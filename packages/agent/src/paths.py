@@ -24,3 +24,6 @@ def audio_dir(config_id: str) -> Path:
     d = AUDIO_BASE_DIR / config_id
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+PIPELINE_STATE_FILE = PROJECT_ROOT / ".generated" / "pipeline" / "plan.json"
