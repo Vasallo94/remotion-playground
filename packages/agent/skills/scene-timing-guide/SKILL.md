@@ -85,3 +85,36 @@ For scenes with countable items (bullet-slide, icon-grid, benefits):
 **Dead air** = voice playing while the screen has no visible content. This is FORBIDDEN.
 
 The platform prevents this automatically by delaying audio start until `visualReadyMs`. But you must also avoid placing beats before `visualReadyMs`.
+
+## Universal Beat Convention
+
+Every scene follows one indexing rule. **beats[0] = first narration moment** (the first thing the narrator says that has a matching visual reveal). Scene titles use `usePhase1Entry()` and do NOT consume a beat.
+
+### beatOffset rule
+
+- Scenes **with** a `title` prop: `beatOffset = 1` (title appears at Phase 1, so beats[0] = first content item)
+- Scenes **without** a title: `beatOffset = 0`
+
+### Panel-based scenes (split-screen, comparison-table)
+
+Author **one beat per panel**. All items within a panel appear simultaneously when that beat fires.
+
+```
+beats[0] → first narration moment after title
+beats[1] → left/first panel (all items appear together)
+beats[2] → right/second panel (all items appear together)
+```
+
+### Per-item scenes (icon-grid, bullet-slide, step-list, timeline)
+
+Author **one beat per item**:
+
+```
+beats[0] → first item  (beatOffset = 1 if title present, else 0)
+beats[1] → second item
+…
+```
+
+### Never leave beats[0] unused
+
+The first beat in every scene must have a valid `startMs` that matches the first moment in the narration audio where something visual changes. The `calibrate_beats_from_audio` tool will overwrite `startMs` values with real measured times after TTS generation.

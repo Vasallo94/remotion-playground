@@ -17,6 +17,7 @@ You dispatch tasks to these agents using the `task(name, task)` tool:
 
 - **audio_planner** — Designs unified audio chart (voiceover + music + SFX). Has **CP3**: presents the audio chart for approval. Returns config with voiceover and soundDesign sections.
 - **voice_generator** — Generates voiceover audio via Gemini TTS. Runs in PARALLEL with sound_engineer.
+- **calibrate** — Measures real beat timestamps from generated TTS audio using Gemini multimodal. Runs immediately AFTER voice_generator completes and BEFORE sound_engineer outputs are consumed by the validator.
 - **sound_engineer** — Copies music bed and SFX from the audio library. Runs in PARALLEL with voice_generator.
 - **scene_creator** — Creates custom Remotion scene components if needed. Has **CP4** (conditional): presents custom code for approval. Only activates for unregistered scene types.
 - **validator** — Verifies Zod schema, editorial quality, and asset coherence against disk. Has **CP5** (conditional): presents warnings if any.
@@ -149,14 +150,23 @@ Do NOT paste config JSON into task descriptions. Agents use `read_file` and `wri
 
 `voice_generation` and `sound_assets` run concurrently. Mark both `in_progress` and dispatch `voice_generator` AND `sound_engineer` in a single turn.
 
+## calibrate (stage after voice_generator)
+
+**Agent:** voice_generator (same subagent, extra tool)  
+**Tool:** `calibrate_beats_from_audio(config_json)`  
+**When to run:** After `generate_voiceover` succeeds and before `sound_engineer` starts. Skip if voiceover is disabled.  
+**What it does:** Sends each scene's generated MP3 to Gemini multimodal, asks it to identify the real start time of each beat's narration phrase, and updates `beat.startMs` in the config. Eliminates the gap between manually-estimated startMs and what the TTS actually produces.  
+**Output:** Updated `config.json` on disk with accurate beat timestamps.
+
 ### Validation gates
 
-| After step                          | Action                                                                                                                                                                                                                  |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `copywriting`                       | Read `/pipeline/config.json` with `read_file`, call `validate_config` with the JSON **string**. Re-dispatch copywriter with the error list if any.                                                                      |
-| `direction`                         | Same: read config, validate, re-dispatch director if errors.                                                                                                                                                            |
-| `scene_qa`                          | ALL PASS → continue. MINOR_FIX with auto_fix → re-dispatch copywriter with QA feedback from `/pipeline/qa_feedback.json`, re-validate, re-run QA (max 1 retry). MAJOR_ISSUE → scene_qa presents CP-QA for human review. |
-| `voice_generation` + `sound_assets` | Dispatch `validator` for full schema + asset verification.                                                                                                                                                              |
+| After step                   | Action                                                                                                                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `copywriting`                | Read `/pipeline/config.json` with `read_file`, call `validate_config` with the JSON **string**. Re-dispatch copywriter with the error list if any.                                                                      |
+| `direction`                  | Same: read config, validate, re-dispatch director if errors.                                                                                                                                                            |
+| `scene_qa`                   | ALL PASS → continue. MINOR_FIX with auto_fix → re-dispatch copywriter with QA feedback from `/pipeline/qa_feedback.json`, re-validate, re-run QA (max 1 retry). MAJOR_ISSUE → scene_qa presents CP-QA for human review. |
+| `voice_generation`           | Dispatch `calibrate` step (same voice_generator subagent, `calibrate_beats_from_audio` tool). Skip if voiceover disabled.                                                                                               |
+| `calibrate` + `sound_assets` | Dispatch `validator` for full schema + asset verification.                                                                                                                                                              |
 
 Always pass the JSON **string** to `validate_config`, never the file path. Warnings are not automatically blocking — surface them but do not re-dispatch unless actionable.
 
