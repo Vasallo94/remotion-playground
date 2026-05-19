@@ -65,6 +65,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Beat offset bugs in SplitScreenScene (panel beats), FlowDiagramScene (beatOffset 2→1), CodeDiffScene (beatOffset 2→1), BrowserMockupScene (beatOffset 2→1), ComparisonTableScene (left/right swap) — scenes now follow the universal beat convention
 - **DeepAgents skills deployment** — skills now route through virtual `/skills/` on the agent `CompositeBackend`, so the metadata paths announced by `SkillsMiddleware` are readable later via `read_file`; added a regression test for metadata load plus full `SKILL.md` read
 - **`packages/agent/src/tools/qa.py`** — `render_scene_stills` now calls render-service via HTTP instead of spawning `npx tsx` (agent container is pure Python, no Node.js); fixed default model from `gemini-2.0-flash` to `gemini-3.1-flash-preview`; restored missing `import base64` and `from pathlib import Path` that were accidentally dropped during refactor
 - **`packages/agent/prompts/copywriter.md`** — limited post-approval `audit_content_quality` to exactly one call with an explicit STOP CONDITION to break the infinite audit loop

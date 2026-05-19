@@ -41,7 +41,7 @@ export const BrowserMockupScene: React.FC<Record<string, unknown>> = (rawProps) 
     }),
   )
 
-  const beatOffset = title ? 2 : 1
+  const beatOffset = title ? 1 : 0
 
   const renderBlock = (block: ContentBlock, i: number) => {
     const blockDelay = beats?.[i + beatOffset]

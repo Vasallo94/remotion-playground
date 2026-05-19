@@ -196,16 +196,16 @@ export const ComparisonTableScene: React.FC<Record<string, unknown>> = (rawProps
           column={leftColumn}
           accent={leftAccent}
           icon={leftIcon}
-          beat={beats?.[2] ?? null}
-          fallbackMs={600}
+          beat={beats?.[1] ?? null}
+          fallbackMs={300}
           tokens={tokens}
         />
         <ComparisonColumn
           column={rightColumn}
           accent={rightAccent}
           icon={rightIcon}
-          beat={beats?.[1] ?? null}
-          fallbackMs={300}
+          beat={beats?.[2] ?? null}
+          fallbackMs={600}
           tokens={tokens}
         />
       </div>

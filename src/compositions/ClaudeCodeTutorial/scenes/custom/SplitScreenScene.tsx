@@ -113,8 +113,8 @@ export const SplitScreenScene: React.FC<Record<string, unknown>> = (rawProps) =>
   const normalizedLeft = normalizePanel(left, "Izquierda", tokens.primary)
   const normalizedRight = normalizePanel(right, "Derecha", tokens.secondary)
 
-  const leftItemBeatStart = 2
-  const rightItemBeatStart = leftItemBeatStart + normalizedLeft.items.length
+  const leftPanelBeat = beats?.[1] ?? null
+  const rightPanelBeat = beats?.[2] ?? null
 
   return (
     <AbsoluteFill
@@ -173,14 +173,7 @@ export const SplitScreenScene: React.FC<Record<string, unknown>> = (rawProps) =>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {normalizedLeft.items.map((item, i) => (
-                  <PanelItem
-                    key={i}
-                    text={item}
-                    beat={beats?.[leftItemBeatStart + i] ?? null}
-                    index={i}
-                    accent={accent}
-                    tokens={tokens}
-                  />
+                  <PanelItem key={i} text={item} beat={leftPanelBeat} index={i} accent={accent} tokens={tokens} />
                 ))}
               </div>
             </div>
@@ -215,14 +208,7 @@ export const SplitScreenScene: React.FC<Record<string, unknown>> = (rawProps) =>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {normalizedRight.items.map((item, i) => (
-                  <PanelItem
-                    key={i}
-                    text={item}
-                    beat={beats?.[rightItemBeatStart + i] ?? null}
-                    index={i}
-                    accent={accent}
-                    tokens={tokens}
-                  />
+                  <PanelItem key={i} text={item} beat={rightPanelBeat} index={i} accent={accent} tokens={tokens} />
                 ))}
               </div>
             </div>

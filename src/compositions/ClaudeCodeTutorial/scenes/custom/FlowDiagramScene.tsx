@@ -277,7 +277,8 @@ const DataDrivenFlow: React.FC<{
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
 
-  const visualDelay = beats?.[2] ? getBeatStartFrame(beats[2], fps) : Math.ceil(fps * 0.8)
+  const beatOffset = 1
+  const visualDelay = beats?.[beatOffset] ? getBeatStartFrame(beats[beatOffset], fps) : Math.ceil(fps * 0.8)
   const edgeProgress = spring({
     frame: Math.max(0, frame - visualDelay),
     fps,
@@ -286,7 +287,7 @@ const DataDrivenFlow: React.FC<{
   })
 
   const introReveal = useBeatReveal({
-    beat: beats?.[1] ?? undefined,
+    beat: beats?.[0] ?? undefined,
     fallbackDelayMs: 300,
     animationMs: 300,
   })
@@ -296,8 +297,6 @@ const DataDrivenFlow: React.FC<{
     fallbackDelayMs: 1200 + nodes.length * 200,
     animationMs: 300,
   })
-
-  const beatOffset = 2
 
   const particleX = showParticle ? interpolate(edgeProgress, [0, 1], [0, 100], { extrapolateRight: "clamp" }) : 0
 

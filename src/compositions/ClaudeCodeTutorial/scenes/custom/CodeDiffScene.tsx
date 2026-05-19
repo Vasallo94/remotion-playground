@@ -32,7 +32,7 @@ export const CodeDiffScene: React.FC<Record<string, unknown>> = (rawProps) => {
   ]
 
   const linesStartDelay = Math.ceil(fps * 0.25)
-  const beatOffset = title ? 2 : 1
+  const beatOffset = title ? 1 : 0
 
   const lineColors: Record<string, { bg: string; text: string; prefix: string }> = {
     context: { bg: "transparent", text: tokens.foreground, prefix: " " },
