@@ -129,8 +129,8 @@ class TestQaScenes:
             "suggested_changes": {},
         })
 
-        with patch("src.tools.qa.ChatGoogleGenerativeAI") as MockModel:
-            MockModel.return_value.invoke.return_value = llm_response
+        with patch("src.tools.qa.create_model") as MockCreateModel:
+            MockCreateModel.return_value.invoke.return_value = llm_response
 
             from src.tools.qa import qa_scenes
             result = json.loads(qa_scenes(config, manifest))
@@ -153,8 +153,8 @@ class TestQaScenes:
         llm_response = MagicMock()
         llm_response.content = "I think this scene looks great!"
 
-        with patch("src.tools.qa.ChatGoogleGenerativeAI") as MockModel:
-            MockModel.return_value.invoke.return_value = llm_response
+        with patch("src.tools.qa.create_model") as MockCreateModel:
+            MockCreateModel.return_value.invoke.return_value = llm_response
 
             from src.tools.qa import qa_scenes
             result = json.loads(qa_scenes(config, manifest))

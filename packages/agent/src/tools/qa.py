@@ -8,12 +8,12 @@ from typing import Annotated, Any
 import httpx
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import InjectedToolArg
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 from ._checkpoint import checkpoint_interrupt
 from ..context import get_pipeline_context
+from .._llm import create_model
 
-QA_MODEL = os.environ.get("SCENE_QA_MODEL", "gemini-3.1-flash-preview")
+QA_MODEL = os.environ.get("SCENE_QA_MODEL", "gemini-3.1-pro-preview")
 
 _DEFAULT_RENDER_SERVICE_URL = os.environ.get("RENDER_SERVICE_URL", "http://localhost:3100")
 
@@ -70,7 +70,10 @@ def _build_context(config: dict, scene: dict, index: int, still_path: str) -> di
     scenes = config.get("scenes", [])
     voiceover = config.get("voiceover", {})
     vo_scenes = voiceover.get("scenes", {}) if isinstance(voiceover, dict) else {}
-    vo_entry = vo_scenes.get(str(index), {})
+    if isinstance(vo_scenes, dict):
+        vo_entry = vo_scenes.get(str(index), {})
+    else:
+        vo_entry = next((s for s in vo_scenes if isinstance(s, dict) and s.get("sceneIndex") == index), {})
 
     return {
         "video_context": {
@@ -192,7 +195,7 @@ def qa_scenes(
     stills = {s["index"]: s["path"] for s in manifest.get("scenes", [])}
 
     results = []
-    model: ChatGoogleGenerativeAI | None = None
+    model = None
 
     for index, scene in enumerate(scenes):
         still_path = stills.get(index)
@@ -201,7 +204,7 @@ def qa_scenes(
             continue
 
         if model is None:
-            model = ChatGoogleGenerativeAI(model=QA_MODEL)
+            model = create_model(QA_MODEL)
         context = _build_context(config, scene, index, still_path)
         image_data = base64.b64encode(Path(still_path).read_bytes()).decode("utf-8")
         prompt = _build_qa_prompt(context)
