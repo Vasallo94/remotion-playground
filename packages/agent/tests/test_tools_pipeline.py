@@ -173,3 +173,15 @@ def test_get_next_step_skipped_counts_as_done(monkeypatch):
 
     assert result["status"] == "all_completed"
     assert result["progress"]["completed"] == 1
+
+
+def test_new_video_steps_scene_qa_after_scene_creation(monkeypatch):
+    backend = install_backend(monkeypatch)
+    result = pipeline.create_pipeline_plan("new_video", "Test order")
+    steps = result["plan"]["steps"]
+    ids = [s["id"] for s in steps]
+    scene_creation_idx = ids.index("scene_creation")
+    scene_qa_idx = ids.index("scene_qa")
+    assert scene_qa_idx > scene_creation_idx, (
+        f"scene_qa (pos {scene_qa_idx}) must come after scene_creation (pos {scene_creation_idx})"
+    )
