@@ -7,6 +7,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- `calibrate_beats_from_audio` tool: analyzes generated TTS audio via Gemini multimodal to auto-populate accurate `beat.startMs` values, replacing manually estimated timestamps
+
 - **Stall detection circuit breaker in `get_next_pipeline_step`** — after 10 consecutive polls finding the same step `in_progress`, the tool returns `status: "stalled"` with `stalledStep` and `stallCount`; prevents infinite orchestrator polling loops when a subagent exits without calling `update_pipeline_step`; stall counter clears automatically when the step advances
 
 - **`packages/web/src/lib/planState.ts`** — plan state extraction module that reads `/pipeline/plan.json` from LangGraph `stream.values.files`; provides `PlanState`/`PlanStep` types, `extractPlanState()` parser, `stepLabel()`/`modeLabel()` i18n mappings, `loadingLabelFromPlan()` and `isRenderingStep()` helpers

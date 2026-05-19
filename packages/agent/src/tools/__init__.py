@@ -1,3 +1,4 @@
+from .calibrate import calibrate_beats_from_audio
 from .catalog import query_scene_catalog
 from .configs import (
     list_video_configs,
