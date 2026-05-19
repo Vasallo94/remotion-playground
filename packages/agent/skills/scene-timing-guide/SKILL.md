@@ -92,8 +92,8 @@ Every scene follows one indexing rule. **beats[0] = first narration moment** (th
 
 ### beatOffset rule
 
-- Scenes **with** a `title` prop: `beatOffset = 1` (title appears at Phase 1, so beats[0] = first content item)
-- Scenes **without** a title: `beatOffset = 0`
+- Scenes with **intro text rendered via beats** (flow-diagram): `beatOffset = 1` — beats[0] triggers the intro text reveal, beats[1+] trigger the nodes.
+- All other scenes (icon-grid, block-diagram, split-screen, comparison-table, bullet-slide, step-list): `beatOffset = 0` — beats[0] triggers the first visual element directly. The `title` prop uses `usePhase1Entry()` and does NOT consume a beat slot.
 
 ### Panel-based scenes (split-screen, comparison-table)
 
@@ -107,11 +107,12 @@ beats[2] → right/second panel (all items appear together)
 
 ### Per-item scenes (icon-grid, bullet-slide, step-list, timeline)
 
-Author **one beat per item**:
+Author **one beat per item** (beatOffset = 0):
 
 ```
-beats[0] → first item  (beatOffset = 1 if title present, else 0)
+beats[0] → first item
 beats[1] → second item
+beats[2] → third item
 …
 ```
 

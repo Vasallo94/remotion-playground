@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `IconGridScene`: `beatOffset` changed to `0` — icon-grid has no intro text, titles use phase1Entry and do not consume a beat slot; items now start at `beats[0]` as intended
+- `tipos-ingenieria-ia` config: added missing beat for flow-diagram node 3 (LLM, at 11500ms) and block-diagram block 2 (Herramientas, at 10000ms) — last element of each scene now reveals on its beat instead of fallback timing
+- Beat convention in `scene-timing-guide` SKILL: `beatOffset = 1` only for scenes with code-rendered intro text (flow-diagram); all other scenes use `beatOffset = 0`
+
 ### Added
 
 - `calibrate_beats_from_audio` tool: analyzes generated TTS audio via Gemini multimodal to auto-populate accurate `beat.startMs` values, replacing manually estimated timestamps

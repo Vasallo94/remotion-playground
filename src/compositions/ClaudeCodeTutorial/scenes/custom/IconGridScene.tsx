@@ -167,7 +167,7 @@ export const IconGridScene: React.FC<Record<string, unknown>> = (rawProps) => {
   const tokens = useThemeTokens()
   const items = normalizeItems(props.items)
   const phase1 = usePhase1Entry({ durationMs: 100 })
-  const beatOffset = title ? 1 : 0
+  const beatOffset = 0
 
   const cols = Math.max(1, Math.min(columns, items.length || columns))
   const cardWidth = cols === 2 ? 440 : cols === 4 ? 240 : 300

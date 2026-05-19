@@ -31,7 +31,7 @@
     {
       "type": "intro",
       "title": "3 tipos de Ingeniería IA",
-      "subtitle": "Prompt, Context e Intent Engineering",
+      "subtitle": "De instrucciones a agentes autónomos",
       "durationInSeconds": 4,
       "timing": {
         "tailHoldMs": 600,
@@ -56,17 +56,17 @@
           {
             "icon": "terminal",
             "title": "Prompt",
-            "description": "Instrucciones estáticas"
+            "description": "Comandos directos"
           },
           {
-            "icon": "layers",
+            "icon": "database",
             "title": "Context",
-            "description": "Datos externos (RAG)"
+            "description": "Inyección RAG"
           },
           {
             "icon": "gear",
             "title": "Intent",
-            "description": "Sistemas autónomos"
+            "description": "Agentes resolutivos"
           }
         ]
       },
@@ -78,26 +78,20 @@
       "beats": [
         {
           "id": "beat-prompt",
-          "startMs": 500,
-          "narration": "El ecosistema de IA tiene tres grandes niveles de abstracción.",
-          "visual": "Grid frame"
-        },
-        {
-          "id": "beat-prompt-desc",
-          "startMs": 3500,
-          "narration": "Primero, Prompt Engineering: instrucciones estáticas y directas.",
+          "startMs": 2500,
+          "narration": "Primero, Prompt Engineering.",
           "visual": "Prompt icon appears"
         },
         {
           "id": "beat-context",
-          "startMs": 6500,
-          "narration": "Segundo, Context Engineering: donde inyectamos datos externos al vuelo.",
+          "startMs": 5000,
+          "narration": "Segundo, Context Engineering.",
           "visual": "Context icon appears"
         },
         {
           "id": "beat-intent",
-          "startMs": 9500,
-          "narration": "Y tercero, Intent Engineering: sistemas autónomos que resuelven problemas.",
+          "startMs": 7500,
+          "narration": "Y tercero, Intent Engineering.",
           "visual": "Intent icon appears"
         }
       ]
@@ -108,39 +102,51 @@
       "props": {
         "title": "1. Prompt Engineering",
         "left": {
-          "label": "Concepto",
-          "items": ["Optimización NLP pura", "Memoria del modelo", "Tareas deterministas"],
-          "icon": "folder"
+          "label": "Características",
+          "items": ["Técnicas de lenguaje natural", "Dependencia del modelo base", "Resultados previsibles"],
+          "icon": "brain"
         },
         "right": {
           "label": "Flujo de datos",
-          "items": ["Usuario → LLM → Respuesta", "Sin transformación de datos externos"],
+          "items": ["Interacción stateless (sin estado)", "Limitado a datos de entrenamiento"],
           "icon": "code"
         }
       },
-      "durationInSeconds": 12,
+      "durationInSeconds": 14,
       "timing": {
         "tailHoldMs": 800,
         "transitionMs": 800
       },
       "beats": [
         {
-          "id": "split-concept",
+          "id": "beat-left-1",
           "startMs": 500,
-          "narration": "Empecemos por Prompt Engineering.",
-          "visual": "Split screen intro"
+          "narration": "En Prompt Engineering usamos técnicas de lenguaje natural.",
+          "visual": "Left 1"
         },
         {
-          "id": "split-left",
+          "id": "beat-left-2",
           "startMs": 3000,
-          "narration": "Es optimización del lenguaje puro para tareas deterministas.",
-          "visual": "Left column items appear"
+          "narration": "Dependemos del modelo base",
+          "visual": "Left 2"
         },
         {
-          "id": "split-right",
+          "id": "beat-left-3",
+          "startMs": 5000,
+          "narration": "para resultados previsibles.",
+          "visual": "Left 3"
+        },
+        {
+          "id": "beat-right-1",
           "startMs": 7000,
-          "narration": "El flujo es simple: el usuario pregunta y el modelo responde, sin datos externos.",
-          "visual": "Right column items appear"
+          "narration": "Su flujo es una interacción directa sin intermediarios,",
+          "visual": "Right 1"
+        },
+        {
+          "id": "beat-right-2",
+          "startMs": 10000,
+          "narration": "con total aislamiento de información.",
+          "visual": "Right 2"
         }
       ]
     },
@@ -149,15 +155,15 @@
       "lines": [
         {
           "kind": "command",
-          "text": "System: 'Eres un asistente sarcástico. Responde en JSON.'"
+          "text": "System: 'Eres un Tech Lead sarcástico. Responde en JSON.'"
         },
         {
           "kind": "command",
-          "text": "User: '¿Cuánto es 2+2?'"
+          "text": "User: '¿Para qué sirve git push --force?'"
         },
         {
           "kind": "claude",
-          "text": "{\n  \"answer\": \"Son 4, genio.\"\n}"
+          "text": "{\n  \"answer\": \"Para borrar el trabajo de tus compañeros, genio.\"\n}"
         }
       ],
       "durationInSeconds": 14,
@@ -190,26 +196,61 @@
       "type": "custom",
       "componentId": "flow-diagram",
       "props": {
-        "title": "Query → Vector DB → Contexto → LLM",
-        "description": "2. Context Engineering: Inyectar información externa dinámica (RAG) para evitar alucinaciones."
+        "title": "Pipeline de Context Engineering",
+        "description": "Inyectar historial, APIs y estado dinámico antes del LLM.",
+        "nodes": [
+          {
+            "label": "User Query",
+            "description": "Pregunta del usuario"
+          },
+          {
+            "label": "Inyección de Datos",
+            "description": "Historial, APIs, DBs"
+          },
+          {
+            "label": "Prompt Enriquecido",
+            "description": "Query + Contexto"
+          },
+          {
+            "label": "LLM",
+            "description": "Generación"
+          }
+        ]
       },
-      "durationInSeconds": 12,
+      "durationInSeconds": 16,
       "timing": {
         "tailHoldMs": 800,
         "transitionMs": 1000
       },
       "beats": [
         {
-          "id": "flow-intro",
+          "id": "flow-node-1",
           "startMs": 500,
-          "narration": "Pero los modelos alucinan si no conocen tu negocio. Aquí entra el Context Engineering.",
-          "visual": "Diagram title"
+          "narration": "Pero el modelo necesita datos dinámicos,",
+          "visual": "Node 1"
         },
         {
-          "id": "flow-rag",
-          "startMs": 5000,
-          "narration": "Buscamos información en una base de datos vectorial y la añadimos al contexto.",
-          "visual": "Diagram flow"
+          "id": "flow-node-2",
+          "startMs": 3500,
+          "narration": "y ahí entra el Context Engineering.",
+          "visual": "Node 2"
+        },
+        {
+          "id": "flow-node-3",
+          "startMs": 6500,
+          "narration": "No se trata solo de vectores o RAG,",
+          "visual": "Node 3"
+        },
+        {
+          "id": "flow-node-4",
+          "startMs": 9000,
+          "narration": "consiste en inyectar cualquier tipo de contexto, como tu historial o APIs, antes de llamar al LLM.",
+          "visual": "Node 4"
+        },
+        {
+          "id": "b4",
+          "startMs": 11500,
+          "narration": "y el LLM lo procesa con contexto completo."
         }
       ]
     },
@@ -230,19 +271,19 @@
         {
           "id": "code-embed",
           "startMs": 500,
-          "narration": "En código, vectorizamos la pregunta del usuario.",
+          "narration": "El patrón RAG con vectores es simplemente la implementación más popular del Context Engineering. En este ejemplo, vectorizamos la pregunta,",
           "visual": "Code line 1"
         },
         {
           "id": "code-query",
           "startMs": 4000,
-          "narration": "Buscamos los documentos relevantes.",
+          "narration": "buscamos documentos",
           "visual": "Code line 2"
         },
         {
           "id": "code-prompt",
           "startMs": 8000,
-          "narration": "Y armamos un nuevo prompt dinámico que incluye esa información. Esto es RAG.",
+          "narration": "y construimos el prompt.",
           "visual": "Code line 3"
         }
       ]
@@ -255,21 +296,21 @@
         "blocks": [
           {
             "id": "goal",
-            "label": "User Goal",
+            "label": "Objetivo (ej: 'Crea un endpoint')",
             "row": 0,
-            "col": 0
+            "col": 0,
+            "connections": ["agent"]
           },
           {
             "id": "agent",
-            "label": "Agent Planner",
+            "label": "Agente (Planificador LLM)",
             "row": 0,
             "col": 1,
             "connections": ["tools"]
           },
           {
             "id": "tools",
-            "label": "Tool Execution",
-            "sublabel": "API / Code",
+            "label": "Herramientas (APIs, Terminal)",
             "row": 0,
             "col": 2,
             "connections": ["agent"]
@@ -299,6 +340,11 @@
           "startMs": 7000,
           "narration": "Él mismo planifica qué herramientas usar y en qué orden ejecutarlas.",
           "visual": "Agent and tools blocks"
+        },
+        {
+          "id": "b3",
+          "startMs": 10000,
+          "narration": "ejecutando herramientas como APIs y terminal."
         }
       ]
     },
@@ -307,19 +353,19 @@
       "lines": [
         {
           "kind": "command",
-          "text": "Goal: 'Busca el clima y guárdalo'"
+          "text": "Goal: 'Busca el clima de Madrid y guárdalo'"
         },
         {
           "kind": "output",
-          "text": "Ejecutando: get_weather()"
+          "text": "Ejecutando: get_weather(location=\"Madrid\")"
         },
         {
           "kind": "output",
-          "text": "Ejecutando: execute_sql()"
+          "text": "Ejecutando: execute_sql(query=\"INSERT INTO weather...\")"
         },
         {
           "kind": "claude",
-          "text": "Clima obtenido y guardado correctamente."
+          "text": "Clima de Madrid (24°C) obtenido y guardado correctamente en la DB."
         }
       ],
       "durationInSeconds": 15,
@@ -350,7 +396,7 @@
     },
     {
       "type": "callout",
-      "text": "Error común: Usar agentes para tareas simples añade latencia y costes innecesarios.",
+      "text": "⚠️ Error común: Usar Intent Engineering (agentes) para tareas de Prompt Engineering. Añade latencia innecesaria.",
       "position": "center",
       "durationInSeconds": 8,
       "timing": {
@@ -369,7 +415,7 @@
     {
       "type": "outro",
       "title": "Usa la herramienta adecuada",
-      "bullets": ["Prompt: Tareas estáticas", "Context: Datos dinámicos", "Intent: Acciones y flujos"],
+      "bullets": ["Prompt: Tareas estáticas", "Context: Datos dinámicos", "Intent: Acciones autónomas"],
       "durationInSeconds": 10,
       "timing": {
         "tailHoldMs": 2000,
@@ -404,68 +450,40 @@
     }
   ],
   "voiceover": {
+    "enabled": true,
     "provider": "gemini",
     "voiceId": "Orus",
     "language": "es-ES",
-    "scenes": [
-      {
-        "sceneIndex": 0,
-        "path": "voiceover/tipos-ingenieria-ia/0.mp3",
-        "durationMs": 5680
-      },
-      {
-        "sceneIndex": 1,
-        "path": "voiceover/tipos-ingenieria-ia/1.mp3",
-        "durationMs": 20200
-      },
-      {
-        "sceneIndex": 2,
-        "path": "voiceover/tipos-ingenieria-ia/2.mp3",
-        "durationMs": 12160
-      },
-      {
-        "sceneIndex": 3,
-        "path": "voiceover/tipos-ingenieria-ia/3.mp3",
-        "durationMs": 10720
-      },
-      {
-        "sceneIndex": 4,
-        "path": "voiceover/tipos-ingenieria-ia/4.mp3",
-        "durationMs": 11400
-      },
-      {
-        "sceneIndex": 5,
-        "path": "voiceover/tipos-ingenieria-ia/5.mp3",
-        "durationMs": 12840
-      },
-      {
-        "sceneIndex": 6,
-        "path": "voiceover/tipos-ingenieria-ia/6.mp3",
-        "durationMs": 13120
-      },
-      {
-        "sceneIndex": 7,
-        "path": "voiceover/tipos-ingenieria-ia/7.mp3",
-        "durationMs": 12640
-      },
-      {
-        "sceneIndex": 8,
-        "path": "voiceover/tipos-ingenieria-ia/8.mp3",
-        "durationMs": 6360
-      },
-      {
-        "sceneIndex": 9,
-        "path": "voiceover/tipos-ingenieria-ia/9.mp3",
-        "durationMs": 11320
-      }
-    ]
+    "audioPaths": {
+      "0": "public/voiceover/tipos-ingenieria-ia/scene-0.mp3",
+      "1": "public/voiceover/tipos-ingenieria-ia/scene-1.mp3",
+      "2": "public/voiceover/tipos-ingenieria-ia/scene-2.mp3",
+      "3": "public/voiceover/tipos-ingenieria-ia/scene-3.mp3",
+      "4": "public/voiceover/tipos-ingenieria-ia/scene-4.mp3",
+      "5": "public/voiceover/tipos-ingenieria-ia/scene-5.mp3",
+      "6": "public/voiceover/tipos-ingenieria-ia/scene-6.mp3",
+      "7": "public/voiceover/tipos-ingenieria-ia/scene-7.mp3",
+      "8": "public/voiceover/tipos-ingenieria-ia/scene-8.mp3",
+      "9": "public/voiceover/tipos-ingenieria-ia/scene-9.mp3"
+    },
+    "scenes": {
+      "0": "[excited] ¿Conoces la diferencia entre Prompt, Context e Intent Engineering?",
+      "1": "El ecosistema de IA tiene tres grandes niveles de abstracción. Primero, Prompt Engineering. Segundo, Context Engineering. Y tercero, Intent Engineering.",
+      "2": "En Prompt Engineering usamos técnicas de lenguaje natural. Dependemos del modelo base para resultados previsibles. Su flujo es una interacción directa sin intermediarios, con total aislamiento de información.",
+      "3": "Le damos un rol al sistema de manera manual. El usuario hace su consulta, y el modelo genera la salida basándose exclusivamente en su entrenamiento previo.",
+      "4": "Pero el modelo necesita datos dinámicos, y ahí entra el Context Engineering. No se trata solo de vectores o RAG, consiste en inyectar cualquier tipo de contexto, como tu historial o APIs, antes de llamar al LLM.",
+      "5": "El patrón RAG con vectores es simplemente la implementación más popular del Context Engineering. En este ejemplo, vectorizamos la pregunta, buscamos documentos y construimos el prompt.",
+      "6": "[amazed] Finalmente, Intent Engineering lleva esto más allá. Le das un objetivo de alto nivel a un agente. Él mismo planifica qué herramientas usar y en qué orden ejecutarlas.",
+      "7": "Por ejemplo, le pedimos que busque el clima de Madrid y lo guarde. El agente ejecuta de forma autónoma una función para el clima y otra de base de datos, resolviendo el problema completo sin microgestión.",
+      "8": "[serious] Pero cuidado: no uses agentes complejos para tareas simples, sólo añadirás latencia y costes innecesarios.",
+      "9": "[cheerful] La clave es usar la herramienta adecuada: Prompt para tareas estáticas, Context para inyectar datos dinámicos, e Intent para acciones autónomas."
+    }
   },
   "soundDesign": {
     "musicBed": {
-      "path": "audio/library/lofi-tech-ambient.mp3",
+      "libraryId": "lofi-tech",
       "volume": 0.15
     },
     "sfx": []
-  },
-  "_skipAudioGeneration": true
+  }
 }
