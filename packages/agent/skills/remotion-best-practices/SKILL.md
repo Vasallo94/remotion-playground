@@ -5,6 +5,40 @@ metadata:
   tags: remotion, video, react, animation, composition
 ---
 
+## Project-specific context
+
+This skill is used inside an automated video generation pipeline. Before reading the general sections below, note what is and isn't relevant here.
+
+**Priority rule files for this project:**
+
+- `rules/timing.md` — interpolation curves, spring animations, easing
+- `rules/sequencing.md` — `Sequence`, `Series` composition patterns
+- `rules/animations.md` — fundamental `useCurrentFrame` + `interpolate` patterns
+- `rules/audio.md` — `<Audio>` component, trimming, volume
+- `rules/images.md` — `<Img>` component
+
+**Skip these — not used in this pipeline:**
+
+`rules/maps.md`, `rules/lottie.md`, `rules/gifs.md`, `rules/light-leaks.md`, `rules/charts.md`, `rules/3d.md`
+
+**Project abstractions that extend Remotion:**
+
+These hooks in `src/shared/hooks/` replace raw `useCurrentFrame` patterns for the two standard animation phases:
+
+- `usePhase1Entry({ durationMs })` — returns `{ opacity, scale }`. Use for Phase 1 instant-entry animations: titles, structural frames, elements that appear at scene start before any beat fires.
+- `useBeatReveal({ beat, fallbackDelayMs, animationMs })` — returns `{ opacity, y }`. Use for beat-driven reveals. `beat` is a `Beat` object from config.json; when undefined, falls back to `fallbackDelayMs`.
+
+**Beat system:**
+
+- `beats[]` in config.json: `{ id, startMs, narration, visual }`
+- `beatOffset` convention: `0` for per-item scenes (icon-grid, block-diagram, bullet-slide, step-list); `1` for flow-diagram only (beats[0] = intro text, beats[1+] = nodes)
+- Never set `leadInMs` or `audioStartMs` — auto-calculated by the platform
+
+**Custom component registration:**
+
+- All new components must be added to `src/compositions/ClaudeCodeTutorial/scenes/custom/customSceneRegistry.ts`
+- Remotion bundles at compile time — no dynamic imports
+
 ## When to use
 
 Use this skills whenever you are dealing with Remotion code to obtain the domain-specific knowledge.
