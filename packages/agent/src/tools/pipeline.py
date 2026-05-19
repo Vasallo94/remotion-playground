@@ -99,9 +99,12 @@ def _read_plan(backend: Any) -> dict[str, Any] | None:
 def _write_plan(backend: Any, plan: dict[str, Any]) -> None:
     content = json.dumps(plan, ensure_ascii=False, indent=2) + "\n"
     backend.upload_files([(PIPELINE_PLAN_PATH, content.encode("utf-8"))])
-    disk_file = _paths.PIPELINE_STATE_FILE
-    disk_file.parent.mkdir(parents=True, exist_ok=True)
-    disk_file.write_text(content, encoding="utf-8")
+    try:
+        disk_file = _paths.PIPELINE_STATE_FILE
+        disk_file.parent.mkdir(parents=True, exist_ok=True)
+        disk_file.write_text(content, encoding="utf-8")
+    except OSError:
+        pass  # Disk write is a recovery fallback; don't let it break the primary flow
 
 
 def _default_steps(mode: str) -> list[dict[str, Any]]:
