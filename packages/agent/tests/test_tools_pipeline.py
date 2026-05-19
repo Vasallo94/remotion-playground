@@ -1,6 +1,9 @@
 import json
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
+from src import paths as agent_paths
 from src.tools import pipeline
 
 
@@ -39,8 +42,9 @@ def test_create_pipeline_plan_persists_default_new_video_steps(monkeypatch):
     assert [step["owner"] for step in saved["steps"][:3]] == ["researcher", "copywriter", "orchestrator"]
 
 
-def test_read_pipeline_plan_missing_returns_instruction(monkeypatch):
+def test_read_pipeline_plan_missing_returns_instruction(monkeypatch, tmp_path):
     install_backend(monkeypatch)
+    monkeypatch.setattr(agent_paths, "PIPELINE_STATE_FILE", tmp_path / "plan.json")
 
     result = pipeline.read_pipeline_plan()
 
@@ -98,8 +102,9 @@ def test_record_pipeline_decision_appends_decision_and_event(monkeypatch):
     assert result["plan"]["events"][-1]["type"] == "decision_recorded"
 
 
-def test_get_next_step_no_plan(monkeypatch):
+def test_get_next_step_no_plan(monkeypatch, tmp_path):
     install_backend(monkeypatch)
+    monkeypatch.setattr(agent_paths, "PIPELINE_STATE_FILE", tmp_path / "plan.json")
 
     result = pipeline.get_next_pipeline_step()
 
@@ -173,3 +178,87 @@ def test_get_next_step_skipped_counts_as_done(monkeypatch):
 
     assert result["status"] == "all_completed"
     assert result["progress"]["completed"] == 1
+
+
+def test_new_video_steps_scene_qa_after_scene_creation(monkeypatch):
+    backend = install_backend(monkeypatch)
+    result = pipeline.create_pipeline_plan("new_video", "Test order")
+    steps = result["plan"]["steps"]
+    ids = [s["id"] for s in steps]
+    scene_creation_idx = ids.index("scene_creation")
+    scene_qa_idx = ids.index("scene_qa")
+    assert scene_qa_idx > scene_creation_idx, (
+        f"scene_qa (pos {scene_qa_idx}) must come after scene_creation (pos {scene_creation_idx})"
+    )
+
+
+def test_get_next_step_returns_in_progress_below_stall_threshold(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall")
+    # Mark first step as in_progress
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    # polls below threshold should still return in_progress
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
+        result = pipeline.get_next_pipeline_step()
+        assert result["status"] == "in_progress"
+
+
+def test_get_next_step_returns_stalled_after_threshold(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall")
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
+        pipeline.get_next_pipeline_step()
+
+    # threshold poll crosses → stalled
+    result = pipeline.get_next_pipeline_step()
+    assert result["status"] == "stalled"
+    assert result["stalledStep"]["id"] == "research"
+    assert result["stallCount"] == pipeline._STALL_THRESHOLD
+
+
+def test_stall_counter_resets_after_step_advances(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall reset")
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    for _ in range(5):
+        pipeline.get_next_pipeline_step()
+
+    # Complete the step — counter should reset
+    pipeline.update_pipeline_step("research", "completed", summary="done")
+
+    # Mark next step in_progress; counter starts fresh
+    pipeline.update_pipeline_step("copywriting", "in_progress")
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
+        result = pipeline.get_next_pipeline_step()
+        assert result["status"] == "in_progress"
+
+
+def test_plan_is_written_to_disk(monkeypatch, tmp_path):
+    install_backend(monkeypatch)
+    disk_path = tmp_path / "pipeline" / "plan.json"
+    monkeypatch.setattr(agent_paths, "PIPELINE_STATE_FILE", disk_path)
+
+    pipeline.create_pipeline_plan("new_video", "Test disk write")
+
+    assert disk_path.exists(), "plan.json was not written to disk"
+    saved = json.loads(disk_path.read_text())
+    assert saved["mode"] == "new_video"
+
+
+def test_read_plan_falls_back_to_disk_when_store_empty(monkeypatch, tmp_path):
+    install_backend(monkeypatch)  # fresh empty store
+    disk_path = tmp_path / "pipeline" / "plan.json"
+    monkeypatch.setattr(agent_paths, "PIPELINE_STATE_FILE", disk_path)
+
+    # Manually write a plan to disk (simulating recovery after restart)
+    disk_path.parent.mkdir(parents=True)
+    disk_path.write_text(json.dumps({"mode": "new_video", "steps": [], "status": "pending"}))
+
+    result = pipeline.read_pipeline_plan()
+
+    assert result["exists"] is True
+    assert result["plan"]["mode"] == "new_video"

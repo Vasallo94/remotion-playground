@@ -1,7 +1,8 @@
 import { useState } from "react"
 import type { ValidationReportData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
+import type { AppTheme } from "../theme"
 
 interface Props {
   data: ValidationReportData
@@ -11,7 +12,17 @@ interface Props {
   compact?: boolean
 }
 
-function IssueGroup({ title, items, color }: { title: string; items: string[]; color: string }) {
+function IssueGroup({
+  title,
+  items,
+  color,
+  theme,
+}: {
+  title: string
+  items: string[]
+  color: string
+  theme: AppTheme
+}) {
   if (items.length === 0) return null
   return (
     <div style={{ marginBottom: 10 }}>
@@ -37,6 +48,7 @@ function IssueGroup({ title, items, color }: { title: string; items: string[]; c
 }
 
 export function ValidationReportCard({ data, onApprove, onRequestChanges, disabled, compact }: Props) {
+  const { theme } = useAppTheme()
   const [feedback, setFeedback] = useState("")
   const [showFeedback, setShowFeedback] = useState(false)
   const hasActions = Boolean(onApprove && onRequestChanges)
@@ -71,9 +83,14 @@ export function ValidationReportCard({ data, onApprove, onRequestChanges, disabl
         <div style={{ fontSize: 13, color: theme.colors.status.success }}>Sin errores, avisos ni recomendaciones.</div>
       ) : (
         <>
-          <IssueGroup title="Errores" items={data.errors} color={theme.colors.status.error} />
-          <IssueGroup title="Avisos" items={data.warnings} color={theme.colors.status.warning} />
-          <IssueGroup title="Recomendaciones" items={data.recommendations} color={theme.colors.text.secondary} />
+          <IssueGroup title="Errores" items={data.errors} color={theme.colors.status.error} theme={theme} />
+          <IssueGroup title="Avisos" items={data.warnings} color={theme.colors.status.warning} theme={theme} />
+          <IssueGroup
+            title="Recomendaciones"
+            items={data.recommendations}
+            color={theme.colors.text.secondary}
+            theme={theme}
+          />
         </>
       )}
 

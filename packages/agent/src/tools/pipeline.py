@@ -7,8 +7,11 @@ from typing import Annotated, Any, Literal
 from deepagents.backends import StateBackend
 from langchain_core.tools import InjectedToolArg
 
+from .. import paths as _paths
+
 PIPELINE_PLAN_PATH = "/pipeline/plan.json"
 PLAN_STATUSES = {"pending", "in_progress", "completed", "blocked", "skipped", "failed"}
+_STALL_THRESHOLD = 10
 
 DEFAULT_STEPS: dict[str, list[dict[str, str]]] = {
     "new_video": [
@@ -16,11 +19,11 @@ DEFAULT_STEPS: dict[str, list[dict[str, str]]] = {
         {"id": "copywriting", "owner": "copywriter", "title": "Create escaleta and config"},
         {"id": "draft_validation", "owner": "orchestrator", "title": "Validate draft config"},
         {"id": "direction", "owner": "director", "title": "Polish timing and beats"},
-        {"id": "scene_qa", "owner": "scene_qa", "title": "Review scene stills"},
         {"id": "audio_plan", "owner": "audio_planner", "title": "Plan voiceover and sound"},
         {"id": "voice_generation", "owner": "voice_generator", "title": "Generate voiceover"},
         {"id": "sound_assets", "owner": "sound_engineer", "title": "Prepare music and SFX"},
         {"id": "scene_creation", "owner": "scene_creator", "title": "Create missing custom scenes"},
+        {"id": "scene_qa", "owner": "scene_qa", "title": "Review scene stills"},
         {"id": "final_validation", "owner": "validator", "title": "Validate final config and assets"},
         {"id": "render", "owner": "orchestrator", "title": "Render video"},
         {"id": "review", "owner": "reviewer", "title": "Review rendered output"},
@@ -79,18 +82,29 @@ def _backend() -> StateBackend:
 
 def _read_plan(backend: Any) -> dict[str, Any] | None:
     result = backend.read(PIPELINE_PLAN_PATH)
-    if getattr(result, "error", None):
-        return None
-    file_data = getattr(result, "file_data", None)
-    if not file_data:
-        return None
-    content = file_data.get("content", "")
-    return json.loads(content)
+    if not getattr(result, "error", None):
+        file_data = getattr(result, "file_data", None)
+        if file_data:
+            return json.loads(file_data.get("content", ""))
+
+    disk_file = _paths.PIPELINE_STATE_FILE
+    if disk_file.exists():
+        try:
+            return json.loads(disk_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
 
 
 def _write_plan(backend: Any, plan: dict[str, Any]) -> None:
     content = json.dumps(plan, ensure_ascii=False, indent=2) + "\n"
     backend.upload_files([(PIPELINE_PLAN_PATH, content.encode("utf-8"))])
+    try:
+        disk_file = _paths.PIPELINE_STATE_FILE
+        disk_file.parent.mkdir(parents=True, exist_ok=True)
+        disk_file.write_text(content, encoding="utf-8")
+    except OSError:
+        pass  # Disk write is a recovery fallback; don't let it break the primary flow
 
 
 def _default_steps(mode: str) -> list[dict[str, Any]]:
@@ -249,13 +263,15 @@ def get_next_pipeline_step(
     """Return the next actionable step from `/pipeline/plan.json`.
 
     Reads the plan and returns the pipeline's current state:
-    - `"next_step"`: a pending step is ready to execute.
-    - `"in_progress"`: one or more steps are already running.
-    - `"blocked"`: a step is blocked and needs resolution.
-    - `"all_completed"`: every step is completed or skipped.
-    - `"no_plan"`: no plan exists yet.
+    - ``"next_step"``: a pending step is ready to execute.
+    - ``"in_progress"``: one or more steps are already running (below stall threshold).
+    - ``"stalled"``: an in_progress step has been polled ≥10 times without advancing.
+    - ``"blocked"``: a step is blocked and needs resolution.
+    - ``"all_completed"``: every step is completed or skipped.
+    - ``"no_plan"``: no plan exists yet.
     """
-    plan = _read_plan(_backend())
+    backend = _backend()
+    plan = _read_plan(backend)
     if plan is None:
         return {
             "status": "no_plan",
@@ -290,14 +306,43 @@ def get_next_pipeline_step(
         }
 
     if in_progress:
+        stalled_step = in_progress[0]
+        current_stall_id = plan.get("_stallStepId")
+        stall_count = plan.get("_stallCount", 0)
+
+        if current_stall_id == stalled_step["id"]:
+            stall_count += 1
+        else:
+            stall_count = 1
+
+        plan["_stallStepId"] = stalled_step["id"]
+        plan["_stallCount"] = stall_count
+        _write_plan(backend, plan)
+
+        if stall_count >= _STALL_THRESHOLD:
+            return {
+                "status": "stalled",
+                "stalledStep": stalled_step,
+                "stallCount": stall_count,
+                "reason": (
+                    f"Step '{stalled_step['id']}' has been in_progress for {stall_count} consecutive polls. "
+                    "The owning subagent likely exited without calling update_pipeline_step. "
+                    "Call update_pipeline_step to mark it failed or completed, then proceed."
+                ),
+                "progress": progress,
+            }
+
         return {
             "status": "in_progress",
             "steps": in_progress,
-            "reason": f"Step '{in_progress[0]['id']}' is being executed by {in_progress[0].get('owner', '?')}",
+            "reason": f"Step '{stalled_step['id']}' is being executed by {stalled_step.get('owner', '?')}",
             "progress": progress,
         }
 
     if not pending:
+        plan.pop("_stallStepId", None)
+        plan.pop("_stallCount", None)
+        _write_plan(backend, plan)
         return {
             "status": "all_completed",
             "reason": "All steps are completed or skipped.",
@@ -305,6 +350,11 @@ def get_next_pipeline_step(
         }
 
     next_step = pending[0]
+    # Clear stall tracking when advancing to next step
+    plan.pop("_stallStepId", None)
+    plan.pop("_stallCount", None)
+    _write_plan(backend, plan)
+
     return {
         "status": "next_step",
         "step": next_step,

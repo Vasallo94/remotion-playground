@@ -1,4 +1,4 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import type { ActiveVideoTarget, StoredVideoArtifact } from "../types"
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 }
 
 export function Header({ artifacts = [], activeTarget, onSelectTarget }: Props) {
+  const { theme, mode, toggle } = useAppTheme()
   return (
     <header
       style={{
@@ -54,6 +55,22 @@ export function Header({ artifacts = [], activeTarget, onSelectTarget }: Props) 
             </option>
           ))}
         </select>
+        <button
+          onClick={toggle}
+          title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          style={{
+            background: "none",
+            border: `1px solid ${theme.colors.border.default}`,
+            borderRadius: theme.radius.sm,
+            padding: "6px 10px",
+            cursor: "pointer",
+            color: theme.colors.text.secondary,
+            fontSize: 14,
+            lineHeight: 1,
+          }}
+        >
+          {mode === "dark" ? "☀" : "◑"}
+        </button>
       </div>
     </header>
   )

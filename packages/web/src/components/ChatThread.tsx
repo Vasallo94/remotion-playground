@@ -30,13 +30,14 @@ import { TargetSelectionCard } from "./TargetSelectionCard"
 import { RevisionPlanCard } from "./RevisionPlanCard"
 import { VariantPlanCard } from "./VariantPlanCard"
 import { WorkingIndicator } from "./WorkingIndicator"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 // ---------------------------------------------------------------------------
 // Helpers — resolved checkpoint badge
 // ---------------------------------------------------------------------------
 
 function UserDecisionBadge({ decision }: { decision: Record<string, unknown> }) {
+  const { theme } = useAppTheme()
   let label = "Respondido"
   if (decision.approved === true && decision.selectedValue) {
     label = `Seleccionado: ${decision.selectedValue}`
@@ -211,6 +212,7 @@ export function ChatThread({
   onRetry,
   isRendering,
 }: Props) {
+  const { theme } = useAppTheme()
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom when content changes

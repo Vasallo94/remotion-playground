@@ -1,6 +1,6 @@
 import type { PipelineEvent } from "../types"
 import type { PlanState } from "../lib/planState"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { PipelineStepper } from "./PipelineStepper"
 import { EventLog } from "./EventLog"
 import type { StoredThread } from "../lib/threadStorage"
@@ -29,6 +29,7 @@ export function Sidebar({
   onDeleteThread,
   onNewThread,
 }: Props) {
+  const { theme } = useAppTheme()
   return (
     <div
       style={{

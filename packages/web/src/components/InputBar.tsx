@@ -1,4 +1,4 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import type { ActiveVideoTarget } from "../types"
 
 interface Props {
@@ -18,6 +18,7 @@ const TARGET_ACTIONS = [
 ]
 
 export function InputBar({ value, onChange, onSend, disabled, activeTarget }: Props) {
+  const { theme } = useAppTheme()
   return (
     <div
       style={{

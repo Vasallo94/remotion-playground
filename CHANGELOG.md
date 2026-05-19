@@ -7,6 +7,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Stall detection circuit breaker in `get_next_pipeline_step`** — after 10 consecutive polls finding the same step `in_progress`, the tool returns `status: "stalled"` with `stalledStep` and `stallCount`; prevents infinite orchestrator polling loops when a subagent exits without calling `update_pipeline_step`; stall counter clears automatically when the step advances
+
 - **`packages/web/src/lib/planState.ts`** — plan state extraction module that reads `/pipeline/plan.json` from LangGraph `stream.values.files`; provides `PlanState`/`PlanStep` types, `extractPlanState()` parser, `stepLabel()`/`modeLabel()` i18n mappings, `loadingLabelFromPlan()` and `isRenderingStep()` helpers
 - **`get_next_pipeline_step` tool** — deterministic next-step resolver that reads `plan.json` and returns the next actionable step, owner, progress count, and reason; replaces manual plan parsing in the orchestrator prompt; handles all states: `next_step`, `in_progress`, `blocked`, `all_completed`, `no_plan`
 - **Shared pipeline plan** — new `/pipeline/plan.json` coordination artifact with tools `create_pipeline_plan`, `read_pipeline_plan`, `update_pipeline_step`, and `record_pipeline_decision`; orchestrator and subagents now use it as the canonical pipeline state instead of relying on generic `write_todos`

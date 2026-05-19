@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import type { InteractionOption, InteractionRequestData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 
 interface Props {
@@ -20,6 +20,7 @@ function optionPayload(option: InteractionOption) {
 }
 
 export function InteractionRequestCard({ data, onApprove, onRequestChanges, disabled }: Props) {
+  const { theme } = useAppTheme()
   const input = data.input
   const [answer, setAnswer] = useState("")
   const [selected, setSelected] = useState(input.kind === "single_choice" ? (input.options[0]?.id ?? "") : "")

@@ -1,5 +1,5 @@
 import type { VariantPlanData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export function VariantPlanCard({ data, onApprove, onRequestChanges, disabled }: Props) {
+  const { theme } = useAppTheme()
   const source = String(data.source.title ?? data.source.configId ?? data.source.configPath ?? "source")
   const variant = String(data.variant.title ?? data.variant.configId ?? data.variant.configPath ?? "variant")
 

@@ -1,6 +1,7 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 export function ClapperboardIcon({ size = 28 }: { size?: number } = {}) {
+  const { theme } = useAppTheme()
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Board body */}
@@ -49,6 +50,7 @@ interface Props {
 }
 
 export function WorkingIndicator({ label }: Props) {
+  const { theme } = useAppTheme()
   return (
     <div className="animate-slide-in" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
       <div

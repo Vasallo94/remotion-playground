@@ -1,6 +1,7 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 export function RenderProgress({ progress }: { progress: number }) {
+  const { theme } = useAppTheme()
   return (
     <div className="animate-fade-in" style={{ margin: "12px 0" }}>
       <div style={{ fontSize: 12, color: theme.colors.text.secondary, marginBottom: 6, fontFamily: theme.fonts.mono }}>

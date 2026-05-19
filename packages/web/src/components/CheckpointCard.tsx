@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { CheckpointData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 import { getSceneScript, getSceneTitle } from "./reviewData"
 
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function CheckpointCard({ data, onApprove, onRequestChanges, disabled }: Props) {
+  const { theme } = useAppTheme()
   const [feedback, setFeedback] = useState("")
   const [showFeedback, setShowFeedback] = useState(false)
   const totalDuration = data.scenes.reduce((sum, s) => sum + (s.durationInSeconds || 0), 0)

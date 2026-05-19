@@ -1,7 +1,7 @@
 import React, { useMemo } from "react"
 import { Player } from "@remotion/player"
 import { calculateTotalFrames } from "@remotion-src/shared/calculateDuration"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 interface VideoConfig {
   composition?: string
@@ -33,6 +33,7 @@ const COMPOSITIONS: Record<string, React.LazyExoticComponent<CompositionComponen
 }
 
 export function VideoPlayer({ config, style }: Props) {
+  const { theme } = useAppTheme()
   const compositionId = config.composition || "ClaudeCodeTutorial"
   const Component = COMPOSITIONS[compositionId]
   const fps = config.fps || 30

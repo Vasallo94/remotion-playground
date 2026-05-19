@@ -1,20 +1,21 @@
 import { useEffect, useRef } from "react"
 import type { PipelineEvent } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
 }
 
-const TYPE_COLORS: Record<PipelineEvent["type"], string> = {
-  info: theme.colors.text.secondary,
-  checkpoint: theme.colors.status.warning,
-  success: theme.colors.status.success,
-  error: theme.colors.status.error,
-}
-
 export function EventLog({ events }: { events: PipelineEvent[] }) {
+  const { theme } = useAppTheme()
   const bottomRef = useRef<HTMLLIElement>(null)
+
+  const TYPE_COLORS: Record<PipelineEvent["type"], string> = {
+    info: theme.colors.text.secondary,
+    checkpoint: theme.colors.status.warning,
+    success: theme.colors.status.success,
+    error: theme.colors.status.error,
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
