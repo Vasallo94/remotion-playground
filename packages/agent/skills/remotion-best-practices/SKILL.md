@@ -25,18 +25,18 @@ This skill is used inside an automated video generation pipeline. Before reading
 
 These hooks in `src/shared/hooks/` replace raw `useCurrentFrame` patterns for the two standard animation phases:
 
-- `usePhase1Entry({ durationMs })` — returns `{ opacity, scale }`. Use for Phase 1 instant-entry animations: titles, structural frames, elements that appear at scene start before any beat fires.
-- `useBeatReveal({ beat, fallbackDelayMs, animationMs })` — returns `{ opacity, y }`. Use for beat-driven reveals. `beat` is a `Beat` object from config.json; when undefined, falls back to `fallbackDelayMs`.
+- `usePhase1Entry({ durationMs })` — returns `{ opacity, scale, progress }`. Use for Phase 1 instant-entry animations: titles, structural frames, elements that appear at scene start before any beat fires.
+- `useBeatReveal({ beat, fallbackDelayMs, animationMs })` — returns `{ opacity, y, progress, visible }`. Use for beat-driven reveals. `beat` is a `Beat` object from config.json; when `beat` is undefined, falls back to `fallbackDelayMs`. Use `visible` to gate child rendering.
 
 **Beat system:**
 
 - `beats[]` in config.json: `{ id, startMs, narration, visual }`
-- `beatOffset` convention: `0` for per-item scenes (icon-grid, block-diagram, bullet-slide, step-list); `1` for flow-diagram only (beats[0] = intro text, beats[1+] = nodes)
-- Never set `leadInMs` or `audioStartMs` — auto-calculated by the platform
+- `beatOffset` convention: `0` for icon-grid (beats[0] = first item); effectively `1` for bullet-slide and block-diagram (both use `beats[i+1]` internally, so beats[0] is reserved); `1` for flow-diagram (beats[0] = intro text, beats[1+] = nodes)
+- Do not set `leadInMs` or `audioStartMs` unless explicitly instructed — the platform calculates defaults automatically
 
 **Custom component registration:**
 
-- All new components must be added to `src/compositions/ClaudeCodeTutorial/scenes/custom/customSceneRegistry.ts`
+- All new components must be added to `src/compositions/ClaudeCodeTutorial/customSceneRegistry.ts`
 - Remotion bundles at compile time — no dynamic imports
 
 ## When to use
