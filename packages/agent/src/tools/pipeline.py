@@ -9,6 +9,7 @@ from langchain_core.tools import InjectedToolArg
 
 PIPELINE_PLAN_PATH = "/pipeline/plan.json"
 PLAN_STATUSES = {"pending", "in_progress", "completed", "blocked", "skipped", "failed"}
+_STALL_THRESHOLD = 10
 
 DEFAULT_STEPS: dict[str, list[dict[str, str]]] = {
     "new_video": [
@@ -256,8 +257,6 @@ def get_next_pipeline_step(
     - ``"all_completed"``: every step is completed or skipped.
     - ``"no_plan"``: no plan exists yet.
     """
-    _STALL_THRESHOLD = 10
-
     backend = _backend()
     plan = _read_plan(backend)
     if plan is None:
@@ -328,6 +327,9 @@ def get_next_pipeline_step(
         }
 
     if not pending:
+        plan.pop("_stallStepId", None)
+        plan.pop("_stallCount", None)
+        _write_plan(backend, plan)
         return {
             "status": "all_completed",
             "reason": "All steps are completed or skipped.",

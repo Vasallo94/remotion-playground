@@ -193,8 +193,8 @@ def test_get_next_step_returns_in_progress_below_stall_threshold(monkeypatch):
     # Mark first step as in_progress
     pipeline.update_pipeline_step("research", "in_progress")
 
-    # 9 polls should still return in_progress
-    for _ in range(9):
+    # polls below threshold should still return in_progress
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
         result = pipeline.get_next_pipeline_step()
         assert result["status"] == "in_progress"
 
@@ -204,14 +204,14 @@ def test_get_next_step_returns_stalled_after_threshold(monkeypatch):
     pipeline.create_pipeline_plan("new_video", "Test stall")
     pipeline.update_pipeline_step("research", "in_progress")
 
-    for _ in range(9):
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
         pipeline.get_next_pipeline_step()
 
-    # 10th poll crosses threshold → stalled
+    # threshold poll crosses → stalled
     result = pipeline.get_next_pipeline_step()
     assert result["status"] == "stalled"
     assert result["stalledStep"]["id"] == "research"
-    assert "stallCount" in result
+    assert result["stallCount"] == pipeline._STALL_THRESHOLD
 
 
 def test_stall_counter_resets_after_step_advances(monkeypatch):
@@ -227,6 +227,6 @@ def test_stall_counter_resets_after_step_advances(monkeypatch):
 
     # Mark next step in_progress; counter starts fresh
     pipeline.update_pipeline_step("copywriting", "in_progress")
-    for _ in range(9):
+    for _ in range(pipeline._STALL_THRESHOLD - 1):
         result = pipeline.get_next_pipeline_step()
         assert result["status"] == "in_progress"
