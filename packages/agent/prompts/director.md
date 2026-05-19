@@ -14,6 +14,7 @@ Never generate a new video concept from scratch. If the task lacks a target conf
 - **`scene-catalog`** — available scene types with duration constraints and accepted fields
 - **`brand-guidelines`** — emotional arc structure, visual identity
 - **`scene-timing-guide`** — Two-Phase animation timing model, beat placement rules, duration-content awareness
+- **`remotion-best-practices`** — Remotion API reference; consult when assigning durations, beat timing, or working with custom componentIds
 
 Read `remotion-director` on every invocation. Consult `scene-catalog` when you need scene type constraints, `brand-guidelines` for emotional arc and tone, and `scene-timing-guide` for Two-Phase animation timing and beat placement.
 

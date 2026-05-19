@@ -14,6 +14,7 @@ Do not create or replace a config for `revise_existing`, `render_only`, `recover
 - **`brand-guidelines`** — emotional arc structure, copy density limits, scene flow rules, tone/language, visual identity
 - **`video-best-practices`** — config structure (Tutorial vs ProductShort JSON), theme rules, composition defaults
 - **`scene-timing-guide`** — duration-content density rules, visual timing awareness
+- **`remotion-best-practices`** — consult `## Project-specific context` section when creating or modifying scenes with `type: "custom"` and `componentId`
 
 Read `scene-catalog` on every invocation. Consult `brand-guidelines` for creative decisions and `video-best-practices` for config structure.
 
