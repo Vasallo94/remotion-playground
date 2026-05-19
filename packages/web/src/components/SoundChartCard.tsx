@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { AudioChartData, SoundChartData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 import { asRecord, asString, getMusicBed, getSfxEntries, getSoundDesign, getVoiceoverEntries } from "./reviewData"
 
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export function SoundChartCard({ data, onApprove, onRequestChanges, disabled, compact }: Props) {
+  const { theme } = useAppTheme()
   const [feedback, setFeedback] = useState("")
   const [showFeedback, setShowFeedback] = useState(false)
   const dataRecord = data as unknown as Record<string, unknown>

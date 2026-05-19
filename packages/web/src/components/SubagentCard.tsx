@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import type { SubagentStreamInterface, ToolCallWithResult } from "@langchain/langgraph-sdk/react"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
+import type { AppTheme } from "../theme"
 
 interface Props {
   subagent: SubagentStreamInterface
@@ -23,15 +24,6 @@ const AGENT_ICONS: Record<string, string> = {
 
 function agentIcon(type: string): string {
   return AGENT_ICONS[type] ?? "◈"
-}
-
-// ─── Status palette ──────────────────────────────────────────────────────────
-
-const STATUS: Record<string, { accent: string; label: string }> = {
-  pending: { accent: theme.colors.status.warning, label: "en espera" },
-  running: { accent: theme.colors.status.warning, label: "en ejecución" },
-  complete: { accent: theme.colors.status.success, label: "completado" },
-  error: { accent: theme.colors.status.error, label: "error" },
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -81,7 +73,7 @@ function extractThinkingText(subagent: SubagentStreamInterface): string {
 
 // ─── ToolRow sub-component ───────────────────────────────────────────────────
 
-function ToolRow({ tc }: { tc: ToolCallWithResult }) {
+function ToolRow({ tc, theme }: { tc: ToolCallWithResult; theme: AppTheme }) {
   const [expanded, setExpanded] = useState(false)
   const isDone = tc.result !== undefined
   const isError = tc.state === "error"
@@ -255,7 +247,7 @@ function ToolRow({ tc }: { tc: ToolCallWithResult }) {
 
 // ─── ReasoningBlock sub-component ────────────────────────────────────────────
 
-function ReasoningBlock({ text, isActive }: { text: string; isActive: boolean }) {
+function ReasoningBlock({ text, isActive, theme }: { text: string; isActive: boolean; theme: AppTheme }) {
   if (!text) return null
   return (
     <div
@@ -303,8 +295,16 @@ function ReasoningBlock({ text, isActive }: { text: string; isActive: boolean })
 // ─── SubagentCard ─────────────────────────────────────────────────────────────
 
 export function SubagentCard({ subagent, defaultExpanded = true }: Props) {
+  const { theme } = useAppTheme()
   const [expanded, setExpanded] = useState(defaultExpanded)
   const prevStatus = useRef(subagent.status)
+
+  const STATUS: Record<string, { accent: string; label: string }> = {
+    pending: { accent: theme.colors.status.warning, label: "en espera" },
+    running: { accent: theme.colors.status.warning, label: "en ejecución" },
+    complete: { accent: theme.colors.status.success, label: "completado" },
+    error: { accent: theme.colors.status.error, label: "error" },
+  }
 
   useEffect(() => {
     if (prevStatus.current !== "complete" && subagent.status === "complete") {
@@ -477,7 +477,7 @@ export function SubagentCard({ subagent, defaultExpanded = true }: Props) {
           }}
         >
           {subagent.toolCalls.map((tc) => (
-            <ToolRow key={tc.id} tc={tc} />
+            <ToolRow key={tc.id} tc={tc} theme={theme} />
           ))}
         </div>
       )}
@@ -485,7 +485,7 @@ export function SubagentCard({ subagent, defaultExpanded = true }: Props) {
       {/* Reasoning block */}
       {thinkingText && (
         <div style={{ padding: "8px 10px 10px" }}>
-          <ReasoningBlock text={thinkingText} isActive={isActive} />
+          <ReasoningBlock text={thinkingText} isActive={isActive} theme={theme} />
         </div>
       )}
     </div>

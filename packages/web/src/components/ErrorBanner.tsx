@@ -1,4 +1,4 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 interface Props {
   message: string
@@ -15,6 +15,7 @@ function friendlyError(raw: string): string {
 }
 
 export function ErrorBanner({ message, onRetry }: Props) {
+  const { theme } = useAppTheme()
   return (
     <div
       role="alert"

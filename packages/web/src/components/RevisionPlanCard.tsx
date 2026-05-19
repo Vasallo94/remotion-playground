@@ -1,5 +1,5 @@
 import type { RevisionPlanData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 
 interface Props {
@@ -9,20 +9,21 @@ interface Props {
   disabled?: boolean
 }
 
-function list(items: string[]) {
-  return (
-    <ul style={{ margin: 0, paddingLeft: 18, color: theme.colors.text.secondary, fontSize: 12, lineHeight: 1.6 }}>
-      {items.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  )
-}
-
 export function RevisionPlanCard({ data, onApprove, onRequestChanges, disabled }: Props) {
+  const { theme } = useAppTheme()
   const targetTitle = String(
     data.target.title ?? data.target.configId ?? data.target.configPath ?? data.target.sourcePath ?? "target",
   )
+
+  function list(items: string[]) {
+    return (
+      <ul style={{ margin: 0, paddingLeft: 18, color: theme.colors.text.secondary, fontSize: 12, lineHeight: 1.6 }}>
+        {items.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    )
+  }
 
   return (
     <div

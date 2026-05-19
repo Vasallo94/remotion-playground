@@ -1,4 +1,4 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 
 const AGENT_LABELS: Record<string, string> = {
   researcher: "Investigando",
@@ -9,6 +9,7 @@ const AGENT_LABELS: Record<string, string> = {
 }
 
 export function SubagentBadge({ agentName }: { agentName: string }) {
+  const { theme } = useAppTheme()
   const label = AGENT_LABELS[agentName] ?? agentName
 
   return (

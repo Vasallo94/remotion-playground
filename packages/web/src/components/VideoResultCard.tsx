@@ -1,4 +1,4 @@
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { getDownloadUrl, getStreamUrl } from "../api"
 import { btnStyle } from "./btnStyle"
 
@@ -15,6 +15,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function VideoResultCard({ jobId, title, fileSize }: Props) {
+  const { theme } = useAppTheme()
   const streamUrl = getStreamUrl(jobId)
   const downloadUrl = getDownloadUrl(jobId)
 

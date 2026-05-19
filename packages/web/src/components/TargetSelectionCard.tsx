@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import type { ActiveVideoTarget, TargetSelectionData } from "../types"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
 import { btnStyle } from "./btnStyle"
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function TargetSelectionCard({ data, onApprove, onRequestChanges, disabled }: Props) {
+  const { theme } = useAppTheme()
   const candidates = data.candidates.filter((candidate) => !candidate.error)
   const [selectedPath, setSelectedPath] = useState(candidates[0]?.configPath ?? "")
   const selected = useMemo(

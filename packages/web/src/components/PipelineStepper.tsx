@@ -1,5 +1,6 @@
 import { type PlanState, modeLabel, stepLabel } from "../lib/planState"
-import { theme } from "../theme"
+import { useAppTheme } from "../hooks/useAppTheme"
+import type { AppTheme } from "../theme"
 
 interface Props {
   plan: PlanState | null
@@ -7,7 +8,7 @@ interface Props {
   hasError: boolean
 }
 
-function dotColor(status: string, isLoading: boolean): string {
+function dotColor(status: string, isLoading: boolean, theme: AppTheme): string {
   switch (status) {
     case "completed":
     case "skipped":
@@ -22,11 +23,13 @@ function dotColor(status: string, isLoading: boolean): string {
   }
 }
 
-function lineColor(status: string): string {
+function lineColor(status: string, theme: AppTheme): string {
   return status === "completed" || status === "skipped" ? theme.colors.status.success : theme.colors.border.default
 }
 
 export function PipelineStepper({ plan, isLoading, hasError }: Props) {
+  const { theme } = useAppTheme()
+
   if (!plan) {
     if (isLoading) {
       return (
@@ -81,7 +84,7 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
                     width: 12,
                     height: 12,
                     borderRadius: "50%",
-                    backgroundColor: dotColor(step.status, isLoading),
+                    backgroundColor: dotColor(step.status, isLoading, theme),
                     flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
@@ -107,7 +110,7 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
                       width: 2,
                       flex: 1,
                       minHeight: 20,
-                      backgroundColor: lineColor(step.status),
+                      backgroundColor: lineColor(step.status, theme),
                       borderRadius: 1,
                       transition: "background-color 300ms",
                     }}
