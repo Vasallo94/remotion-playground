@@ -185,3 +185,48 @@ def test_new_video_steps_scene_qa_after_scene_creation(monkeypatch):
     assert scene_qa_idx > scene_creation_idx, (
         f"scene_qa (pos {scene_qa_idx}) must come after scene_creation (pos {scene_creation_idx})"
     )
+
+
+def test_get_next_step_returns_in_progress_below_stall_threshold(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall")
+    # Mark first step as in_progress
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    # 9 polls should still return in_progress
+    for _ in range(9):
+        result = pipeline.get_next_pipeline_step()
+        assert result["status"] == "in_progress"
+
+
+def test_get_next_step_returns_stalled_after_threshold(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall")
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    for _ in range(9):
+        pipeline.get_next_pipeline_step()
+
+    # 10th poll crosses threshold → stalled
+    result = pipeline.get_next_pipeline_step()
+    assert result["status"] == "stalled"
+    assert result["stalledStep"]["id"] == "research"
+    assert "stallCount" in result
+
+
+def test_stall_counter_resets_after_step_advances(monkeypatch):
+    install_backend(monkeypatch)
+    pipeline.create_pipeline_plan("new_video", "Test stall reset")
+    pipeline.update_pipeline_step("research", "in_progress")
+
+    for _ in range(5):
+        pipeline.get_next_pipeline_step()
+
+    # Complete the step — counter should reset
+    pipeline.update_pipeline_step("research", "completed", summary="done")
+
+    # Mark next step in_progress; counter starts fresh
+    pipeline.update_pipeline_step("copywriting", "in_progress")
+    for _ in range(9):
+        result = pipeline.get_next_pipeline_step()
+        assert result["status"] == "in_progress"

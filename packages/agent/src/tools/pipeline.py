@@ -249,13 +249,17 @@ def get_next_pipeline_step(
     """Return the next actionable step from `/pipeline/plan.json`.
 
     Reads the plan and returns the pipeline's current state:
-    - `"next_step"`: a pending step is ready to execute.
-    - `"in_progress"`: one or more steps are already running.
-    - `"blocked"`: a step is blocked and needs resolution.
-    - `"all_completed"`: every step is completed or skipped.
-    - `"no_plan"`: no plan exists yet.
+    - ``"next_step"``: a pending step is ready to execute.
+    - ``"in_progress"``: one or more steps are already running (below stall threshold).
+    - ``"stalled"``: an in_progress step has been polled ≥10 times without advancing.
+    - ``"blocked"``: a step is blocked and needs resolution.
+    - ``"all_completed"``: every step is completed or skipped.
+    - ``"no_plan"``: no plan exists yet.
     """
-    plan = _read_plan(_backend())
+    _STALL_THRESHOLD = 10
+
+    backend = _backend()
+    plan = _read_plan(backend)
     if plan is None:
         return {
             "status": "no_plan",
@@ -290,10 +294,36 @@ def get_next_pipeline_step(
         }
 
     if in_progress:
+        stalled_step = in_progress[0]
+        current_stall_id = plan.get("_stallStepId")
+        stall_count = plan.get("_stallCount", 0)
+
+        if current_stall_id == stalled_step["id"]:
+            stall_count += 1
+        else:
+            stall_count = 1
+
+        plan["_stallStepId"] = stalled_step["id"]
+        plan["_stallCount"] = stall_count
+        _write_plan(backend, plan)
+
+        if stall_count >= _STALL_THRESHOLD:
+            return {
+                "status": "stalled",
+                "stalledStep": stalled_step,
+                "stallCount": stall_count,
+                "reason": (
+                    f"Step '{stalled_step['id']}' has been in_progress for {stall_count} consecutive polls. "
+                    "The owning subagent likely exited without calling update_pipeline_step. "
+                    "Call update_pipeline_step to mark it failed or completed, then proceed."
+                ),
+                "progress": progress,
+            }
+
         return {
             "status": "in_progress",
             "steps": in_progress,
-            "reason": f"Step '{in_progress[0]['id']}' is being executed by {in_progress[0].get('owner', '?')}",
+            "reason": f"Step '{stalled_step['id']}' is being executed by {stalled_step.get('owner', '?')}",
             "progress": progress,
         }
 
@@ -305,6 +335,11 @@ def get_next_pipeline_step(
         }
 
     next_step = pending[0]
+    # Clear stall tracking when advancing to next step
+    plan.pop("_stallStepId", None)
+    plan.pop("_stallCount", None)
+    _write_plan(backend, plan)
+
     return {
         "status": "next_step",
         "step": next_step,
