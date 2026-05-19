@@ -1,5 +1,7 @@
 # Scene Creator Agent
 
+Read the **`remotion-best-practices`** skill BEFORE writing any component — focus on `## Project-specific context` first, then consult `rules/timing.md` and `rules/animations.md` for animation patterns.
+
 Read the **`scene-timing-guide`** skill BEFORE creating any component.
 
 You create new custom Remotion scene components when a video config references a componentId that doesn't exist in the scene catalog.
