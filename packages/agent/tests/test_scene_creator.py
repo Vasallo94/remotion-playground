@@ -62,3 +62,46 @@ def test_scene_creator_definition():
     assert "read_scene" in tool_names
     assert "present_custom_scene" in tool_names
     assert len(defn["tools"]) == 6
+
+
+# Minimal registry stub that register_node can parse
+_REGISTRY_STUB = """\
+import { ExistingScene } from "./scenes/custom/ExistingScene"
+
+export const customSceneRegistry: Record<string, unknown> = {
+  "existing-scene": ExistingScene,
+}
+"""
+
+
+def test_register_node_adds_both_keys(tmp_path, monkeypatch):
+    """register_node must add kebab-case AND PascalCase entries for the new scene."""
+    from src.subagents.scene_creator import nodes
+
+    registry_file = tmp_path / "customSceneRegistry.ts"
+    registry_file.write_text(_REGISTRY_STUB, encoding="utf-8")
+    monkeypatch.setattr(nodes, "REGISTRY_PATH", registry_file)
+
+    state = {"component_id": "auto-repair-loop", "code": "", "attempt": 0, "max_attempts": 3, "lint_error": "", "bundle_error": "", "status": "registering"}
+    nodes.register_node(state)
+
+    content = registry_file.read_text()
+    assert 'import { AutoRepairLoopScene }' in content
+    assert '"auto-repair-loop": AutoRepairLoopScene' in content
+    assert "AutoRepairLoopScene: AutoRepairLoopScene" in content
+
+
+def test_register_node_idempotent(tmp_path, monkeypatch):
+    """Calling register_node twice must not duplicate entries."""
+    from src.subagents.scene_creator import nodes
+
+    registry_file = tmp_path / "customSceneRegistry.ts"
+    registry_file.write_text(_REGISTRY_STUB, encoding="utf-8")
+    monkeypatch.setattr(nodes, "REGISTRY_PATH", registry_file)
+
+    state = {"component_id": "auto-repair-loop", "code": "", "attempt": 0, "max_attempts": 3, "lint_error": "", "bundle_error": "", "status": "registering"}
+    nodes.register_node(state)
+    nodes.register_node(state)
+
+    content = registry_file.read_text()
+    assert content.count("AutoRepairLoopScene: AutoRepairLoopScene") == 1

@@ -19,6 +19,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **`FlowDiagramScene` git-flow default removed** — replaced `LegacyGitDiagram` fallback (which hardcoded a feature-branch/main SVG) with `StepFlow`: when no `nodes` are provided, the scene now auto-derives step cards from `title.split("→")`; numbered red circles + bordered cards + animated arrows; eliminates the spurious git graph that appeared whenever the model used `componentId: "flow-diagram"` without explicit node data
 
+- **`scene_creator` self-registration fixed** — `register_node()` now adds both kebab-case (`"hook-architecture"`) and PascalCase (`HookArchitectureScene`) keys to `customSceneRegistry.ts`, so the renderer finds the component regardless of which `componentId` format config.json uses; idempotency check switched from `component_id in content` to `class_name in content` (more precise, avoids substring false-positives)
+
 - **`director.py` summarization middleware** — added `SummarizationMiddleware` to director subagent so it handles long message histories without hitting Vertex AI context limits
 
 - **`ChatThread.tsx` subagent card race** — prevents duplicate cards from appearing when two stream updates arrive for the same subagent in quick succession

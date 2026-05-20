@@ -56,11 +56,16 @@ def register_node(state: SceneCreatorState) -> dict:
 
     registry_content = REGISTRY_PATH.read_text(encoding="utf-8")
 
-    if component_id in registry_content:
+    # Use class_name (PascalCase) for the idempotency check — more precise than
+    # component_id (kebab-case) which could match substrings in comments/descriptions.
+    if class_name in registry_content:
         return {"status": "validating"}
 
     import_line = f'import {{ {class_name} }} from "./scenes/custom/{class_name}"'
-    entry_line = f'  "{component_id}": {class_name},'
+    # Register under both keys so the renderer finds it regardless of whether
+    # config.json uses componentId "hook-architecture" or "HookArchitectureScene".
+    entry_kebab = f'  "{component_id}": {class_name},'
+    entry_pascal = f'  {class_name}: {class_name},'
 
     lines = registry_content.split("\n")
     last_import_idx = 0
@@ -69,10 +74,11 @@ def register_node(state: SceneCreatorState) -> dict:
             last_import_idx = idx
     lines.insert(last_import_idx + 1, import_line)
 
-    # Add entry before closing brace
+    # Add both entries before closing brace (insert in reverse so order is preserved)
     for idx in range(len(lines) - 1, -1, -1):
         if lines[idx].strip() == "}":
-            lines.insert(idx, entry_line)
+            lines.insert(idx, entry_pascal)
+            lines.insert(idx, entry_kebab)
             break
 
     REGISTRY_PATH.write_text("\n".join(lines), encoding="utf-8")
