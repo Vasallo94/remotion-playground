@@ -26,6 +26,9 @@ importers:
       '@remotion/transitions':
         specifier: 4.0.457
         version: 4.0.457(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      mediabunny:
+        specifier: 1.42.0
+        version: 1.42.0
       react:
         specifier: 19.2.3
         version: 19.2.3

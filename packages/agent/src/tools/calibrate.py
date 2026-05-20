@@ -34,8 +34,27 @@ def _calibration_fingerprint(mp3_path: Path, narrations: list[str]) -> str:
 
 
 def _get_genai_client():
-    from .voice import _get_genai_client as _voice_client
-    return _voice_client()
+    import os
+    from google import genai
+
+    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if api_key:
+        return genai.Client(api_key=api_key)
+
+    from google.oauth2 import service_account
+    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if not creds_path:
+        return None
+    from pathlib import Path as _Path
+    p = _Path(creds_path)
+    if not p.is_file():
+        return None
+    credentials = service_account.Credentials.from_service_account_file(
+        str(p), scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT", "vertexlda")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+    return genai.Client(vertexai=True, project=project, location=location, credentials=credentials)
 
 
 def _calibrate_scene(client, mp3_path: Path, beats: list[dict]) -> list[dict]:

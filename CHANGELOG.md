@@ -5,7 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **`claude-code-hooks` tutorial** — 8-scene LinkedIn tutorial (~90s) on Claude Code hooks automation; includes 3 custom React scenes: `HookArchitectureScene` (horizontal block diagram with beat-driven node reveals), `SettingsJsonScene` (macOS-style code viewer with highlighted lines), `AutoRepairLoopScene` (step-card flow with SVG arrows); all registered in `customSceneRegistry.ts`
+
+- **`packages/agent/src/_llm.py`** — extracted `create_model()` factory from `orchestrator.py` into a shared module; adds `timeout=600` and `max_retries=2` to all Vertex AI calls to prevent 499 deadline-exceeded errors during long scene_creator runs
+
 ### Fixed
+
+- **`calibrate.py` Vertex AI region** — `_get_genai_client()` now uses its own Vertex AI client with `location` read from `GOOGLE_CLOUD_LOCATION` env (defaults to `"global"`); previously delegated to `voice.py`'s client which hardcoded `us-central1`, causing 404 "model not found" for `gemini-3.1-pro-preview` (only available on `global`)
+
+- **`customSceneRegistry.ts`** — added static imports and registry entries for `HookArchitectureScene`, `SettingsJsonScene`, `AutoRepairLoopScene`; without this Remotion bundles at compile time cannot resolve the componentId and renders crash
+
+- **`director.py` summarization middleware** — added `SummarizationMiddleware` to director subagent so it handles long message histories without hitting Vertex AI context limits
+
+- **`ChatThread.tsx` subagent card race** — prevents duplicate cards from appearing when two stream updates arrive for the same subagent in quick succession
+
+- **`docker-compose.yml`** — added DB environment variables to ensure agent container connects to the correct database on startup
 
 - `IconGridScene`: `beatOffset` changed to `0` — icon-grid has no intro text, titles use phase1Entry and do not consume a beat slot; items now start at `beats[0]` as intended
 - `tipos-ingenieria-ia` config: added missing beat for flow-diagram node 3 (LLM, at 11500ms) and block-diagram block 2 (Herramientas, at 10000ms) — last element of each scene now reveals on its beat instead of fallback timing

@@ -41,6 +41,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gemini_flash_tts_testing_sa.json
       - RENDER_SERVICE_URL=http://render-service:3100
       - BG_JOB_ISOLATED_LOOPS=true
+      - LANGGRAPH_DATABASE_URL=sqlite:////app/.generated/langgraph.db
     depends_on:
       render-service:
         condition: service_healthy

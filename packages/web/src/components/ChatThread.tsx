@@ -349,12 +349,17 @@ export function ChatThread({
         <SubagentCard key={sub.id} subagent={sub} defaultExpanded={true} />
       ))}
 
-      {/* Checkpoint card (from active interrupt) */}
-      {checkpointType && checkpointData && checkpointHandlers[checkpointType] && (
-        <div style={{ marginTop: 8 }}>
-          {renderCheckpointCard(checkpointType, checkpointData, checkpointHandlers[checkpointType], isLoading)}
-        </div>
-      )}
+      {/* Checkpoint card (from active interrupt) — suppressed while a resolved enrichment for the
+          same type is already rendered; avoids the double-card race between addEnrichment and
+          the SDK clearing stream.interrupt after resume(). */}
+      {checkpointType &&
+        checkpointData &&
+        checkpointHandlers[checkpointType] &&
+        !enrichments.some((e) => e.type === "resolved_checkpoint" && e.data?.checkpointType === checkpointType) && (
+          <div style={{ marginTop: 8 }}>
+            {renderCheckpointCard(checkpointType, checkpointData, checkpointHandlers[checkpointType], isLoading)}
+          </div>
+        )}
 
       {/* Error banner */}
       {error != null && <ErrorBanner message={typeof error === "string" ? error : String(error)} onRetry={onRetry} />}
