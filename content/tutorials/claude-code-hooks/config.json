@@ -1,0 +1,294 @@
+{
+  "id": "claude-code-hooks",
+  "title": "Hooks de Claude Code",
+  "description": "Tutorial sobre qué son los hooks, cómo configurarlos y casos de uso con auto-reparación.",
+  "composition": "ClaudeCodeTutorial",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "theme": "linea-directa",
+  "transition": null,
+  "brief": {
+    "platform": "linkedin",
+    "audience": "desarrolladores",
+    "goal": "Enseñar a automatizar flujos con hooks en Claude Code",
+    "promise": "Sabrás configurar validaciones y auto-reparaciones",
+    "tone": "profesional, directo y técnico",
+    "cta": "Empieza a usar Hooks hoy",
+    "hookStrategy": "problema-solucion",
+    "templateId": "tutorial-code-walkthrough",
+    "narrativeArc": ["hook", "mental-model", "setup", "demo", "why-it-matters", "pitfalls", "summary"]
+  },
+  "voiceover": {
+    "enabled": true,
+    "provider": "gemini",
+    "language": "es-ES",
+    "voiceId": "Leda",
+    "scenes": {
+      "0": {
+        "text": "Hooks en Claude Code. Automatiza calidad y tests sin esfuerzo."
+      },
+      "1": {
+        "text": "Arquitectura de un Hook. El usuario dispara la acción, Claude Code actúa como gestor de eventos, y el sistema operativo ejecuta npm test."
+      },
+      "2": {
+        "text": "¿Cómo se configura esto en tu espacio de trabajo?"
+      },
+      "3": {
+        "text": "En settings.json. Defines hooks como pre-commit que ejecuta npm test y npm run lint, y post-save que formatea el código."
+      },
+      "4": {
+        "text": "Este es el Bucle de Auto-reparación. Si un comando falla con código de salida 1, Claude analiza el error de los tests, corrige el archivo, y reintenta el hook con éxito."
+      },
+      "5": {
+        "text": "Error detectado, parche generado y reintento. Si un hook falla, el motor captura el error y activa el self-healing loop para solucionarlo automáticamente."
+      },
+      "6": {
+        "text": "Evita errores: Usa siempre rutas relativas y asegúrate de dar permisos de ejecución a tus scripts."
+      },
+      "7": {
+        "text": "Empieza a usar Hooks hoy. Crea tu archivo settings.json, define comandos de validación, y deja que Claude repare tus tests."
+      }
+    }
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "title": "Hooks en Claude Code",
+      "subtitle": "Automatiza calidad y tests sin esfuerzo",
+      "durationInSeconds": 5,
+      "beats": [
+        {
+          "id": "0-1",
+          "startMs": 1900,
+          "narration": "Hooks en Claude Code."
+        },
+        {
+          "id": "0-2",
+          "startMs": 4100,
+          "narration": "Automatiza calidad y tests sin esfuerzo."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "HookArchitectureScene",
+      "props": {
+        "title": "Arquitectura de un Hook",
+        "blocks": [
+          {
+            "id": "user",
+            "label": "Usuario",
+            "row": 0,
+            "col": 0
+          },
+          {
+            "id": "claude",
+            "label": "Claude Code",
+            "sublabel": "Gestor de Eventos",
+            "row": 0,
+            "col": 1,
+            "connections": ["os"]
+          },
+          {
+            "id": "os",
+            "label": "Sistema Operativo",
+            "sublabel": "npm test",
+            "row": 0,
+            "col": 2
+          }
+        ]
+      },
+      "durationInSeconds": 12,
+      "beats": [
+        {
+          "id": "1-1",
+          "startMs": 200,
+          "narration": "Arquitectura de un Hook."
+        },
+        {
+          "id": "1-2",
+          "startMs": 2160,
+          "narration": "El usuario dispara la acción,"
+        },
+        {
+          "id": "1-3",
+          "startMs": 4440,
+          "narration": "Claude Code actúa como gestor de eventos,"
+        },
+        {
+          "id": "1-4",
+          "startMs": 7260,
+          "narration": "y el sistema operativo ejecuta npm test."
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "text": "¿Cómo se configura esto en tu espacio de trabajo?",
+      "position": "center",
+      "durationInSeconds": 5,
+      "beats": [
+        {
+          "id": "2-1",
+          "startMs": 450,
+          "narration": "¿Cómo se configura esto en tu espacio de trabajo?"
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "SettingsJsonScene",
+      "props": {
+        "title": "settings.json",
+        "language": "json",
+        "filename": "settings.json",
+        "code": "{\n  \"hooks\": {\n    \"pre-commit\": \"npm test && npm run lint\",\n    \"post-save\": \"prettier --write .\"\n  }\n}",
+        "highlightLines": [3, 4]
+      },
+      "durationInSeconds": 12,
+      "beats": [
+        {
+          "id": "3-1",
+          "startMs": 200,
+          "narration": "En settings.json."
+        },
+        {
+          "id": "3-2",
+          "startMs": 4240,
+          "narration": "Defines hooks como pre-commit que ejecuta npm test y npm run lint,"
+        },
+        {
+          "id": "3-3",
+          "startMs": 8360,
+          "narration": "y post-save que formatea el código."
+        }
+      ]
+    },
+    {
+      "type": "terminal",
+      "title": "Bucle de Auto-reparación",
+      "lines": [
+        {
+          "kind": "command",
+          "text": "git commit -m 'feat: update user auth'"
+        },
+        {
+          "kind": "output",
+          "text": "> Corriendo hook pre-commit: npm test && npm run lint"
+        },
+        {
+          "kind": "output",
+          "text": "> Resultado: Falló (Exit code 1)"
+        },
+        {
+          "kind": "claude",
+          "text": "Analizando el error de los tests..."
+        },
+        {
+          "kind": "claude",
+          "text": "Corrigiendo el archivo main.js..."
+        },
+        {
+          "kind": "output",
+          "text": "> Reintentando hook... Éxito."
+        }
+      ],
+      "durationInSeconds": 24,
+      "beats": [
+        {
+          "id": "4-1",
+          "startMs": 150,
+          "narration": "Este es el Bucle de Auto-reparación."
+        },
+        {
+          "id": "4-2",
+          "startMs": 2800,
+          "narration": "Si un comando falla con código de salida 1,"
+        },
+        {
+          "id": "4-3",
+          "startMs": 5200,
+          "narration": "Claude analiza el error de los tests,"
+        },
+        {
+          "id": "4-4",
+          "startMs": 7800,
+          "narration": "corrige el archivo,"
+        },
+        {
+          "id": "4-5",
+          "startMs": 9000,
+          "narration": "y reintenta el hook con éxito."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "AutoRepairLoopScene",
+      "props": {
+        "title": "Error detectado → Parche generado → Reintento",
+        "description": "Si un hook falla, el motor captura el error y activa el self-healing loop para solucionarlo automáticamente."
+      },
+      "durationInSeconds": 14,
+      "beats": [
+        {
+          "id": "5-1",
+          "startMs": 200,
+          "narration": "Error detectado, parche generado y reintento."
+        },
+        {
+          "id": "5-2",
+          "startMs": 2500,
+          "narration": "Si un hook falla, el motor captura el error y activa el self-healing loop para solucionarlo automáticamente."
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "text": "Evita errores: Usa siempre rutas relativas y asegúrate de dar permisos de ejecución a tus scripts.",
+      "position": "bottom",
+      "durationInSeconds": 8,
+      "beats": [
+        {
+          "id": "6-1",
+          "startMs": 100,
+          "narration": "Evita errores: Usa siempre rutas relativas"
+        },
+        {
+          "id": "6-2",
+          "startMs": 2850,
+          "narration": "y asegúrate de dar permisos de ejecución a tus scripts."
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "title": "Empieza a usar Hooks hoy",
+      "bullets": ["Crea tu archivo settings.json", "Define comandos de validación", "Deja que Claude repare tus tests"],
+      "durationInSeconds": 10,
+      "beats": [
+        {
+          "id": "7-1",
+          "startMs": 100,
+          "narration": "Empieza a usar Hooks hoy."
+        },
+        {
+          "id": "7-2",
+          "startMs": 890,
+          "narration": "Crea tu archivo settings.json,"
+        },
+        {
+          "id": "7-3",
+          "startMs": 3430,
+          "narration": "define comandos de validación,"
+        },
+        {
+          "id": "7-4",
+          "startMs": 5140,
+          "narration": "y deja que Claude repare tus tests."
+        }
+      ]
+    }
+  ]
+}

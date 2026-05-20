@@ -28,6 +28,9 @@ import { SplitScreenScene } from "./scenes/custom/SplitScreenScene"
 import { StatRevealScene } from "./scenes/custom/StatRevealScene"
 import { StepListScene } from "./scenes/custom/StepListScene"
 import { TimelineScene } from "./scenes/custom/TimelineScene"
+import { AutoRepairLoopScene } from "./scenes/custom/AutoRepairLoopScene"
+import { HookArchitectureScene } from "./scenes/custom/HookArchitectureScene"
+import { SettingsJsonScene } from "./scenes/custom/SettingsJsonScene"
 import { TwoColumnTextScene } from "./scenes/custom/TwoColumnTextScene"
 
 export const customSceneRegistry: Record<string, FC<Record<string, unknown>>> = {
@@ -57,4 +60,7 @@ export const customSceneRegistry: Record<string, FC<Record<string, unknown>>> = 
   "logo-wall": LogoWallScene,
   "two-column-text": TwoColumnTextScene,
   "step-list": StepListScene,
+  HookArchitectureScene: HookArchitectureScene,
+  SettingsJsonScene: SettingsJsonScene,
+  AutoRepairLoopScene: AutoRepairLoopScene,
 }
