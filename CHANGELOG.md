@@ -17,6 +17,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **`customSceneRegistry.ts`** — added static imports and registry entries for `HookArchitectureScene`, `SettingsJsonScene`, `AutoRepairLoopScene`; without this Remotion bundles at compile time cannot resolve the componentId and renders crash
 
+- **`FlowDiagramScene` git-flow default removed** — replaced `LegacyGitDiagram` fallback (which hardcoded a feature-branch/main SVG) with `StepFlow`: when no `nodes` are provided, the scene now auto-derives step cards from `title.split("→")`; numbered red circles + bordered cards + animated arrows; eliminates the spurious git graph that appeared whenever the model used `componentId: "flow-diagram"` without explicit node data
+
 - **`director.py` summarization middleware** — added `SummarizationMiddleware` to director subagent so it handles long message histories without hitting Vertex AI context limits
 
 - **`ChatThread.tsx` subagent card race** — prevents duplicate cards from appearing when two stream updates arrive for the same subagent in quick succession
