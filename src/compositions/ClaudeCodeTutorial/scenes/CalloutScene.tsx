@@ -53,6 +53,7 @@ export const CalloutScene: React.FC<CalloutSceneProps> = ({ text, position, back
             lineHeight: 1.5,
             color: tokens.foreground,
             fontWeight: 500,
+            whiteSpace: "pre-line",
           }}
         >
           {text}

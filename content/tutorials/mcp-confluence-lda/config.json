@@ -1,29 +1,297 @@
 {
   "id": "mcp-confluence-lda",
-  "title": "MCP de Confluence",
-  "description": "Anuncio: la wiki corporativa ya está conectada a Claude Code vía MCP.",
-  "composition": "ClaudeCodeTutorial",
   "fps": 30,
   "width": 1280,
   "height": 720,
   "theme": "linea-directa",
-  "transition": null,
-  "brief": {
-    "platform": "linkedin",
-    "audience": "desarrolladores LDA",
-    "goal": "Anunciar el MCP de Confluence y mostrar cómo usarlo",
-    "promise": "Conecta la wiki corporativa a Claude Code en un minuto",
-    "tone": "profesional, directo y técnico",
-    "cta": "Escribe /wiki-connect en Claude Code",
-    "hookStrategy": "demo-first",
-    "templateId": "tutorial-code-walkthrough",
-    "narrativeArc": ["demo-wow", "context", "architecture", "capabilities", "demos", "setup", "cta"]
-  },
+  "scenes": [
+    {
+      "type": "intro",
+      "subtitle": "La wiki corporativa, dentro de Claude Code",
+      "durationInSeconds": 6,
+      "title": "MCP de Confluence"
+    },
+    {
+      "title": "Demo",
+      "durationInSeconds": 20,
+      "lines": [
+        {
+          "text": "Busca en la wiki la documentación del servicio de tarificación",
+          "kind": "command"
+        },
+        {
+          "text": "Usando search_pages para buscar en Confluence...",
+          "kind": "claude"
+        },
+        {
+          "kind": "output",
+          "text": "  1. Motor de Tarificación - Guía técnica  [IT | ID: 284710]"
+        },
+        {
+          "kind": "output",
+          "text": "  2. API de Tarificación - Endpoints       [DEV | ID: 301455]"
+        },
+        {
+          "kind": "output",
+          "text": "  3. Reglas de negocio - Tarificación Auto [NEG | ID: 295120]"
+        },
+        {
+          "kind": "claude",
+          "text": "Leyendo la página más relevante..."
+        },
+        {
+          "text": "El motor de tarificación es un servicio Spring Boot desplegado en Kubernetes que expone endpoints REST para calcular primas de seguros de auto, hogar y vida.",
+          "kind": "claude"
+        }
+      ],
+      "type": "terminal"
+    },
+    {
+      "durationInSeconds": 12,
+      "text": "Un servidor MCP centralizado conecta Claude Code con la wiki corporativa. Desplegado en la red de LDA, autenticado con tu token personal.",
+      "position": "center",
+      "type": "callout"
+    },
+    {
+      "props": {
+        "layout": "horizontal",
+        "description": "Flujo de conexión segura desde el cliente de terminal Claude Code al servidor MCP local y a la API REST de Confluence.",
+        "title": "Arquitectura",
+        "edges": [
+          {
+            "from": "claude",
+            "to": "mcp",
+            "label": "streamable-http"
+          },
+          {
+            "label": "REST API + PAT",
+            "from": "mcp",
+            "to": "confluence"
+          }
+        ],
+        "nodes": [
+          {
+            "title": "Claude Code",
+            "id": "claude",
+            "description": "Tu terminal"
+          },
+          {
+            "description": "Red LDA",
+            "id": "mcp",
+            "title": "MCP Server"
+          },
+          {
+            "title": "Confluence",
+            "id": "confluence",
+            "description": "Wiki corporativa"
+          }
+        ]
+      },
+      "durationInSeconds": 12,
+      "componentId": "flow-diagram",
+      "type": "custom"
+    },
+    {
+      "props": {
+        "metrics": [
+          {
+            "label": "herramientas",
+            "value": "28"
+          },
+          {
+            "value": "7",
+            "label": "categorías"
+          }
+        ]
+      },
+      "durationInSeconds": 10,
+      "type": "custom",
+      "componentId": "big-number"
+    },
+    {
+      "durationInSeconds": 20,
+      "props": {
+        "items": [
+          {
+            "icon": "book",
+            "title": "Buscar",
+            "description": "Texto libre, etiquetas, fechas"
+          },
+          {
+            "icon": "file",
+            "title": "Leer",
+            "description": "Contenido completo de páginas"
+          },
+          {
+            "description": "Árbol de espacios y páginas",
+            "title": "Navegar",
+            "icon": "folder"
+          },
+          {
+            "title": "Crear y editar",
+            "icon": "code",
+            "description": "Páginas nuevas o actualizadas"
+          },
+          {
+            "title": "Adjuntos",
+            "icon": "link",
+            "description": "Subir y listar ficheros"
+          },
+          {
+            "description": "Metadata y comentarios",
+            "icon": "layers",
+            "title": "Etiquetas"
+          },
+          {
+            "description": "Mermaid y enlaces rotos",
+            "icon": "check",
+            "title": "Calidad"
+          }
+        ],
+        "title": "Categorías",
+        "columns": 4
+      },
+      "componentId": "icon-grid",
+      "type": "custom"
+    },
+    {
+      "durationInSeconds": 12,
+      "title": "Buscar y leer",
+      "type": "terminal",
+      "lines": [
+        {
+          "text": "Lee la página 'Guía de despliegue' del espacio IT",
+          "kind": "command"
+        },
+        {
+          "text": "Usando get_page_by_title en el espacio IT...",
+          "kind": "claude"
+        },
+        {
+          "kind": "output",
+          "text": "  Guía de despliegue - Motor de Tarificación (v3.2)"
+        },
+        {
+          "text": "La guía describe el pipeline CI/CD con Jenkins, despliegue en el cluster K8s de producción, y los pasos de rollback en caso de incidencia.",
+          "kind": "claude"
+        }
+      ]
+    },
+    {
+      "lines": [
+        {
+          "text": "Crea una página en DEV con la documentación de src/api/siniestros/",
+          "kind": "command"
+        },
+        {
+          "text": "Leyendo src/api/siniestros/... 4 archivos analizados.",
+          "kind": "claude"
+        },
+        {
+          "text": "Generando documentación con endpoints, schemas y ejemplos...",
+          "kind": "claude"
+        },
+        {
+          "kind": "claude",
+          "text": "Usando create_page en el espacio DEV..."
+        },
+        {
+          "text": "  Página creada: wiki.lda/display/DEV/API+Siniestros",
+          "kind": "output"
+        }
+      ],
+      "type": "terminal",
+      "title": "Crear documentación",
+      "durationInSeconds": 12
+    },
+    {
+      "type": "terminal",
+      "lines": [
+        {
+          "text": "/wiki-publish docs/architecture.md --space DEV",
+          "kind": "command"
+        },
+        {
+          "kind": "claude",
+          "text": "Convirtiendo markdown a Confluence storage format..."
+        },
+        {
+          "text": "Detectados 2 bloques Mermaid. Renderizando a PNG...",
+          "kind": "claude"
+        },
+        {
+          "kind": "output",
+          "text": "  Subido: architecture-diagram.png (42 KB)"
+        },
+        {
+          "text": "  Subido: sequence-flow.png (38 KB)",
+          "kind": "output"
+        },
+        {
+          "text": "Página publicada: wiki.lda/display/DEV/Architecture",
+          "kind": "claude"
+        }
+      ],
+      "durationInSeconds": 13,
+      "title": "Publicar markdown"
+    },
+    {
+      "type": "terminal",
+      "lines": [
+        {
+          "kind": "command",
+          "text": "/wiki-connect"
+        },
+        {
+          "kind": "claude",
+          "text": "Detecto macOS. Usando Keychain para almacenar el PAT."
+        },
+        {
+          "kind": "claude",
+          "text": "Introduce tu Personal Access Token de Confluence:"
+        },
+        {
+          "kind": "output",
+          "text": "  PAT almacenado en macOS Keychain"
+        },
+        {
+          "kind": "claude",
+          "text": "Configurando CONFLUENCE_PAT en ~/.zshenv..."
+        },
+        {
+          "text": "Escribiendo .mcp.json con la URL del servidor...",
+          "kind": "claude"
+        },
+        {
+          "kind": "claude",
+          "text": "Verificando conexión..."
+        },
+        {
+          "kind": "output",
+          "text": "  47 espacios encontrados. Conexión verificada."
+        }
+      ],
+      "durationInSeconds": 14,
+      "title": "Setup"
+    },
+    {
+      "text": "Empieza ahora.\nAbre Claude Code y escribe /wiki-connect\nDocumentación completa en la wiki: espacio IA Coding",
+      "durationInSeconds": 12,
+      "position": "center",
+      "type": "callout"
+    },
+    {
+      "durationInSeconds": 8,
+      "title": "MCP de Confluence",
+      "bullets": [
+        "Ya disponible para todos los equipos",
+        "Escribe /wiki-connect para empezar",
+        "Documentación: wiki.lda — espacio IA Coding"
+      ],
+      "type": "outro"
+    }
+  ],
   "voiceover": {
-    "enabled": true,
-    "provider": "gemini",
-    "language": "es-ES",
-    "voiceId": "Leda",
     "scenes": {
       "0": {
         "text": "MCP de Confluence. La wiki corporativa, dentro de Claude Code."
@@ -56,243 +324,29 @@
         "text": "Configurarlo toma un minuto. La skill wiki-connect te guía paso a paso. Almacena tu token de forma segura y configura la conexión."
       },
       "10": {
-        "text": "Empieza ahora. Abre Claude Code y escribe barra wiki-connect. Documentación completa en la wiki, espacio IC."
+        "text": "Empieza ahora. Abre Claude Code y escribe barra wiki-connect. Documentación completa en la wiki, espacio IA Coding."
       },
       "11": {
         "text": "MCP de Confluence. Ya disponible para todos los equipos."
       }
+    },
+    "voiceId": "Leda",
+    "enabled": true,
+    "language": "es-ES",
+    "provider": "gemini"
+  },
+  "soundDesign": {
+    "musicBed": {
+      "fadeOutMs": 3000,
+      "duckingFadeMs": 400,
+      "fadeInMs": 2000,
+      "volume": -18,
+      "duckingVolume": -26,
+      "trackId": "lofi-tech"
     }
   },
-  "scenes": [
-    {
-      "type": "intro",
-      "title": "MCP de Confluence",
-      "subtitle": "La wiki corporativa, dentro de Claude Code",
-      "durationInSeconds": 5
-    },
-    {
-      "type": "terminal",
-      "title": "Demo",
-      "lines": [
-        {
-          "kind": "command",
-          "text": "Busca en la wiki la documentación del servicio de tarificación"
-        },
-        {
-          "kind": "claude",
-          "text": "Usando search_pages para buscar en Confluence..."
-        },
-        {
-          "kind": "output",
-          "text": "  1. Motor de Tarificación - Guía técnica  [IT | ID: 284710]"
-        },
-        {
-          "kind": "output",
-          "text": "  2. API de Tarificación - Endpoints       [DEV | ID: 301455]"
-        },
-        {
-          "kind": "output",
-          "text": "  3. Reglas de negocio - Tarificación Auto [NEG | ID: 295120]"
-        },
-        {
-          "kind": "claude",
-          "text": "Leyendo la página más relevante..."
-        },
-        {
-          "kind": "claude",
-          "text": "El motor de tarificación es un servicio Spring Boot desplegado en Kubernetes que expone endpoints REST para calcular primas de seguros de auto, hogar y vida."
-        }
-      ],
-      "durationInSeconds": 20
-    },
-    {
-      "type": "callout",
-      "text": "Un servidor MCP centralizado conecta Claude Code con la wiki corporativa. Desplegado en la red de LDA, autenticado con tu token personal.",
-      "position": "center",
-      "durationInSeconds": 6
-    },
-    {
-      "type": "custom",
-      "componentId": "flow-diagram",
-      "props": {
-        "title": "Arquitectura",
-        "nodes": [
-          { "id": "claude", "title": "Claude Code", "description": "Tu terminal" },
-          { "id": "mcp", "title": "MCP Server", "description": "Red LDA" },
-          { "id": "confluence", "title": "Confluence", "description": "Wiki corporativa" }
-        ],
-        "edges": [
-          { "from": "claude", "to": "mcp", "label": "streamable-http" },
-          { "from": "mcp", "to": "confluence", "label": "REST API + PAT" }
-        ],
-        "layout": "horizontal"
-      },
-      "durationInSeconds": 8
-    },
-    {
-      "type": "custom",
-      "componentId": "big-number",
-      "props": {
-        "metrics": [
-          { "value": "28", "label": "herramientas" },
-          { "value": "7", "label": "categorías" }
-        ]
-      },
-      "durationInSeconds": 5
-    },
-    {
-      "type": "custom",
-      "componentId": "icon-grid",
-      "props": {
-        "title": "Categorías",
-        "columns": 4,
-        "items": [
-          { "icon": "book", "title": "Buscar", "description": "Texto libre, etiquetas, fechas" },
-          { "icon": "file", "title": "Leer", "description": "Contenido completo de páginas" },
-          { "icon": "folder", "title": "Navegar", "description": "Árbol de espacios y páginas" },
-          { "icon": "code", "title": "Crear y editar", "description": "Páginas nuevas o actualizadas" },
-          { "icon": "link", "title": "Adjuntos", "description": "Subir y listar ficheros" },
-          { "icon": "layers", "title": "Etiquetas", "description": "Metadata y comentarios" },
-          { "icon": "check", "title": "Calidad", "description": "Mermaid y enlaces rotos" }
-        ]
-      },
-      "durationInSeconds": 10
-    },
-    {
-      "type": "terminal",
-      "title": "Buscar y leer",
-      "lines": [
-        {
-          "kind": "command",
-          "text": "Lee la página 'Guía de despliegue' del espacio IT"
-        },
-        {
-          "kind": "claude",
-          "text": "Usando get_page_by_title en el espacio IT..."
-        },
-        {
-          "kind": "output",
-          "text": "  Guía de despliegue - Motor de Tarificación (v3.2)"
-        },
-        {
-          "kind": "claude",
-          "text": "La guía describe el pipeline CI/CD con Jenkins, despliegue en el cluster K8s de producción, y los pasos de rollback en caso de incidencia."
-        }
-      ],
-      "durationInSeconds": 12
-    },
-    {
-      "type": "terminal",
-      "title": "Crear documentación",
-      "lines": [
-        {
-          "kind": "command",
-          "text": "Crea una página en DEV con la documentación de src/api/siniestros/"
-        },
-        {
-          "kind": "claude",
-          "text": "Leyendo src/api/siniestros/... 4 archivos analizados."
-        },
-        {
-          "kind": "claude",
-          "text": "Generando documentación con endpoints, schemas y ejemplos..."
-        },
-        {
-          "kind": "claude",
-          "text": "Usando create_page en el espacio DEV..."
-        },
-        {
-          "kind": "output",
-          "text": "  Página creada: wiki.lda/display/DEV/API+Siniestros"
-        }
-      ],
-      "durationInSeconds": 12
-    },
-    {
-      "type": "terminal",
-      "title": "Publicar markdown",
-      "lines": [
-        {
-          "kind": "command",
-          "text": "/wiki-publish docs/architecture.md --space DEV"
-        },
-        {
-          "kind": "claude",
-          "text": "Convirtiendo markdown a Confluence storage format..."
-        },
-        {
-          "kind": "claude",
-          "text": "Detectados 2 bloques Mermaid. Renderizando a PNG..."
-        },
-        {
-          "kind": "output",
-          "text": "  Subido: architecture-diagram.png (42 KB)"
-        },
-        {
-          "kind": "output",
-          "text": "  Subido: sequence-flow.png (38 KB)"
-        },
-        {
-          "kind": "claude",
-          "text": "Página publicada: wiki.lda/display/DEV/Architecture"
-        }
-      ],
-      "durationInSeconds": 12
-    },
-    {
-      "type": "terminal",
-      "title": "Setup",
-      "lines": [
-        {
-          "kind": "command",
-          "text": "/wiki-connect"
-        },
-        {
-          "kind": "claude",
-          "text": "Detecto macOS. Usando Keychain para almacenar el PAT."
-        },
-        {
-          "kind": "claude",
-          "text": "Introduce tu Personal Access Token de Confluence:"
-        },
-        {
-          "kind": "output",
-          "text": "  PAT almacenado en macOS Keychain"
-        },
-        {
-          "kind": "claude",
-          "text": "Configurando CONFLUENCE_PAT en ~/.zshenv..."
-        },
-        {
-          "kind": "claude",
-          "text": "Escribiendo .mcp.json con la URL del servidor..."
-        },
-        {
-          "kind": "claude",
-          "text": "Verificando conexión..."
-        },
-        {
-          "kind": "output",
-          "text": "  47 espacios encontrados. Conexión verificada."
-        }
-      ],
-      "durationInSeconds": 14
-    },
-    {
-      "type": "callout",
-      "text": "Empieza ahora.\nAbre Claude Code y escribe /wiki-connect\nDocumentación completa en la wiki: espacio IC",
-      "position": "center",
-      "durationInSeconds": 6
-    },
-    {
-      "type": "outro",
-      "title": "MCP de Confluence",
-      "bullets": [
-        "Ya disponible para todos los equipos",
-        "Escribe /wiki-connect para empezar",
-        "Documentación: wiki.lda — espacio IC"
-      ],
-      "durationInSeconds": 8
-    }
-  ]
+  "_skipAudioGeneration": true,
+  "title": "MCP de Confluence",
+  "description": "Anuncio: la wiki corporativa ya está conectada a Claude Code vía MCP.",
+  "_threadId": "019ecb28-3455-78d3-bda2-58c8f437f22a"
 }
