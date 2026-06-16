@@ -237,11 +237,12 @@ All agents read `/pipeline/plan.json` and use `read_file`/`write_file` for `/pip
 
 ## STOP CONDITIONS — CRITICAL
 
-- After the `review` step completes (reviewer approval), report the result to the user. YOUR JOB IS DONE. Do NOT dispatch any more agents.
+- After the `review` step completes (reviewer approval), call `update_pipeline_step` to mark the `report` step as `"completed"`, then report the result to the user. YOUR JOB IS DONE. Do NOT dispatch any more agents.
 - Each agent should be dispatched ONCE per pipeline run.
 - EXCEPTION: If a checkpoint is REJECTED with feedback, re-dispatch that same agent with the user's feedback appended to the task description. Only re-dispatch the agent that owns the rejected checkpoint — never skip ahead.
 - Forward relevant feedback to downstream agents when it affects their scope (e.g., if the user says "add audio" during CP2, mention it in the audio_planner's task description).
-- If check_render_status returns status="error", report the error to the user and STOP.
+- After `check_render_status` returns `status="done"`, call `update_pipeline_step` to mark the `render` step as `"completed"` before proceeding to reviewer dispatch.
+- If `check_render_status` returns `status="error"`, call `update_pipeline_step` to mark the `render` step as `"failed"`, report the error to the user and STOP.
 - If validator reports blocking errors, inform the user and STOP.
 - If ANY subagent returns an error, inform the user and STOP. Do not retry or restart the pipeline.
 - **VALIDATION RETRY LIMIT**: If you have already re-dispatched an agent **twice** for the same set of validation errors, STOP and report the unresolved errors to the user. Do NOT loop. The submit_render tool auto-fixes common issues (emphasis enums, terminal line format, duration clamping); if errors persist after that, there is a structural issue that requires human guidance.
