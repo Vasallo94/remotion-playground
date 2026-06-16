@@ -2,10 +2,10 @@ import express from "express"
 import cors from "cors"
 import { randomUUID } from "crypto"
 import { spawn } from "child_process"
-import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, readFileSync } from "fs"
+import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, readFileSync, rmSync } from "fs"
 import { pathToFileURL } from "url"
 import path from "path"
-import { insertJob, updateJob, getJob, getJobByConfigId, listJobs, recoverOrphanedJobs } from "./db"
+import { insertJob, updateJob, getJob, getJobByConfigId, listJobs, recoverOrphanedJobs, purgeOldJobs } from "./db"
 
 const app = express()
 app.use(cors())
@@ -243,6 +243,18 @@ app.post("/api/render", (req, res) => {
           file_size: statSync(outputPath).size,
           completed_at: new Date().toISOString(),
         })
+        const configId = req.body.id as string | undefined
+        if (configId) {
+          const oldIds = purgeOldJobs(configId, jobId)
+          for (const id of oldIds) {
+            try {
+              rmSync(path.join(JOBS_DIR, id), { recursive: true, force: true })
+            } catch {
+              /* ignore */
+            }
+          }
+          if (oldIds.length > 0) console.log(`Purged ${oldIds.length} old render(s) for ${configId}`)
+        }
       } else {
         const detail = renderStderr.trim()
         updateJob(jobId, {
@@ -347,7 +359,14 @@ app.get("/api/render/:id/download", (req, res) => {
     res.status(job ? 410 : 404).json({ error: job ? "Video file deleted" : "Video not available" })
     return
   }
-  res.download(filePath, `${job?.config_id || req.params.id}.mp4`)
+  const filename = `${job?.config_id || req.params.id}.mp4`
+  res.sendFile(filePath, {
+    headers: {
+      "Content-Type": "video/mp4",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+    dotfiles: "allow",
+  })
 })
 
 // GET /api/audio/library — list available music tracks
