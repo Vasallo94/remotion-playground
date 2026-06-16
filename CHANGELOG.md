@@ -13,6 +13,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **`render-service` download endpoint** — `res.download()` in Express 5.2.1 throws `NotFoundError` because the `send` module doesn't receive `dotfiles: "allow"`; replaced with `res.sendFile()` + explicit `Content-Disposition` header, consistent with the working streaming endpoint
+
+- **`orchestrator.md` pipeline step completion** — orchestrator never called `update_pipeline_step` for the render and report steps it owns, causing the frontend pipeline tracker to stay stuck on "en curso..." indefinitely; added explicit instructions to mark render as completed/failed and report as completed
+
+- **`qa.py` theme context** — scene QA model flagged Línea Directa branding as "irrelevant to developers" because no theme info was passed in the prompt; now `video_context` includes theme name and the prompt tells the model brand elements are intentional
+
 - **`calibrate.py` Vertex AI region** — `_get_genai_client()` now uses its own Vertex AI client with `location` read from `GOOGLE_CLOUD_LOCATION` env (defaults to `"global"`); previously delegated to `voice.py`'s client which hardcoded `us-central1`, causing 404 "model not found" for `gemini-3.1-pro-preview` (only available on `global`)
 
 - **`customSceneRegistry.ts`** — added static imports and registry entries for `HookArchitectureScene`, `SettingsJsonScene`, `AutoRepairLoopScene`; without this Remotion bundles at compile time cannot resolve the componentId and renders crash
