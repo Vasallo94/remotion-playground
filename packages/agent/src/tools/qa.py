@@ -13,7 +13,7 @@ from ._checkpoint import checkpoint_interrupt
 from ..context import get_pipeline_context
 from .._llm import create_model
 
-QA_MODEL = os.environ.get("SCENE_QA_MODEL", "gemini-3.1-pro-preview")
+QA_MODEL = os.environ.get("SCENE_QA_MODEL", "gemini-3.5-flash")
 
 _DEFAULT_RENDER_SERVICE_URL = os.environ.get("RENDER_SERVICE_URL", "http://localhost:3100")
 
@@ -84,6 +84,7 @@ def _build_context(config: dict, scene: dict, index: int, still_path: str) -> di
             "promise": config.get("brief", {}).get("promise", ""),
             "tone": config.get("brief", {}).get("tone", ""),
             "total_scenes": len(scenes),
+            "theme": config.get("theme", "default"),
         },
         "scene_audio": {
             "voiceover_text": vo_entry.get("text", "") if isinstance(vo_entry, dict) else str(vo_entry),
@@ -135,6 +136,7 @@ def _build_qa_prompt(context: dict) -> str:
 - Audience: {vc.get('audience', '')}
 - Goal: {vc.get('goal', '')}
 - Promise: {vc.get('promise', '')}
+- Theme: {vc.get('theme', 'default')} (brand-specific visual elements like colors, logos, and mascots are intentional — do not flag them as irrelevant)
 
 ## This Scene ({sc['index']}/{vc['total_scenes']})
 - Type: {sc['type']} / {sc.get('componentId', '')}
