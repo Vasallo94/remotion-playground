@@ -1,5 +1,5 @@
 {
-  "name": "remotion-playground",
+  "name": "claqueta",
   "version": "1.0.0",
   "description": "My Remotion video",
   "repository": {},
@@ -41,11 +41,12 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "dev": "remotion studio",
-    "build": "remotion bundle",
+    "dev": "tsx scripts/generateTutorialManifest.ts && remotion studio",
+    "build": "tsx scripts/generateTutorialManifest.ts && remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "prepare": "husky",
+    "generate:manifest": "tsx scripts/generateTutorialManifest.ts",
     "generate:catalog": "tsx scripts/generate-scene-catalog.ts",
     "agent:dev": "cd packages/agent && uv run langgraph dev --config langgraph.json --port 2024 --allow-blocking",
     "test:visual": "vitest run src/__tests__/visual.test.ts",

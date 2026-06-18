@@ -11,6 +11,7 @@ out
 # Vídeos generados — binarios grandes, no trackear
 content/**/output.mp4
 public/voiceover/
+src/generated/
 .superpowers/
 .claude/hooks/
 .claude/voiceover-usage.log

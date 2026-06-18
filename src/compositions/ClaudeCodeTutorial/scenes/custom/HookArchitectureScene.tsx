@@ -50,9 +50,22 @@ const NodeBlock: React.FC<{
         zIndex: 2,
       }}
     >
-      <span style={{ fontSize: 32, fontWeight: 700, color: tokens.foreground }}>{block.label}</span>
+      <span style={{ fontSize: 32, fontWeight: 700, color: tokens.foreground, textAlign: "center", padding: "0 16px" }}>
+        {block.label}
+      </span>
       {block.sublabel && (
-        <span style={{ fontSize: 24, color: tokens.primary, marginTop: 12, fontWeight: 500 }}>{block.sublabel}</span>
+        <span
+          style={{
+            fontSize: 24,
+            color: tokens.primary,
+            marginTop: 12,
+            fontWeight: 500,
+            textAlign: "center",
+            padding: "0 16px",
+          }}
+        >
+          {block.sublabel}
+        </span>
       )}
     </div>
   )

@@ -33,7 +33,7 @@ Remotion-based video pipeline that generates Claude Code tutorial videos from JS
 ### Directory layout
 
 ```
-remotion-playground/
+claqueta/
   src/                          # Remotion rendering code (compositions, schemas, themes, utils)
   content/                      # Video project configs (committed JSON, gitignored MP4s)
     tutorials/{slug}/config.json

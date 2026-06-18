@@ -7,6 +7,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Dynamic composition registration** — `scripts/generateTutorialManifest.ts` scans `content/tutorials/` and `content/shorts/` at build time, generates a typed manifest, and `Root.tsx` creates one `<Composition>` per config inside `<Folder>` groups; all 17 tutorials and 1 short now appear individually in the Remotion Studio sidebar instead of only 3 hardcoded compositions
+
+- **`liteparse-skill` tutorial config** — 11-scene video (~130s) demonstrating the LiteParse document parsing skill from lda-docs plugin; covers PDF/DOCX/image parsing, OCR, cost analysis, and local-first architecture
+
+- **`lda-presentacion-skill` tutorial config** — 10-scene video (~112s) showcasing the lda-presentación skill from lda-docs plugin; demonstrates creating self-contained HTML presentations with LDA branding, 12 slide types, edit mode, and PDF export
+
+- **`win-secrets-skill` tutorial config** — 12-scene video (~140s) covering secure credential management with win-secrets (DPAPI) and mac-secrets (Keychain) skills from lda-core plugin; focuses on Windows workflow with PowerShell secret-store.ps1, wrapper scripts, and .mcp.json integration
+
+- **`lda-presentacion` example deliverables** — generated example HTML presentation (12 slides) and PDF export demonstrating the lda-presentación skill output
+
 - **`claude-code-hooks` tutorial** — 8-scene LinkedIn tutorial (~90s) on Claude Code hooks automation; includes 3 custom React scenes: `HookArchitectureScene` (horizontal block diagram with beat-driven node reveals), `SettingsJsonScene` (macOS-style code viewer with highlighted lines), `AutoRepairLoopScene` (step-card flow with SVG arrows); all registered in `customSceneRegistry.ts`
 
 - **`packages/agent/src/_llm.py`** — extracted `create_model()` factory from `orchestrator.py` into a shared module; adds `timeout=600` and `max_retries=2` to all Vertex AI calls to prevent 499 deadline-exceeded errors during long scene_creator runs
