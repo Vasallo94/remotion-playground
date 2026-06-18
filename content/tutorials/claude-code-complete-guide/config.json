@@ -26,8 +26,6 @@
         "animation": "build"
       },
       "timing": {
-        "leadInMs": 400,
-        "audioStartMs": 200,
         "tailHoldMs": 500,
         "transitionMs": 0
       },
@@ -43,7 +41,7 @@
         },
         {
           "id": "promise",
-          "startMs": 1000,
+          "startMs": 1200,
           "endMs": 4500,
           "narration": "La herramienta de IA para desarrolladores que realmente funciona.",
           "visual": "Subtítulo aparece con fade-in suave",
@@ -52,7 +50,7 @@
         },
         {
           "id": "hook",
-          "startMs": 5000,
+          "startMs": 5800,
           "endMs": 8500,
           "narration": "En menos de tres minutos, vas a conocer todo lo que puede hacer por ti.",
           "visual": "Hold en lockup completo, anticipo de transición",
@@ -66,16 +64,27 @@
       "durationInSeconds": 14,
       "props": {
         "title": "Cómo funciona: Tool Use",
+        "description": "Los modelos de lenguaje solo procesan texto, pero con tools adquieren superpoderes.",
         "introText": "Los modelos de lenguaje solo procesan texto. Las tools les dan superpoderes.",
         "nodes": [
-          { "id": "request", "title": "Tu petición", "description": "Texto en lenguaje natural", "color": "#4A90D9" },
+          {
+            "id": "request",
+            "title": "Tu petición",
+            "description": "Texto en lenguaje natural",
+            "color": "#4A90D9"
+          },
           {
             "id": "model",
             "title": "Modelo de lenguaje",
             "description": "Procesa y decide la acción",
             "color": "#9B59B6"
           },
-          { "id": "tools", "title": "Tools", "description": "Leer, escribir, ejecutar", "color": "#E67E22" },
+          {
+            "id": "tools",
+            "title": "Tools",
+            "description": "Leer, escribir, ejecutar",
+            "color": "#E67E22"
+          },
           {
             "id": "result",
             "title": "Resultado",
@@ -87,8 +96,6 @@
         "outroText": "Claude tiene el mejor tool use del mercado"
       },
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 500,
         "minVisualHoldMs": 600,
         "transitionMs": 600
@@ -96,7 +103,7 @@
       "beats": [
         {
           "id": "concept",
-          "startMs": 0,
+          "startMs": 150,
           "endMs": 2500,
           "narration": "Claude Code funciona con tool use.",
           "visual": "introText visible, diagrama vacío",
@@ -121,7 +128,7 @@
         },
         {
           "id": "advantage",
-          "startMs": 9500,
+          "startMs": 0,
           "endMs": 12000,
           "narration": "Claude tiene el mejor tool use del mercado.",
           "visual": "Partícula completa el recorrido, outroText aparece",
@@ -135,21 +142,55 @@
       "title": "Claude Code en acción",
       "durationInSeconds": 16,
       "lines": [
-        { "kind": "command", "text": "claude \"Optimize the Chalk library for performance\"" },
-        { "kind": "claude", "text": "Analyzing benchmarks... Found 3 bottlenecks in string processing" },
-        { "kind": "output", "text": "✓ Result: 3.9x throughput improvement", "delayAfterMs": 800 },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "claude \"Analyze churn data from streaming_customers.csv\"" },
-        { "kind": "claude", "text": "Creating Jupyter notebook for analysis..." },
-        { "kind": "output", "text": "✓ 3 key churn drivers identified", "delayAfterMs": 600 },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "claude \"Fix button styling on localhost:3000\"" },
-        { "kind": "claude", "text": "Opening browser via Playwright MCP... Updating CSS..." },
-        { "kind": "output", "text": "✓ UI updated — screenshot verified", "delayAfterMs": 600 }
+        {
+          "kind": "command",
+          "text": "claude \"Optimize the Chalk library for performance\""
+        },
+        {
+          "kind": "claude",
+          "text": "Analyzing benchmarks... Found 3 bottlenecks in string processing"
+        },
+        {
+          "kind": "output",
+          "text": "✓ Result: 3.9x throughput improvement",
+          "delayAfterMs": 800
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "claude \"Analyze churn data from streaming_customers.csv\""
+        },
+        {
+          "kind": "claude",
+          "text": "Creating Jupyter notebook for analysis..."
+        },
+        {
+          "kind": "output",
+          "text": "✓ 3 key churn drivers identified",
+          "delayAfterMs": 600
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "claude \"Fix button styling on localhost:3000\""
+        },
+        {
+          "kind": "claude",
+          "text": "Opening browser via Playwright MCP... Updating CSS..."
+        },
+        {
+          "kind": "output",
+          "text": "✓ UI updated — screenshot verified",
+          "delayAfterMs": 600
+        }
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 500,
         "minVisualHoldMs": 600,
         "transitionMs": 800
@@ -165,7 +206,7 @@
         },
         {
           "id": "chalk-demo",
-          "startMs": 2000,
+          "startMs": 1820,
           "endMs": 6000,
           "narration": "Optimizar una librería JavaScript y conseguir casi cuatro veces más rendimiento.",
           "visual": "Comando Chalk se escribe, Claude analiza, output 3.9x aparece",
@@ -174,7 +215,7 @@
         },
         {
           "id": "jupyter-demo",
-          "startMs": 6500,
+          "startMs": 7240,
           "endMs": 10000,
           "narration": "Analizar datos de clientes en un Jupyter notebook.",
           "visual": "Comando churn se escribe, Claude crea notebook, output aparece",
@@ -183,7 +224,7 @@
         },
         {
           "id": "playwright-demo",
-          "startMs": 10500,
+          "startMs": 11000,
           "endMs": 14500,
           "narration": "O corregir una interfaz abriendo un navegador real.",
           "visual": "Comando fix se escribe, Claude abre browser, output verified",
@@ -200,18 +241,37 @@
         "title": "Tres niveles de contexto",
         "layout": "horizontal",
         "blocks": [
-          { "id": "project", "title": "Project", "subtitle": "Compartido con el equipo", "color": "#4A90D9" },
-          { "id": "local", "title": "Local", "subtitle": "Personal, no se commitea", "color": "#9B59B6" },
-          { "id": "machine", "title": "Machine", "subtitle": "Global, todos los proyectos", "color": "#27AE60" }
+          {
+            "id": "project",
+            "title": "Project",
+            "subtitle": "Compartido con el equipo",
+            "color": "#4A90D9"
+          },
+          {
+            "id": "local",
+            "title": "Local",
+            "subtitle": "Personal, no se commitea",
+            "color": "#9B59B6"
+          },
+          {
+            "id": "machine",
+            "title": "Machine",
+            "subtitle": "Global, todos los proyectos",
+            "color": "#27AE60"
+          }
         ],
         "connections": [
-          { "from": "project", "to": "local" },
-          { "from": "local", "to": "machine" }
+          {
+            "from": "project",
+            "to": "local"
+          },
+          {
+            "from": "local",
+            "to": "machine"
+          }
         ]
       },
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 450,
         "minVisualHoldMs": 600,
         "transitionMs": 1000
@@ -227,7 +287,7 @@
         },
         {
           "id": "project-block",
-          "startMs": 3000,
+          "startMs": 5040,
           "endMs": 5000,
           "narration": "El de proyecto, compartido con tu equipo.",
           "visual": "Bloque Project aparece con spring",
@@ -236,7 +296,7 @@
         },
         {
           "id": "local-block",
-          "startMs": 5500,
+          "startMs": 8320,
           "endMs": 7500,
           "narration": "El local, solo para ti.",
           "visual": "Bloque Local aparece, conexión con Project se dibuja",
@@ -244,7 +304,7 @@
         },
         {
           "id": "machine-block",
-          "startMs": 8000,
+          "startMs": 10400,
           "endMs": 10500,
           "narration": "Y el de máquina, que aplica a todos tus proyectos.",
           "visual": "Bloque Machine aparece, conexión con Local se dibuja",
@@ -258,22 +318,42 @@
       "title": "Gestión de contexto",
       "durationInSeconds": 11,
       "lines": [
-        { "kind": "command", "text": "/init" },
+        {
+          "kind": "command",
+          "text": "/init"
+        },
         {
           "kind": "output",
           "text": "✓ CLAUDE.md created — project summary, architecture, key files",
           "delayAfterMs": 600
         },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "@ src/schema.ts \"explain this schema\"" },
-        { "kind": "claude", "text": "This defines your data model: Users, Orders, Products..." },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "# \"Always use TypeScript strict mode\"" },
-        { "kind": "output", "text": "✓ Rule saved to CLAUDE.md", "delayAfterMs": 400 }
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "@ src/schema.ts \"explain this schema\""
+        },
+        {
+          "kind": "claude",
+          "text": "This defines your data model: Users, Orders, Products..."
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "# \"Always use TypeScript strict mode\""
+        },
+        {
+          "kind": "output",
+          "text": "✓ Rule saved to CLAUDE.md",
+          "delayAfterMs": 400
+        }
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 450,
         "minVisualHoldMs": 500,
         "transitionMs": 400
@@ -290,7 +370,7 @@
         },
         {
           "id": "at-mention",
-          "startMs": 3500,
+          "startMs": 3920,
           "endMs": 6500,
           "narration": "Con arroba mencionas archivos específicos.",
           "visual": "@ comando se escribe, Claude responde",
@@ -298,7 +378,7 @@
         },
         {
           "id": "hash-memory",
-          "startMs": 7000,
+          "startMs": 6910,
           "endMs": 9500,
           "narration": "Y con almohadilla guardas reglas permanentes en memoria.",
           "visual": "# comando se escribe, regla guardada",
@@ -312,19 +392,45 @@
       "title": "Hacer cambios",
       "durationInSeconds": 9,
       "lines": [
-        { "kind": "command", "text": "[Ctrl+V] screenshot pasted" },
-        { "kind": "claude", "text": "I see the misaligned navbar. Fixing padding..." },
-        { "kind": "output", "text": "✓ Navbar alignment fixed", "delayAfterMs": 600 },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "[Shift+Tab ×2] Plan Mode activated" },
-        { "kind": "claude", "text": "Reading 12 files... 3-step implementation plan ready." },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "ultra think: why is this race condition happening?" },
-        { "kind": "claude", "text": "Extended analysis: mutex not released on error path at line 47" }
+        {
+          "kind": "command",
+          "text": "[Ctrl+V] screenshot pasted"
+        },
+        {
+          "kind": "claude",
+          "text": "I see the misaligned navbar. Fixing padding..."
+        },
+        {
+          "kind": "output",
+          "text": "✓ Navbar alignment fixed",
+          "delayAfterMs": 600
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "[Shift+Tab ×2] Plan Mode activated"
+        },
+        {
+          "kind": "claude",
+          "text": "Reading 12 files... 3-step implementation plan ready."
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "ultra think: why is this race condition happening?"
+        },
+        {
+          "kind": "claude",
+          "text": "Extended analysis: mutex not released on error path at line 47"
+        }
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 400,
         "minVisualHoldMs": 500,
         "transitionMs": 600
@@ -340,7 +446,7 @@
         },
         {
           "id": "plan-mode",
-          "startMs": 2800,
+          "startMs": 3380,
           "endMs": 5000,
           "narration": "Activa Plan Mode para tareas complejas.",
           "visual": "Shift+Tab se escribe, Claude planifica",
@@ -349,7 +455,7 @@
         },
         {
           "id": "think-mode",
-          "startMs": 5200,
+          "startMs": 6560,
           "endMs": 7500,
           "narration": "O usa Think Mode para depuración profunda.",
           "visual": "ultra think se escribe, análisis profundo",
@@ -363,18 +469,42 @@
       "title": "Control de contexto",
       "durationInSeconds": 9,
       "lines": [
-        { "kind": "command", "text": "[Esc]" },
-        { "kind": "output", "text": "→ Claude interrupted. Redirecting..." },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "/compact" },
-        { "kind": "output", "text": "✓ Conversation summarized — expertise preserved", "delayAfterMs": 400 },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "/clear" },
-        { "kind": "output", "text": "✓ Fresh start — ready for new task", "delayAfterMs": 400 }
+        {
+          "kind": "command",
+          "text": "[Esc]"
+        },
+        {
+          "kind": "output",
+          "text": "→ Claude interrupted. Redirecting..."
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "/compact"
+        },
+        {
+          "kind": "output",
+          "text": "✓ Conversation summarized — expertise preserved",
+          "delayAfterMs": 400
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "/clear"
+        },
+        {
+          "kind": "output",
+          "text": "✓ Fresh start — ready for new task",
+          "delayAfterMs": 400
+        }
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 400,
         "minVisualHoldMs": 500,
         "transitionMs": 400
@@ -390,7 +520,7 @@
         },
         {
           "id": "escape",
-          "startMs": 1500,
+          "startMs": 1960,
           "endMs": 3200,
           "narration": "Escape para interrumpir.",
           "visual": "Esc se pulsa, Claude se detiene",
@@ -398,7 +528,7 @@
         },
         {
           "id": "compact",
-          "startMs": 3500,
+          "startMs": 4140,
           "endMs": 5800,
           "narration": "Compact para comprimir el historial sin perder conocimiento.",
           "visual": "/compact se escribe, historial comprimido",
@@ -407,7 +537,7 @@
         },
         {
           "id": "clear",
-          "startMs": 6000,
+          "startMs": 8580,
           "endMs": 7800,
           "narration": "Y clear para empezar de cero.",
           "visual": "/clear se escribe, pantalla limpia",
@@ -422,17 +552,24 @@
       "props": {
         "rootPath": ".claude/commands/",
         "files": [
-          { "name": "audit.md", "type": "file" },
-          { "name": "test-gen.md", "type": "file" },
-          { "name": "vuln-fix.md", "type": "file" }
+          {
+            "name": "audit.md",
+            "type": "file"
+          },
+          {
+            "name": "test-gen.md",
+            "type": "file"
+          },
+          {
+            "name": "vuln-fix.md",
+            "type": "file"
+          }
         ],
         "expandFile": "audit.md",
         "fileContent": "Run a security audit on $ARGUMENTS\n\nCheck for:\n- SQL injection\n- XSS vulnerabilities\n- Exposed credentials",
         "calloutText": "Escribe /audit src/ para ejecutarlo"
       },
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 450,
         "minVisualHoldMs": 600,
         "transitionMs": 1000
@@ -448,16 +585,16 @@
         },
         {
           "id": "file-expand",
-          "startMs": 4800,
+          "startMs": 5180,
           "endMs": 7500,
           "narration": "Cada archivo se convierte en un slash command",
-          "visual": "audit.md se expande, contenido se revela línea a línea",
+          "visual": "audit.md se expande, contenido se reveals línea a línea",
           "animation": "content-panel-fade → lines-reveal",
           "emphasis": "medium"
         },
         {
           "id": "callout",
-          "startMs": 7500,
+          "startMs": 7960,
           "endMs": 9500,
           "narration": "que puedes invocar con parámetros.",
           "visual": "Callout '/audit src/' aparece con spring",
@@ -470,16 +607,34 @@
       "title": "MCP Servers",
       "durationInSeconds": 10,
       "lines": [
-        { "kind": "command", "text": "claude mcp add playwright npx @anthropic/mcp-playwright" },
-        { "kind": "output", "text": "✓ MCP server \"playwright\" added", "delayAfterMs": 600 },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "claude \"Test the login form at localhost:3000\"" },
-        { "kind": "claude", "text": "Opening browser... Filling form... Taking screenshot..." },
-        { "kind": "output", "text": "✓ Login flow verified — all tests pass", "delayAfterMs": 600 }
+        {
+          "kind": "command",
+          "text": "claude mcp add playwright npx @anthropic/mcp-playwright"
+        },
+        {
+          "kind": "output",
+          "text": "✓ MCP server \"playwright\" added",
+          "delayAfterMs": 600
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "claude \"Test the login form at localhost:3000\""
+        },
+        {
+          "kind": "claude",
+          "text": "Opening browser... Filling form... Taking screenshot..."
+        },
+        {
+          "kind": "output",
+          "text": "✓ Login flow verified — all tests pass",
+          "delayAfterMs": 600
+        }
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 400,
         "minVisualHoldMs": 500,
         "transitionMs": 400
@@ -495,7 +650,7 @@
         },
         {
           "id": "mcp-install",
-          "startMs": 2800,
+          "startMs": 3140,
           "endMs": 5500,
           "narration": "Un solo comando para instalar Playwright,",
           "visual": "Comando mcp add se escribe, confirmación aparece",
@@ -504,7 +659,7 @@
         },
         {
           "id": "mcp-usage",
-          "startMs": 5800,
+          "startMs": 5980,
           "endMs": 9000,
           "narration": "y Claude ya puede abrir un navegador y hacer tests automáticos.",
           "visual": "Test command, Claude abre browser, tests pasan",
@@ -519,8 +674,14 @@
       "durationInSeconds": 10,
       "props": {
         "title": "Review automático de PRs",
+        "description": "Claude revisa automáticamente cada pull request y detecta riesgos.",
         "nodes": [
-          { "id": "pr", "title": "PR abierta", "description": "Desarrollador abre pull request", "color": "#4A90D9" },
+          {
+            "id": "pr",
+            "title": "PR abierta",
+            "description": "Desarrollador abre pull request",
+            "color": "#4A90D9"
+          },
           {
             "id": "review",
             "title": "Claude revisa",
@@ -533,14 +694,17 @@
             "description": "Exposición de PII a partner externo",
             "color": "#E74C3C"
           },
-          { "id": "comment", "title": "Comentario", "description": "Claude publica el hallazgo", "color": "#27AE60" }
+          {
+            "id": "comment",
+            "title": "Comentario",
+            "description": "Claude publica el hallazgo",
+            "color": "#27AE60"
+          }
         ],
         "showParticle": true,
         "outroText": "Usa @claude en issues para asignarle tareas"
       },
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 450,
         "minVisualHoldMs": 600,
         "transitionMs": 800
@@ -556,7 +720,7 @@
         },
         {
           "id": "pii-detection",
-          "startMs": 4500,
+          "startMs": 4320,
           "endMs": 7500,
           "narration": "Aquí detectó que se estaba exponiendo información personal a un partner externo.",
           "visual": "Nodo Riesgo aparece en rojo, partícula llega al nodo Comment",
@@ -565,7 +729,7 @@
         },
         {
           "id": "mention",
-          "startMs": 7800,
+          "startMs": 10100,
           "endMs": 9500,
           "narration": "Usa @claude en issues para asignarle tareas.",
           "visual": "outroText aparece con spring",
@@ -578,22 +742,45 @@
       "title": "Hooks",
       "durationInSeconds": 13,
       "lines": [
-        { "kind": "command", "text": "// .claude/settings.local.json" },
+        {
+          "kind": "command",
+          "text": "// .claude/settings.local.json"
+        },
         {
           "kind": "output",
           "text": "{ preToolUse: [{ matcher: \"read|grep\", command: \"node hooks/read_hook.js\" }] }"
         },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "claude \"Read the .env file\"" },
-        { "kind": "output", "text": "⛔ Blocked by read hook — .env access denied", "delayAfterMs": 800 },
-        { "kind": "claude", "text": "Understood. I cannot access .env files." },
-        { "kind": "blank", "text": "" },
-        { "kind": "command", "text": "// Post-hook: tsc --no-emit after every edit" },
-        { "kind": "output", "text": "✓ Type errors caught instantly → Claude auto-fixes" }
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "claude \"Read the .env file\""
+        },
+        {
+          "kind": "output",
+          "text": "⛔ Blocked by read hook — .env access denied",
+          "delayAfterMs": 800
+        },
+        {
+          "kind": "claude",
+          "text": "Understood. I cannot access .env files."
+        },
+        {
+          "kind": "blank",
+          "text": ""
+        },
+        {
+          "kind": "command",
+          "text": "// Post-hook: tsc --no-emit after every edit"
+        },
+        {
+          "kind": "output",
+          "text": "✓ Type errors caught instantly → Claude auto-fixes"
+        }
       ],
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 500,
         "minVisualHoldMs": 600,
         "transitionMs": 800
@@ -610,7 +797,7 @@
         },
         {
           "id": "pre-hook-block",
-          "startMs": 3000,
+          "startMs": 2610,
           "endMs": 7000,
           "narration": "Un pre-hook bloquea el acceso a archivos sensibles.",
           "visual": "Comando .env, bloqueo ⛔ en rojo, Claude confirma restricción",
@@ -619,7 +806,7 @@
         },
         {
           "id": "post-hook-fix",
-          "startMs": 7500,
+          "startMs": 6120,
           "endMs": 11000,
           "narration": "Un post-hook ejecuta el type checker y Claude corrige los errores automáticamente.",
           "visual": "Post-hook config, output ✓ en verde",
@@ -636,14 +823,27 @@
         "title": "Tres formas de integrar",
         "layout": "horizontal",
         "blocks": [
-          { "id": "cli", "title": "CLI", "subtitle": "Scripts y pipelines", "color": "#4A90D9" },
-          { "id": "ts", "title": "TypeScript SDK", "subtitle": "Aplicaciones Node.js", "color": "#9B59B6" },
-          { "id": "py", "title": "Python SDK", "subtitle": "Pipelines ML y automatización", "color": "#27AE60" }
+          {
+            "id": "cli",
+            "title": "CLI",
+            "subtitle": "Scripts y pipelines",
+            "color": "#4A90D9"
+          },
+          {
+            "id": "ts",
+            "title": "TypeScript SDK",
+            "subtitle": "Aplicaciones Node.js",
+            "color": "#9B59B6"
+          },
+          {
+            "id": "py",
+            "title": "Python SDK",
+            "subtitle": "Pipelines ML y automatización",
+            "color": "#27AE60"
+          }
         ]
       },
       "timing": {
-        "leadInMs": 200,
-        "audioStartMs": 100,
         "tailHoldMs": 450,
         "minVisualHoldMs": 600,
         "transitionMs": 1000
@@ -659,7 +859,7 @@
         },
         {
           "id": "cli-block",
-          "startMs": 3500,
+          "startMs": 5200,
           "endMs": 5200,
           "narration": "CLI para scripts.",
           "visual": "Bloque CLI aparece con spring",
@@ -667,7 +867,7 @@
         },
         {
           "id": "ts-block",
-          "startMs": 5500,
+          "startMs": 7300,
           "endMs": 7200,
           "narration": "TypeScript SDK para Node.",
           "visual": "Bloque TypeScript SDK aparece",
@@ -676,7 +876,7 @@
         },
         {
           "id": "py-block",
-          "startMs": 7500,
+          "startMs": 9800,
           "endMs": 9200,
           "narration": "Y Python SDK para machine learning.",
           "visual": "Bloque Python SDK aparece",
@@ -694,8 +894,6 @@
         "Extensible con MCP, Commands, Hooks y SDK"
       ],
       "timing": {
-        "leadInMs": 150,
-        "audioStartMs": 100,
         "tailHoldMs": 800,
         "minVisualHoldMs": 700,
         "transitionMs": 1200
@@ -712,7 +910,7 @@
         },
         {
           "id": "bullet-1",
-          "startMs": 2000,
+          "startMs": 2200,
           "endMs": 3200,
           "narration": "Se adapta a tu workflow,",
           "visual": "Primer bullet aparece con slide-in",
@@ -720,7 +918,7 @@
         },
         {
           "id": "bullet-2",
-          "startMs": 3500,
+          "startMs": 4320,
           "endMs": 4800,
           "narration": "mantiene el contexto",
           "visual": "Segundo bullet aparece",
@@ -728,7 +926,7 @@
         },
         {
           "id": "bullet-3",
-          "startMs": 5000,
+          "startMs": 6140,
           "endMs": 6500,
           "narration": "y se extiende con todo lo que necesites.",
           "visual": "Tercer bullet aparece, hold final de marca",
@@ -758,6 +956,144 @@
       "11": "Y si necesitas integrar Claude Code en tus pipelines, tienes tres opciones. [medium pause] CLI para scripts. [short pause] TypeScript SDK para Node. [short pause] Y Python SDK para machine learning.",
       "12": "Narra con tono pausado y con peso, como cierre de presentación: [medium pause] Empieza a usar Claude Code. [medium pause] Se adapta a tu workflow, [short pause] mantiene el contexto [short pause] y se extiende con todo lo que necesites."
     }
+  },
+  "soundDesign": {
+    "enabled": true,
+    "musicBed": {
+      "libraryId": "lofi-tech-2-loop",
+      "volume": -18,
+      "duckingVolume": -26,
+      "fadeInMs": 2000,
+      "fadeOutMs": 3000,
+      "duckingFadeMs": 400
+    },
+    "sfx": [
+      {
+        "id": "sfx-swoosh-0",
+        "sceneIndex": 0,
+        "triggerMs": 100,
+        "libraryId": "sfx-swoosh",
+        "volume": -16
+      },
+      {
+        "id": "sfx-reveal-1",
+        "sceneIndex": 1,
+        "triggerMs": 5800,
+        "libraryId": "sfx-reveal",
+        "volume": -15
+      },
+      {
+        "id": "sfx-keyboard-2",
+        "sceneIndex": 2,
+        "triggerMs": 2000,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-chime-3-1",
+        "sceneIndex": 3,
+        "triggerMs": 3000,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-chime-3-2",
+        "sceneIndex": 3,
+        "triggerMs": 5500,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-chime-3-3",
+        "sceneIndex": 3,
+        "triggerMs": 8000,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-keyboard-4",
+        "sceneIndex": 4,
+        "triggerMs": 150,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-keyboard-5",
+        "sceneIndex": 5,
+        "triggerMs": 150,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-keyboard-6",
+        "sceneIndex": 6,
+        "triggerMs": 150,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-click-7",
+        "sceneIndex": 7,
+        "triggerMs": 4800,
+        "libraryId": "sfx-click",
+        "volume": -15
+      },
+      {
+        "id": "sfx-keyboard-8",
+        "sceneIndex": 8,
+        "triggerMs": 150,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-reveal-9",
+        "sceneIndex": 9,
+        "triggerMs": 4500,
+        "libraryId": "sfx-reveal",
+        "volume": -15
+      },
+      {
+        "id": "sfx-keyboard-10",
+        "sceneIndex": 10,
+        "triggerMs": 150,
+        "libraryId": "sfx-keyboard",
+        "volume": -14,
+        "loop": true
+      },
+      {
+        "id": "sfx-chime-11-1",
+        "sceneIndex": 11,
+        "triggerMs": 3500,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-chime-11-2",
+        "sceneIndex": 11,
+        "triggerMs": 5500,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-chime-11-3",
+        "sceneIndex": 11,
+        "triggerMs": 7500,
+        "libraryId": "sfx-chime",
+        "volume": -15
+      },
+      {
+        "id": "sfx-stinger-12",
+        "sceneIndex": 12,
+        "triggerMs": 100,
+        "libraryId": "sfx-stinger",
+        "volume": -10
+      }
+    ]
   },
   "subtitles": {
     "enabled": true,

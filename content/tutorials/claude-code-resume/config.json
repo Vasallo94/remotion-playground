@@ -1,0 +1,295 @@
+{
+  "id": "claude-code-resume",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "theme": "linea-directa",
+  "scenes": [
+    {
+      "beats": [
+        {
+          "id": "hook",
+          "visual": "Título: ¿Pierdes el contexto de tu código?",
+          "emphasis": "medium",
+          "narration": "¿Te ha pasado alguna vez que cierras la terminal y pierdes todo el hilo de tu trabajo con Claude Code?",
+          "startMs": 200
+        }
+      ],
+      "title": "¿Pierdes el contexto de tu código?",
+      "type": "intro",
+      "timing": {
+        "tailHoldMs": 500,
+        "transitionMs": 600
+      },
+      "durationInSeconds": 6,
+      "subtitle": "Recupera tus sesiones de Claude al instante"
+    },
+    {
+      "durationInSeconds": 20,
+      "lines": [
+        {
+          "text": "claude -c",
+          "kind": "command"
+        },
+        {
+          "text": "Resuming most recent session: \"Refactorizar auth.ts\"\n✓ Reconstructed history (4 messages)\n✓ Prompt caching active (12,450 tokens cached)",
+          "kind": "output"
+        },
+        {
+          "text": "¡Listo! Volvemos al refactor de auth.ts. ¿Seguimos?",
+          "kind": "claude"
+        },
+        {
+          "text": "",
+          "kind": "blank"
+        },
+        {
+          "kind": "command",
+          "text": "claude -r"
+        },
+        {
+          "text": "Active sessions in this project:\n  1. [Hace 10m] \"Refactorizar auth.ts\" (branch: main)\n  2. [Ayer] \"Corregir bug de login\" (branch: main)\n\n? Select a session to resume:\n❯ 1. \"Refactorizar auth.ts\"",
+          "kind": "output"
+        }
+      ],
+      "beats": [
+        {
+          "startMs": 200,
+          "narration": "No vuelvas a empezar de cero. Con claude -c reanudas tu última sesión al instante...",
+          "emphasis": "high",
+          "visual": "Escribiendo 'claude -c' en consola",
+          "id": "command-c"
+        },
+        {
+          "id": "output-c",
+          "emphasis": "medium",
+          "visual": "Mostrando output y confirmando tokens cacheados",
+          "narration": "...con prompt caching activo.",
+          "startMs": 4500
+        },
+        {
+          "narration": "Y con claude -r...",
+          "startMs": 9000,
+          "id": "command-r",
+          "emphasis": "high",
+          "visual": "Ejecutando 'claude -r' de manera interactiva"
+        },
+        {
+          "id": "menu-r",
+          "visual": "Menú interactivo mostrando lista de sesiones previas en consola",
+          "emphasis": "medium",
+          "narration": "...puedes elegir de forma interactiva entre todas tus sesiones previas en este proyecto.",
+          "startMs": 13500
+        }
+      ],
+      "title": "Continuar vs. Reanudar",
+      "timing": {
+        "transitionMs": 800,
+        "tailHoldMs": 500
+      },
+      "type": "terminal"
+    },
+    {
+      "componentId": "bullet-slide",
+      "durationInSeconds": 15,
+      "props": {
+        "title": "¿Qué restaura el comando?",
+        "items": [
+          {
+            "icon": "book",
+            "text": "Historial completo de mensajes y respuestas."
+          },
+          {
+            "icon": "folder",
+            "text": "Archivos abiertos y estado actual de Git."
+          },
+          {
+            "icon": "terminal",
+            "text": "Resultados de herramientas ejecutadas."
+          },
+          {
+            "text": "Prompt Caching activo para ahorrar tokens.",
+            "icon": "cloud"
+          }
+        ]
+      },
+      "type": "custom",
+      "timing": {
+        "tailHoldMs": 500,
+        "transitionMs": 600
+      },
+      "beats": [
+        {
+          "id": "title",
+          "startMs": 200,
+          "narration": "Al reanudar, Claude recupera...",
+          "visual": "Aparece título: ¿Qué restaura el comando?",
+          "emphasis": "high"
+        },
+        {
+          "id": "bullet-1",
+          "startMs": 2500,
+          "narration": "el historial completo de mensajes y respuestas,",
+          "visual": "Aparece primer ítem: Historial de mensajes",
+          "emphasis": "medium"
+        },
+        {
+          "id": "bullet-2",
+          "startMs": 5500,
+          "narration": "el estado de git con los archivos abiertos,",
+          "visual": "Aparece segundo ítem: Archivos y Git",
+          "emphasis": "low"
+        },
+        {
+          "id": "bullet-3",
+          "startMs": 8500,
+          "narration": "las búsquedas realizadas y los resultados de consola,",
+          "visual": "Aparece tercer ítem: Resultados de herramientas",
+          "emphasis": "low"
+        },
+        {
+          "id": "bullet-4",
+          "startMs": 11500,
+          "narration": "manteniendo el contexto intacto.",
+          "visual": "Aparece cuarto ítem: Prompt Caching activo",
+          "emphasis": "medium"
+        }
+      ]
+    },
+    {
+      "background": "solid",
+      "beats": [
+        {
+          "id": "callout-text",
+          "startMs": 200,
+          "narration": "Dentro de una sesión abierta, escribe /resume para seleccionar interactivamente qué conversación continuar.",
+          "visual": "Mostrar tarjeta callout con /resume y claude --resume",
+          "emphasis": "high"
+        }
+      ],
+      "text": "Dentro de una sesión abierta, escribe /resume para seleccionar interactivamente qué conversación continuar. Desde la terminal, usa claude --resume <nombre> para ir directo.",
+      "position": "center",
+      "timing": {
+        "tailHoldMs": 500,
+        "transitionMs": 800
+      },
+      "type": "callout",
+      "durationInSeconds": 12
+    },
+    {
+      "beats": [
+        {
+          "id": "grid-1",
+          "visual": "Aparece primera tarjeta: Cierres por error",
+          "emphasis": "medium",
+          "narration": "Esto es ideal para reponerte de cortes de red y cierres inesperados,",
+          "startMs": 200
+        },
+        {
+          "emphasis": "medium",
+          "visual": "Aparece segunda tarjeta: Continuar mañana",
+          "id": "grid-2",
+          "startMs": 4500,
+          "narration": "continuar tu trabajo exactamente donde lo dejaste al día siguiente,"
+        },
+        {
+          "id": "grid-3",
+          "visual": "Aparece tercera tarjeta: Trabajo paralelo",
+          "emphasis": "high",
+          "narration": "o alternar limpiamente entre varias tareas sin mezclar contextos.",
+          "startMs": 9000
+        }
+      ],
+      "type": "custom",
+      "timing": {
+        "tailHoldMs": 500,
+        "transitionMs": 800
+      },
+      "durationInSeconds": 15,
+      "props": {
+        "title": "Casos de uso prácticos",
+        "items": [
+          {
+            "title": "Cierres por error",
+            "description": "Cortes de conexión SSH, red o apagado de terminal.",
+            "icon": "shield"
+          },
+          {
+            "description": "Retoma el flujo mental exacto al iniciar la jornada.",
+            "title": "Continuar mañana",
+            "icon": "lightbulb"
+          },
+          {
+            "icon": "folder",
+            "description": "Alterna entre tareas usando sesiones con nombre.",
+            "title": "Trabajo paralelo"
+          }
+        ],
+        "columns": 3
+      },
+      "componentId": "icon-grid"
+    },
+    {
+      "timing": {
+        "tailHoldMs": 1500,
+        "transitionMs": 500
+      },
+      "type": "outro",
+      "bullets": ["Usa /compact en hilos muy largos.", "No cambia tus ramas físicas de Git."],
+      "title": "¡Pruébalo en tu terminal!",
+      "beats": [
+        {
+          "id": "outro-bullet-1",
+          "emphasis": "medium",
+          "visual": "Aparece primer bullet: Usa /compact",
+          "narration": "Recuerda usar la herramienta compact en hilos muy largos.",
+          "startMs": 200
+        },
+        {
+          "id": "outro-bullet-2",
+          "emphasis": "low",
+          "visual": "Aparece segundo bullet: No cambia ramas físicas de Git",
+          "narration": "Y ten en cuenta que no se modifican tus ramas físicas de Git.",
+          "startMs": 3200
+        },
+        {
+          "visual": "Aparece la marca y el CTA final animado",
+          "emphasis": "high",
+          "id": "outro-cta",
+          "startMs": 4500,
+          "narration": "¡Escribe claude resume en tu terminal y no pierdas nunca tu momentum!"
+        }
+      ],
+      "durationInSeconds": 8
+    }
+  ],
+  "title": "Recupera tus sesiones de Claude",
+  "description": "Tutorial sobre el comando /resume de Claude Code",
+  "_threadId": "019ecbee-eb3c-7041-93ac-52e9c6f45df9",
+  "voiceover": {
+    "enabled": true,
+    "provider": "gemini",
+    "voiceId": "Leda",
+    "language": "es-ES",
+    "scenes": {
+      "0": "[excited] ¿Te ha pasado alguna vez que cierras la terminal y pierdes todo el hilo de tu trabajo con Claude Code?",
+      "1": "[cheerful] No vuelvas a empezar de cero. Con claude -c reanudas tu última sesión al instante con prompt caching activo. [softly] Y con claude -r puedes elegir de forma interactiva entre todas tus sesiones previas en este proyecto.",
+      "3": "Dentro de una sesión abierta, escribe barra resume para seleccionar interactivamente qué conversación continuar. Y desde la terminal, usa claude guión guión resume seguido del nombre para ir directo a una tarea específica.",
+      "4": "Esto es ideal para reponerte de cortes de red, continuar tu trabajo al día siguiente o [cheerful] alternar limpiamente entre varias tareas sin mezclar contextos.",
+      "5": "Recuerda usar la herramienta compact en hilos muy largos. [excited] ¡Escribe claude resume en tu terminal y no pierdas nunca tu momentum!",
+      "2": "Al reanudar, Claude recupera el historial de mensajes, el estado de git, las búsquedas realizadas y los resultados de consola, manteniendo el contexto intacto."
+    }
+  },
+  "soundDesign": {
+    "enabled": true,
+    "musicBed": {
+      "libraryId": "lofi-tech",
+      "volume": -18,
+      "duckingVolume": -26,
+      "fadeInMs": 2000,
+      "fadeOutMs": 3000,
+      "duckingFadeMs": 400
+    },
+    "sfx": []
+  }
+}
