@@ -1,0 +1,268 @@
+{
+  "id": "win-secrets-skill",
+  "title": "win-secrets",
+  "description": "Tutorial: gestión segura de credenciales con la skill win-secrets del plugin lda-core.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "theme": "linea-directa",
+  "scenes": [
+    {
+      "type": "intro",
+      "title": "win-secrets",
+      "subtitle": "Gestión segura de credenciales",
+      "durationInSeconds": 6
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Si pegas un token en Claude Code, queda en el historial.\nEl transcript almacena todo lo que escribes en la sesión.\nCualquiera con acceso al transcript tiene tus credenciales.",
+      "durationInSeconds": 12
+    },
+    {
+      "type": "custom",
+      "componentId": "problem-solution",
+      "durationInSeconds": 12,
+      "props": {
+        "problem": "Tokens en .env en texto plano. Contraseñas pegadas en el chat. Credenciales en el historial de sesión. Riesgo de fuga en cada conversación.",
+        "solution": "Cifrado DPAPI nativo de Windows. Prompt seguro sin eco en pantalla. Recuperación automática por script. Secreto nunca visible en transcript.",
+        "problemLabel": "Sin win-secrets",
+        "solutionLabel": "Con win-secrets"
+      }
+    },
+    {
+      "type": "custom",
+      "componentId": "step-list",
+      "durationInSeconds": 14,
+      "props": {
+        "title": "Cómo funciona",
+        "steps": [
+          {
+            "title": "Almacenar",
+            "description": "PowerShell pide el secreto con Read-Host -AsSecureString (sin eco)"
+          },
+          {
+            "title": "Cifrar",
+            "description": "DPAPI cifra con la clave del usuario y la máquina"
+          },
+          {
+            "title": "Guardar",
+            "description": "Fichero .secret en %USERPROFILE%\\.secrets\\"
+          },
+          {
+            "title": "Recuperar",
+            "description": "El script descifra y lo inyecta como variable de entorno"
+          }
+        ]
+      }
+    },
+    {
+      "type": "terminal",
+      "title": "Almacenar credencial",
+      "durationInSeconds": 14,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Necesito configurar el MCP de Confluence con mi PAT"
+        },
+        {
+          "kind": "claude",
+          "text": "Voy a almacenar tu PAT de forma segura con win-secrets."
+        },
+        {
+          "kind": "claude",
+          "text": "Ejecuta esto en una terminal PowerShell aparte (no aquí):"
+        },
+        {
+          "kind": "output",
+          "text": "  .\\secret-store.ps1 -Action store -Service 'confluence-pat' -Account 'claude-code'"
+        },
+        {
+          "kind": "claude",
+          "text": "¿Ya lo has ejecutado? Verifico que se ha guardado correctamente."
+        }
+      ]
+    },
+    {
+      "type": "terminal",
+      "title": "Verificar y crear wrapper",
+      "durationInSeconds": 12,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Sí, ya está guardado"
+        },
+        {
+          "kind": "output",
+          "text": "  powershell.exe -File secret-store.ps1 -Action get -Service 'confluence-pat' -Account 'claude-code'"
+        },
+        {
+          "kind": "output",
+          "text": "  glpat-****...(verificado)"
+        },
+        {
+          "kind": "claude",
+          "text": "PAT almacenado y verificado. Creo el wrapper para el MCP server."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "icon-grid",
+      "durationInSeconds": 16,
+      "props": {
+        "title": "Convención de nombrado",
+        "columns": 3,
+        "items": [
+          {
+            "icon": "tag",
+            "title": "Service",
+            "description": "Qué es: gitlab-pat, oracle-password, confluence-pat"
+          },
+          {
+            "icon": "user",
+            "title": "Account",
+            "description": "Quién: claude-code (global) o nombre del proyecto"
+          },
+          {
+            "icon": "lock",
+            "title": "Value",
+            "description": "El secreto cifrado — nunca en texto plano"
+          },
+          {
+            "icon": "globe",
+            "title": "Cross-project",
+            "description": "Account = claude-code → accesible desde cualquier repo"
+          },
+          {
+            "icon": "folder",
+            "title": "Project-specific",
+            "description": "Account = nombre-directorio → solo para ese proyecto"
+          },
+          {
+            "icon": "database",
+            "title": "Oracle",
+            "description": "Service = oracle-password-<db> → integración directa"
+          }
+        ]
+      }
+    },
+    {
+      "type": "custom",
+      "componentId": "code-block",
+      "durationInSeconds": 14,
+      "props": {
+        "code": "$ErrorActionPreference = \"Stop\"\n$SecretScript = Join-Path $env:USERPROFILE \".secrets\\secret-store.ps1\"\n\n$env:CONFLUENCE_PAT = & $SecretScript -Action get `\n  -Service 'confluence-pat' -Account 'claude-code'\n\nuv run --directory . confluence-mcp-server",
+        "filename": "scripts\\run-confluence.ps1",
+        "language": "powershell"
+      }
+    },
+    {
+      "type": "custom",
+      "componentId": "code-diff",
+      "durationInSeconds": 12,
+      "props": {
+        "fileName": ".mcp.json",
+        "title": "Configuración del MCP server",
+        "deletions": ["    \"env\": {", "      \"PAT\": \"glpat-abc123def456...\"", "    }"],
+        "additions": [
+          "    \"command\": \"powershell.exe\",",
+          "    \"args\": [\"-ExecutionPolicy\", \"Bypass\",",
+          "      \"-File\", \"scripts\\\\run-confluence.ps1\"]"
+        ],
+        "context": {
+          "before": ["{", "  \"mcpServers\": {", "    \"confluence\": {"],
+          "after": ["    }", "  }", "}"]
+        }
+      }
+    },
+    {
+      "type": "custom",
+      "componentId": "comparison-table",
+      "durationInSeconds": 10,
+      "props": {
+        "title": "Dos plataformas, misma convención",
+        "leftColumn": {
+          "header": "win-secrets (Windows)",
+          "items": ["Cifrado DPAPI", "secret-store.ps1", "Ficheros .secret", "PowerShell 5.1+"]
+        },
+        "rightColumn": {
+          "header": "mac-secrets (macOS)",
+          "items": ["macOS Keychain", "Comando security(1)", "Base de datos del sistema", "Sin dependencias"]
+        },
+        "rightIcon": "check",
+        "rightColor": "#22c55e"
+      }
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Nunca pegues un token directamente en Claude Code.\nUsa win-secrets y la skill lo cifra y lo gestiona por ti.\nTus credenciales, siempre protegidas.",
+      "durationInSeconds": 10
+    },
+    {
+      "type": "outro",
+      "title": "win-secrets",
+      "durationInSeconds": 8,
+      "bullets": [
+        "Cifrado DPAPI nativo de Windows",
+        "Misma convención en Mac y Windows",
+        "Plugin lda-core — ya disponible"
+      ]
+    }
+  ],
+  "voiceover": {
+    "enabled": true,
+    "provider": "gemini",
+    "voiceId": "Leda",
+    "language": "es-ES",
+    "scenes": {
+      "0": {
+        "text": "win-secrets. Gestión segura de credenciales."
+      },
+      "1": {
+        "text": "Si pegas un token en Claude Code, queda en el historial. El transcript almacena todo lo que escribes en la sesión. Cualquiera con acceso al transcript tiene tus credenciales."
+      },
+      "2": {
+        "text": "Sin win-secrets, los tokens viven en ficheros punto env en texto plano, las contraseñas se pegan en el chat, y las credenciales quedan en el historial. Con win-secrets, todo se cifra con DPAPI, el sistema nativo de Windows. El secreto nunca aparece visible en el transcript."
+      },
+      "3": {
+        "text": "El flujo es sencillo. Primero, PowerShell te pide el secreto con un prompt seguro sin eco en pantalla. Después, DPAPI lo cifra con la clave de tu usuario y tu máquina. Se guarda como fichero punto secret en tu perfil de Windows. Y cuando lo necesitas, el script lo descifra y lo inyecta como variable de entorno."
+      },
+      "4": {
+        "text": "Así funciona en la práctica. Le dices a Claude que necesitas configurar un MCP con tu PAT, y la skill te pide que ejecutes el comando de almacenamiento en una terminal PowerShell aparte. Nunca en la sesión de Claude Code, para que el secreto no quede en el transcript."
+      },
+      "5": {
+        "text": "Una vez almacenado, Claude verifica que el secreto se ha guardado correctamente y crea automáticamente el wrapper script para el MCP server."
+      },
+      "6": {
+        "text": "La convención de nombrado tiene tres partes. Service identifica qué tipo de credencial es: gitlab-pat, oracle-password, confluence-pat. Account identifica quién la usa: claude-code para secretos globales, o el nombre del proyecto para secretos específicos. Y el valor se cifra, nunca se almacena en texto plano."
+      },
+      "7": {
+        "text": "El wrapper script es un fichero PowerShell que recupera el secreto de DPAPI, lo inyecta como variable de entorno, y lanza el servidor MCP. Así el token nunca aparece en ningún fichero de configuración."
+      },
+      "8": {
+        "text": "El cambio en el punto mcp punto json es mínimo. Antes, el token iba directamente en la sección env. Después, el comando apunta al wrapper PowerShell que recupera el secreto de forma segura."
+      },
+      "9": {
+        "text": "Para los compañeros con Mac, la skill mac-secrets hace exactamente lo mismo pero usando el Keychain de macOS. La convención de service y account es idéntica, así que la documentación funciona para ambas plataformas."
+      },
+      "10": {
+        "text": "Nunca pegues un token directamente en Claude Code. Usa win-secrets y la skill lo cifra y lo gestiona por ti. Tus credenciales, siempre protegidas."
+      },
+      "11": {
+        "text": "win-secrets. Cifrado DPAPI nativo de Windows. Disponible en el plugin lda-core."
+      }
+    }
+  },
+  "soundDesign": {
+    "musicBed": {
+      "trackId": "lofi-tech",
+      "volume": -18,
+      "fadeInMs": 2000,
+      "fadeOutMs": 3000,
+      "duckingVolume": -26,
+      "duckingFadeMs": 400
+    }
+  }
+}

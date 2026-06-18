@@ -1,0 +1,241 @@
+{
+  "id": "liteparse-skill",
+  "title": "LiteParse",
+  "description": "Tutorial: extraccion de documentos con LiteParse, el parser local de la skill lda-docs.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "theme": "linea-directa",
+  "scenes": [
+    {
+      "type": "intro",
+      "title": "LiteParse",
+      "subtitle": "Tus documentos, en texto plano",
+      "durationInSeconds": 6
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Cuando Claude lee un PDF, cada pagina consume ~2.500 tokens de vision.\nUn informe de 20 paginas gasta 50.000 tokens.\nY con mas de 20 paginas, no puede seguir.",
+      "durationInSeconds": 12
+    },
+    {
+      "type": "custom",
+      "componentId": "comparison-table",
+      "durationInSeconds": 10,
+      "props": {
+        "title": "Read nativo vs LiteParse",
+        "leftColumn": {
+          "header": "Read nativo",
+          "items": ["Tokens/pagina: ~2.500", "Limite: 20 paginas", "OCR: No", "Resultado: Imagen"]
+        },
+        "rightColumn": {
+          "header": "LiteParse",
+          "items": [
+            "Tokens/pagina: ~200",
+            "Limite: Sin limite",
+            "OCR: Tesseract integrado",
+            "Resultado: Texto procesable"
+          ]
+        }
+      }
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "LiteParse es un parser local escrito en Rust.\nExtrae texto preservando el layout espacial, con OCR integrado.\nSe instala con un comando y la skill se activa automaticamente.",
+      "durationInSeconds": 12
+    },
+    {
+      "type": "terminal",
+      "title": "Informe de costes",
+      "durationInSeconds": 14,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Lee ~/Downloads/costes_infra_abril.pdf y dame las cifras principales"
+        },
+        {
+          "kind": "claude",
+          "text": "Usando LiteParse para extraer el texto del PDF..."
+        },
+        {
+          "kind": "output",
+          "text": "  lit parse ~/Downloads/costes_infra_abril.pdf"
+        },
+        {
+          "kind": "output",
+          "text": "  42 paginas procesadas en 1.2s"
+        },
+        {
+          "kind": "claude",
+          "text": "El coste total mensual estimado es de 13.263 EUR: Azure 2.245 EUR + GCP 11.018 EUR."
+        }
+      ]
+    },
+    {
+      "type": "terminal",
+      "title": "Presentacion visual",
+      "durationInSeconds": 14,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Analiza las graficas de productividad de ./docs/presentacion.pptx"
+        },
+        {
+          "kind": "claude",
+          "text": "Este documento tiene graficas. Generando screenshots..."
+        },
+        {
+          "kind": "output",
+          "text": "  lit screenshot presentacion.pdf -o /tmp/screenshots"
+        },
+        {
+          "kind": "output",
+          "text": "  12 paginas -> 12 PNGs generados"
+        },
+        {
+          "kind": "claude",
+          "text": "Cursor 2.0 mejora la productividad un 30.7% sobre el baseline, frente al 5.9% de Copilot."
+        }
+      ]
+    },
+    {
+      "type": "terminal",
+      "title": "Documento escaneado",
+      "durationInSeconds": 12,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Extrae el texto de /tmp/polizas_escaneadas.pdf"
+        },
+        {
+          "kind": "claude",
+          "text": "Detectado PDF escaneado. Activando OCR en espanol..."
+        },
+        {
+          "kind": "output",
+          "text": "  lit parse polizas.pdf --ocr-language spa"
+        },
+        {
+          "kind": "claude",
+          "text": "Poliza num. 2.847.391 — Seguro multirriesgo hogar. Tomador: Garcia Lopez, Maria. Prima anual: 487,20 EUR."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "icon-grid",
+      "durationInSeconds": 20,
+      "props": {
+        "title": "Modos de extraccion",
+        "columns": 3,
+        "items": [
+          {
+            "icon": "file",
+            "title": "Texto",
+            "description": "Layout espacial preservado"
+          },
+          {
+            "icon": "layers",
+            "title": "Screenshot",
+            "description": "PNGs para analisis visual"
+          },
+          {
+            "icon": "code",
+            "title": "JSON",
+            "description": "Bounding boxes y metadatos"
+          },
+          {
+            "icon": "book",
+            "title": "OCR",
+            "description": "Tesseract en 100+ idiomas"
+          },
+          {
+            "icon": "filter",
+            "title": "Paginas",
+            "description": "Seleccion con --target-pages"
+          },
+          {
+            "icon": "folder",
+            "title": "Batch",
+            "description": "Directorios completos"
+          }
+        ]
+      }
+    },
+    {
+      "type": "custom",
+      "componentId": "code-block",
+      "durationInSeconds": 12,
+      "props": {
+        "code": "lit parse documento.pdf\nlit screenshot presentacion.pdf -o /tmp/screenshots\nlit parse escaneado.pdf --ocr-language spa\nlit parse informe.pdf --format json -o output.json\nlit batch-parse ./entrada ./salida",
+        "filename": "referencia rapida",
+        "language": "bash"
+      }
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Solo pasale un documento.\nLiteParse se encarga del resto.",
+      "durationInSeconds": 10
+    },
+    {
+      "type": "outro",
+      "title": "LiteParse",
+      "durationInSeconds": 8,
+      "bullets": ["PDF, DOCX, PPTX, imagenes", "Instala: uv tool install liteparse", "Plugin lda-docs — ya disponible"]
+    }
+  ],
+  "voiceover": {
+    "enabled": true,
+    "provider": "gemini",
+    "voiceId": "Leda",
+    "language": "es-ES",
+    "scenes": {
+      "0": {
+        "text": "LiteParse. Tus documentos, en texto plano."
+      },
+      "1": {
+        "text": "Cuando le pides a Claude que lea un PDF, cada pagina consume unos dos mil quinientos tokens de vision. Un informe de veinte paginas gasta cincuenta mil tokens. Y con mas de veinte paginas, no puede seguir."
+      },
+      "2": {
+        "text": "La diferencia es clara. Read nativo consume diez veces mas tokens, tiene un limite de veinte paginas, no tiene OCR, y devuelve una imagen. LiteParse devuelve texto procesable, sin limite, con OCR integrado."
+      },
+      "3": {
+        "text": "LiteParse es un parser local escrito en Rust. Extrae texto preservando el layout espacial, con OCR integrado. Se instala con un comando y la skill se activa automaticamente cuando le pasas un documento."
+      },
+      "4": {
+        "text": "Solo pasale la ruta del documento. La skill lo detecta y extrae el texto automaticamente. Aqui le pedimos las cifras de un informe de costes de cuarenta y dos paginas."
+      },
+      "5": {
+        "text": "Si el documento tiene graficas o diagramas, pasale la ruta y LiteParse genera screenshots que Claude interpreta visualmente."
+      },
+      "6": {
+        "text": "Incluso con documentos escaneados, pasale la ruta y el OCR integrado de Tesseract extrae el texto completo. Soporta mas de cien idiomas."
+      },
+      "7": {
+        "text": "Seis modos de extraccion. Texto con layout espacial. Screenshots para graficas. JSON con bounding boxes. OCR multiidioma. Seleccion de paginas especificas. Y procesamiento por lotes de directorios completos."
+      },
+      "8": {
+        "text": "Cinco comandos que cubren todos los escenarios. Pero recuerda: la skill los ejecuta por ti. Solo pasale el documento."
+      },
+      "9": {
+        "text": "Solo pasale un documento. LiteParse se encarga del resto."
+      },
+      "10": {
+        "text": "LiteParse. Disponible en el plugin lda-docs."
+      }
+    }
+  },
+  "soundDesign": {
+    "musicBed": {
+      "trackId": "lofi-tech",
+      "volume": -18,
+      "fadeInMs": 2000,
+      "fadeOutMs": 3000,
+      "duckingVolume": -26,
+      "duckingFadeMs": 400
+    }
+  }
+}

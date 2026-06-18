@@ -1,0 +1,228 @@
+{
+  "id": "lda-presentacion-skill",
+  "title": "lda-presentación",
+  "description": "Tutorial: genera presentaciones HTML corporativas con la skill lda-presentación del plugin lda-docs.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "theme": "linea-directa",
+  "scenes": [
+    {
+      "type": "intro",
+      "title": "lda-presentación",
+      "subtitle": "Presentaciones LDA en segundos",
+      "durationInSeconds": 6
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Crear una presentación corporativa consume horas.\nFormato, colores, logo, tipografía, exportar a PDF.\nY al final, el resultado nunca es consistente.",
+      "durationInSeconds": 12
+    },
+    {
+      "type": "custom",
+      "componentId": "icon-grid",
+      "durationInSeconds": 18,
+      "props": {
+        "title": "Qué ofrece la skill",
+        "columns": 3,
+        "items": [
+          {
+            "icon": "file",
+            "title": "HTML autocontenido",
+            "description": "Un fichero con todo inline"
+          },
+          {
+            "icon": "layers",
+            "title": "12 tipos de slide",
+            "description": "Portada, stats, cards, steps..."
+          },
+          {
+            "icon": "palette",
+            "title": "Branding LDA",
+            "description": "Colores, logo y tipografía"
+          },
+          {
+            "icon": "edit",
+            "title": "Modo edición",
+            "description": "Tecla E para editar en el navegador"
+          },
+          {
+            "icon": "download",
+            "title": "Export a PDF",
+            "description": "Botón integrado en la presentación"
+          },
+          {
+            "icon": "smartphone",
+            "title": "Navegación táctil",
+            "description": "Flechas, espacio o swipe"
+          }
+        ]
+      }
+    },
+    {
+      "type": "terminal",
+      "title": "Crear presentación",
+      "durationInSeconds": 14,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Crea una presentación de 10 slides sobre los resultados del Q2"
+        },
+        {
+          "kind": "claude",
+          "text": "Voy a usar la skill lda-presentación para generar la presentación..."
+        },
+        {
+          "kind": "output",
+          "text": "  Generando Presentación-Resultados-Q2.html"
+        },
+        {
+          "kind": "output",
+          "text": "  10 slides: Title, Items, Stats, Steps, Cards, Quote, Closing..."
+        },
+        {
+          "kind": "claude",
+          "text": "Presentación generada. Ábrela en el navegador para verla."
+        }
+      ]
+    },
+    {
+      "type": "terminal",
+      "title": "Editar presentación",
+      "durationInSeconds": 12,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Añade un slide de stats con los KPIs de junio a Presentación-Resultados-Q2.html"
+        },
+        {
+          "kind": "claude",
+          "text": "Añadiendo slide de stats al fichero existente..."
+        },
+        {
+          "kind": "output",
+          "text": "  Slide 11 insertado: Stats (Conversión 4.2%, NPS 72, Churn 1.8%)"
+        },
+        {
+          "kind": "claude",
+          "text": "Slide añadido. La presentación ahora tiene 11 slides."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "comparison-table",
+      "durationInSeconds": 10,
+      "props": {
+        "title": "Dos modos de uso",
+        "leftColumn": {
+          "header": "Modo presentación",
+          "items": ["Flechas del teclado", "Barra espaciadora", "Swipe táctil", "Pantalla completa"]
+        },
+        "rightColumn": {
+          "header": "Modo edición",
+          "items": [
+            "Tecla E para activar",
+            "Texto editable inline",
+            "Toolbar con zoom y nav",
+            "Añadir slides desde el navegador"
+          ]
+        }
+      }
+    },
+    {
+      "type": "terminal",
+      "title": "Exportar a PDF",
+      "durationInSeconds": 10,
+      "lines": [
+        {
+          "kind": "command",
+          "text": "Exporta Presentación-Resultados-Q2.html a PDF"
+        },
+        {
+          "kind": "claude",
+          "text": "Abriendo la presentación en el navegador para exportar..."
+        },
+        {
+          "kind": "output",
+          "text": "  Generando Presentación-Resultados-Q2.pdf (A4 landscape, 11 páginas)"
+        },
+        {
+          "kind": "claude",
+          "text": "PDF exportado. 314 KB, listo para compartir."
+        }
+      ]
+    },
+    {
+      "type": "custom",
+      "componentId": "code-block",
+      "durationInSeconds": 12,
+      "props": {
+        "code": "Crea una presentación de 10 slides sobre el plan de migración cloud\n\nAñade un slide de steps con el roadmap del Q3\n\nCambia el slide 5 por un two-column: ventajas vs riesgos\n\nExporta Presentación-Migración.html a PDF",
+        "filename": "prompts de ejemplo",
+        "language": "markdown"
+      }
+    },
+    {
+      "type": "callout",
+      "position": "center",
+      "text": "Solo pídelo.\nClaude genera la presentación completa con branding LDA.\nUn fichero. Cero dependencias. Listo para compartir.",
+      "durationInSeconds": 10
+    },
+    {
+      "type": "outro",
+      "title": "lda-presentación",
+      "durationInSeconds": 8,
+      "bullets": ["12 tipos de slide", "Editable en navegador", "Plugin lda-docs — ya disponible"]
+    }
+  ],
+  "voiceover": {
+    "enabled": true,
+    "provider": "gemini",
+    "voiceId": "Leda",
+    "language": "es-ES",
+    "scenes": {
+      "0": {
+        "text": "lda-presentación. Presentaciones corporativas en segundos."
+      },
+      "1": {
+        "text": "Crear una presentación corporativa consume horas. Formato, colores, logo, tipografía, exportar a PDF. Y al final, el resultado nunca es consistente entre equipos."
+      },
+      "2": {
+        "text": "La skill lo resuelve todo. Un fichero HTML autocontenido con doce tipos de slide: portada, estadísticas, cards, pasos. Branding LDA integrado. Modo edición desde el navegador con la tecla E. Export a PDF incluido. Y navegación táctil para presentar desde cualquier dispositivo."
+      },
+      "3": {
+        "text": "Así de fácil. Le pides a Claude que cree una presentación, y la skill genera un fichero HTML completo. Diez slides con portada, contenido, estadísticas y cierre. Todo con el branding corporativo."
+      },
+      "4": {
+        "text": "También puedes editar presentaciones existentes. Aquí le pedimos que añada un slide de estadísticas con los KPIs de junio. Claude abre el fichero, inserta el slide nuevo y actualiza el contador."
+      },
+      "5": {
+        "text": "La presentación tiene dos modos. Modo presentación con flechas del teclado, barra espaciadora, swipe táctil y pantalla completa. Y modo edición con la tecla E, que activa texto editable y una toolbar con zoom y navegación."
+      },
+      "6": {
+        "text": "Exportar a PDF es igual de sencillo. Claude abre la presentación en el navegador y genera el PDF automáticamente. Un fichero listo para compartir por correo o Teams."
+      },
+      "7": {
+        "text": "Cuatro ejemplos de prompts que cubren los escenarios más comunes. Crear una presentación nueva, añadir un slide, modificar el contenido de uno existente, y exportar a PDF."
+      },
+      "8": {
+        "text": "Solo pídelo. Claude genera la presentación completa con branding LDA. Un fichero. Cero dependencias. Listo para compartir."
+      },
+      "9": {
+        "text": "lda-presentación. Doce tipos de slide, editable en navegador. Disponible en el plugin lda-docs."
+      }
+    }
+  },
+  "soundDesign": {
+    "musicBed": {
+      "trackId": "lofi-tech",
+      "volume": -18,
+      "fadeInMs": 2000,
+      "fadeOutMs": 3000,
+      "duckingVolume": -26,
+      "duckingFadeMs": 400
+    }
+  }
+}
