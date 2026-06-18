@@ -9,7 +9,7 @@ from ..context import resolve_config_id
 from ..paths import PROJECT_ROOT as _DEFAULT_ROOT
 
 PROJECT_ROOT = _DEFAULT_ROOT
-CALIBRATION_MODEL = "gemini-3.1-pro-preview"
+CALIBRATION_MODEL = "gemini-3.5-flash"
 
 
 def _ms_from_timestamp(ts: str | int | float) -> int:

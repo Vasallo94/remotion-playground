@@ -108,6 +108,17 @@ export function listJobs(limit = 20, offset = 0): { jobs: Job[]; total: number }
   return { jobs, total }
 }
 
+export function purgeOldJobs(configId: string, exceptId: string): string[] {
+  const rows = db
+    .prepare("SELECT id FROM jobs WHERE config_id = ? AND id != ? AND status IN ('done', 'error')")
+    .all(configId, exceptId) as { id: string }[]
+  if (rows.length === 0) return []
+  const ids = rows.map((r) => r.id)
+  const placeholders = ids.map(() => "?").join(",")
+  db.prepare(`DELETE FROM jobs WHERE id IN (${placeholders})`).run(...ids)
+  return ids
+}
+
 export function recoverOrphanedJobs(): number {
   const stmt = db.prepare(`
     UPDATE jobs SET status = 'error',

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-_DEFAULT_MODEL = os.environ.get("LLM_MODEL_PRO", "gemini-3.1-pro-preview")
+_DEFAULT_MODEL = os.environ.get("LLM_MODEL_PRO", "gemini-3.5-flash")
 
 
 def _load_vertex_credentials():
