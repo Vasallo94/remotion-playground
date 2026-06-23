@@ -120,6 +120,24 @@ def submit_render(
         config["voiceover"] = voiceover
     if sound_design is not None:
         config["soundDesign"] = sound_design
+        # Ensure library music bed is copied even if sound_engineer didn't do it
+        music_bed = sound_design.get("musicBed") or {}
+        lib_id = music_bed.get("libraryId")
+        if lib_id:
+            import shutil
+            from ..paths import AUDIO_LIBRARY_DIR, audio_dir
+
+            src = (AUDIO_LIBRARY_DIR / f"{lib_id}.mp3").resolve()
+            try:
+                src.relative_to(AUDIO_LIBRARY_DIR.resolve())
+            except ValueError:
+                logger.warning("Rejected path traversal attempt for libraryId: %s", lib_id)
+                src = None
+            if src and src.exists():
+                dest = audio_dir(id) / "music-bed.mp3"
+                if not dest.exists():
+                    shutil.copy2(src, dest)
+                    logger.info("Copied library music bed %s → %s", lib_id, dest)
     # Pipeline agents (voice_generator, sound_engineer) already generated audio
     # files into shared volumes — render script must not regenerate them.
     config["_skipAudioGeneration"] = True

@@ -12,6 +12,10 @@ from .. import paths as _paths
 PIPELINE_PLAN_PATH = "/pipeline/plan.json"
 PLAN_STATUSES = {"pending", "in_progress", "completed", "blocked", "skipped", "failed"}
 _STALL_THRESHOLD = 10
+_MAX_TOTAL_POLLS = 40
+_MAX_STEP_RETURNS = 3
+# Wall-clock timeout includes human checkpoint waits, so set generously
+_PIPELINE_TIMEOUT_SECONDS = 2700
 
 DEFAULT_STEPS: dict[str, list[dict[str, str]]] = {
     "new_video": [
@@ -169,6 +173,9 @@ def create_pipeline_plan(
                 "summary": goal,
             }
         ],
+        "_createdAt": _now(),
+        "_totalPolls": 0,
+        "_stepReturnCounts": {},
     }
     _write_plan(_backend(), plan)
     return {"created": True, "planPath": PIPELINE_PLAN_PATH, "plan": plan}
@@ -268,6 +275,7 @@ def get_next_pipeline_step(
     - ``"stalled"``: an in_progress step has been polled ≥10 times without advancing.
     - ``"blocked"``: a step is blocked and needs resolution.
     - ``"all_completed"``: every step is completed or skipped.
+    - ``"failed"``: pipeline hit a safeguard (poll limit, timeout, or step dispatch limit).
     - ``"no_plan"``: no plan exists yet.
     """
     backend = _backend()
@@ -277,6 +285,37 @@ def get_next_pipeline_step(
             "status": "no_plan",
             "instruction": "Call create_pipeline_plan after route_intent.",
         }
+
+    total_polls = plan.get("_totalPolls", 0) + 1
+    plan["_totalPolls"] = total_polls
+    if total_polls > _MAX_TOTAL_POLLS:
+        plan["status"] = "failed"
+        _write_plan(backend, plan)
+        return {
+            "status": "failed",
+            "reason": (
+                f"Pipeline exceeded maximum poll limit ({_MAX_TOTAL_POLLS}). "
+                "Likely stuck in a loop. Report this to the user and STOP."
+            ),
+        }
+
+    created_at = plan.get("_createdAt")
+    if created_at:
+        try:
+            created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            elapsed = (datetime.now(UTC) - created_dt).total_seconds()
+            if elapsed > _PIPELINE_TIMEOUT_SECONDS:
+                plan["status"] = "failed"
+                _write_plan(backend, plan)
+                return {
+                    "status": "failed",
+                    "reason": (
+                        f"Pipeline exceeded timeout ({_PIPELINE_TIMEOUT_SECONDS}s, "
+                        f"elapsed: {int(elapsed)}s). Report this to the user and STOP."
+                    ),
+                }
+        except (ValueError, TypeError):
+            pass
 
     steps = plan.get("steps", [])
     completed, blocked, in_progress, pending = [], [], [], []
@@ -298,6 +337,7 @@ def get_next_pipeline_step(
     }
 
     if blocked:
+        _write_plan(backend, plan)
         return {
             "status": "blocked",
             "steps": blocked,
@@ -350,17 +390,41 @@ def get_next_pipeline_step(
         }
 
     next_step = pending[0]
-    # Clear stall tracking when advancing to next step
+    step_id = next_step.get("id", "")
+
+    step_counts = plan.get("_stepReturnCounts", {})
+    step_counts[step_id] = step_counts.get(step_id, 0) + 1
+    plan["_stepReturnCounts"] = step_counts
+
+    if step_counts[step_id] > _MAX_STEP_RETURNS:
+        plan["status"] = "failed"
+        _write_plan(backend, plan)
+        return {
+            "status": "failed",
+            "reason": (
+                f"Step '{step_id}' has been returned as next_step {step_counts[step_id]} times "
+                f"without completing (limit: {_MAX_STEP_RETURNS}). "
+                "Report this to the user and STOP."
+            ),
+        }
+
     plan.pop("_stallStepId", None)
     plan.pop("_stallCount", None)
     _write_plan(backend, plan)
 
-    return {
+    result: dict[str, Any] = {
         "status": "next_step",
         "step": next_step,
         "reason": f"Previous steps done: {[s['id'] for s in completed]}",
         "progress": progress,
     }
+    if next_step.get("owner") == "orchestrator":
+        result["ownerHint"] = (
+            "This step is owned by the orchestrator. "
+            "Execute it directly with your own tools (e.g., submit_render, validate_config). "
+            "Do NOT dispatch it to a subagent via task()."
+        )
+    return result
 
 
 def record_pipeline_decision(

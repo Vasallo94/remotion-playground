@@ -136,8 +136,13 @@ app.post("/api/render-stills", (req, res) => {
       return
     }
     try {
-      const jsonMatch = stdout.match(/(\{[\s\S]*\}|\[[\s\S]*\])\s*$/)
-      const result = JSON.parse(jsonMatch ? jsonMatch[1] : stdout)
+      // Extract JSON from the last line that starts with { or [ to avoid
+      // capturing debug/progress output mixed into stdout
+      const lines = stdout.trim().split("\n")
+      const lastJsonLine = [...lines]
+        .reverse()
+        .find((l) => l.trimStart().startsWith("{") || l.trimStart().startsWith("["))
+      const result = JSON.parse(lastJsonLine || stdout)
       res.status(200).json(result)
     } catch {
       res.status(500).json({ error: "Failed to parse stills manifest", raw: stdout })

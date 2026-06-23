@@ -192,7 +192,17 @@ def qa_scenes(
         stills_manifest_json: JSON string from render_scene_stills output.
     """
     config = json.loads(config_json)
-    manifest = json.loads(stills_manifest_json)
+    try:
+        manifest = json.loads(stills_manifest_json)
+    except json.JSONDecodeError as exc:
+        return json.dumps({
+            "scenes": [{
+                "index": 0,
+                "verdict": "ERROR",
+                "reason": f"Failed to parse stills manifest: {exc}",
+                "raw": stills_manifest_json[:500],
+            }]
+        })
     scenes = config.get("scenes", [])
     stills = {s["index"]: s["path"] for s in manifest.get("scenes", [])}
 
