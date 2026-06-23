@@ -21,7 +21,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **`packages/agent/src/_llm.py`** — extracted `create_model()` factory from `orchestrator.py` into a shared module; adds `timeout=600` and `max_retries=2` to all Vertex AI calls to prevent 499 deadline-exceeded errors during long scene_creator runs
 
+- **Pipeline loop protection** — `get_next_pipeline_step()` now enforces three automatic safeguards: global poll limit (40 calls), per-step dispatch limit (3 returns), and wall-clock timeout (20 minutes); prevents infinite validation-retry loops like the one observed in the Docker pipeline comparison test
+
+- **Orchestrator-owned step routing** — `get_next_pipeline_step()` returns an `ownerHint` field for steps with `owner: "orchestrator"`, explicitly instructing the LLM to execute directly instead of dispatching to a subagent; orchestrator prompt now includes a dedicated "Orchestrator-owned steps" section with concrete tool mappings
+
 ### Fixed
+
+- **Render 404 on music bed** — `submit_render` now auto-copies the library music bed to `public/audio/{config_id}/music-bed.mp3` when `libraryId` is set but the file doesn't exist; prevents 404 when `_skipAudioGeneration` bypasses `generate-sound-design.ts`
+
+- **scene_qa crash on malformed stills manifest** — `qa_scenes` now wraps manifest JSON parsing in try-except, returning a graceful ERROR verdict instead of crashing the pipeline; render service stills endpoint also improved to extract JSON from the last matching stdout line instead of using a greedy regex
+
+- **Pipeline stalling between runs** — added `PipelineAutoResumeMiddleware` using DeepAgents' `after_agent` hook with `jump_to="model"` to automatically re-enter the model→tools loop when the pipeline has remaining steps; replaces prompt-only reinforcement which was insufficient (~30% stall rate); includes safeguards: 25 max auto-resumes, 3 consecutive stalls without progress → stop
 
 - **`render-service` download endpoint** — `res.download()` in Express 5.2.1 throws `NotFoundError` because the `send` module doesn't receive `dotfiles: "allow"`; replaced with `res.sendFile()` + explicit `Content-Disposition` header, consistent with the working streaming endpoint
 

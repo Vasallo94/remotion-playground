@@ -29,6 +29,7 @@ from .tools.pipeline import (
     update_pipeline_step,
 )
 
+from .auto_resume import PipelineAutoResumeMiddleware
 from .config import PROJECT_ROOT
 from .context import PipelineContext
 
@@ -100,7 +101,7 @@ def create_video_orchestrator(*, checkpointer=None):
 
     system_prompt = load_prompt("orchestrator")
 
-    middleware: list = [create_skills_middleware(backend)]
+    middleware: list = [create_skills_middleware(backend), PipelineAutoResumeMiddleware()]
     try:
         from deepagents.middleware.summarization import create_summarization_tool_middleware
         middleware.append(create_summarization_tool_middleware(model, StateBackend))
