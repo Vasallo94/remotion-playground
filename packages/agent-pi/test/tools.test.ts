@@ -123,6 +123,28 @@ describe("Claqueta tools", () => {
     )
   })
 
+  it("normalizes script-like scene fields into valid Remotion scene props", async () => {
+    const result = await executeTool("generate_remotion_config", {
+      config: {
+        title: "Compact demo",
+        transition: "cut",
+        scenes: [
+          { type: "terminal", title: "Demo", command: "/compact", expectedOutput: "ok", durationInSeconds: 5 },
+          { type: "callout", title: "Cuándo usarlo", items: ["antes", "después"], durationInSeconds: 4 },
+          { type: "outro", title: "Resumen", summary: "No empiezas de cero", durationInSeconds: 3 },
+        ],
+      },
+    })
+    const config = result.details.config as { scenes: Array<Record<string, unknown>>; transition: { type: string } }
+    assert.deepEqual(config.scenes[0].lines, [
+      { kind: "command", text: "/compact" },
+      { kind: "output", text: "ok" },
+    ])
+    assert.equal(config.scenes[1].text, "antes · después")
+    assert.deepEqual(config.scenes[2].bullets, ["No empiezas de cero"])
+    assert.equal(config.transition.type, "none")
+  })
+
   it("publishes approved artifacts to content/tutorials", async () => {
     const script = {
       title: "Agent Pi tools test",
@@ -169,8 +191,14 @@ describe("Claqueta tools", () => {
     const validation = await executeTool("validate_video_config", { config })
     assert.equal(validation.details.valid, true)
 
+    await executeTool("generate_remotion_config", {
+      config: { title: "Latest config", scenes: [{ type: "terminal", durationInSeconds: 4 }] },
+    })
+    const latestValidation = await executeTool("validate_video_config", {})
+    assert.equal(latestValidation.details.valid, true)
+
     const render = await executeTool("submit_render", { config })
-    assert.equal(render.details.jobId, "job-123")
+    assert.equal((render.details.job as { id: string }).id, "job-123")
 
     const status = await executeTool("check_render_status", { jobId: "job-123" })
     assert.equal((status.details.job as { status: string }).status, "done")

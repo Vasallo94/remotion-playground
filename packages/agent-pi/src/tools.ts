@@ -140,6 +140,21 @@ function resolveConfigPath(pathOrSlug: string): string {
   throw new Error(`No config found for '${pathOrSlug}'`)
 }
 
+async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms)
+    if (!signal) return
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timeout)
+        reject(new Error("Aborted"))
+      },
+      { once: true },
+    )
+  })
+}
+
 async function fetchJson(url: string, options?: RequestInit): Promise<{ status: number; body: unknown }> {
   const response = await fetch(url, options)
   const text = await response.text()
@@ -154,17 +169,24 @@ async function fetchJson(url: string, options?: RequestInit): Promise<{ status: 
   return { status: response.status, body }
 }
 
-function configFromInput(store: AgentPiStore, config: unknown, artifactId?: string): Record<string, unknown> {
+function configFromInput(
+  store: AgentPiStore,
+  threadId: string,
+  config: unknown,
+  artifactId?: string,
+): Record<string, unknown> {
   if (artifactId) {
     const artifact = store.getArtifact<Record<string, unknown>>(artifactId)
     if (!artifact) throw new Error(`Artifact not found: ${artifactId}`)
     if (artifact.kind !== "config") throw new Error(`Artifact is not a config: ${artifactId}`)
-    return artifact.data
+    return withTutorialDefaults(artifact.data)
   }
-  if (typeof config !== "object" || config === null || Array.isArray(config)) {
-    throw new Error("A config object or config artifactId is required")
+  if (typeof config === "object" && config !== null && !Array.isArray(config)) {
+    return withTutorialDefaults(config as Record<string, unknown>)
   }
-  return config as Record<string, unknown>
+  const artifact = latestArtifact<Record<string, unknown>>(store, threadId, "config")
+  if (artifact) return withTutorialDefaults(artifact.data)
+  throw new Error("A config object or config artifactId is required")
 }
 
 function latestArtifact<TData>(
@@ -179,6 +201,126 @@ function latestArtifact<TData>(
     .at(-1) as ArtifactRecord<TData> | undefined
 }
 
+function asString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const items = value
+    .map((item) => {
+      if (typeof item === "string") return item
+      if (typeof item === "object" && item !== null && typeof (item as { text?: unknown }).text === "string") {
+        return (item as { text: string }).text
+      }
+      return undefined
+    })
+    .filter((item): item is string => item !== undefined && item.trim().length > 0)
+  return items.length > 0 ? items : undefined
+}
+
+function normalizeTerminalLines(scene: Record<string, unknown>): Array<Record<string, unknown>> {
+  const rawLines = Array.isArray(scene.lines) ? scene.lines : undefined
+  if (rawLines?.length) {
+    return rawLines.map((line) => {
+      if (typeof line !== "object" || line === null) return { kind: "output", text: String(line) }
+      const record = line as Record<string, unknown>
+      const rawKind = asString(record.kind)?.toLowerCase()
+      const kind =
+        rawKind === "command" || rawKind === "output" || rawKind === "claude" || rawKind === "blank"
+          ? rawKind
+          : "output"
+      return { ...record, kind, text: asString(record.text) ?? "" }
+    })
+  }
+
+  const command = asString(scene.command) ?? "/compact"
+  const output = asString(scene.expectedOutput) ?? asString(scene.output) ?? "✓ Contexto compactado"
+  return [
+    { kind: "command", text: command },
+    { kind: "output", text: output },
+  ]
+}
+
+function normalizeScene(rawScene: unknown): Record<string, unknown> {
+  const scene = typeof rawScene === "object" && rawScene !== null ? (rawScene as Record<string, unknown>) : {}
+  const type = asString(scene.type) ?? "callout"
+  const durationInSeconds = Number(scene.durationInSeconds ?? 4)
+  const safeDuration = Number.isFinite(durationInSeconds) ? durationInSeconds : 4
+  const title = asString(scene.title) ?? asString(scene.heading) ?? asString(scene.id) ?? "Escena"
+  const voiceover = asString(scene.voiceover) ?? asString(scene.narration) ?? asString(scene.summary)
+  const items = asStringArray(scene.items) ?? asStringArray(scene.bullets)
+
+  if (type === "intro") {
+    return {
+      ...scene,
+      type: "intro",
+      title,
+      subtitle: asString(scene.subtitle) ?? voiceover,
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  if (type === "terminal") {
+    return {
+      ...scene,
+      type: "terminal",
+      title,
+      lines: normalizeTerminalLines(scene),
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  if (type === "callout") {
+    return {
+      ...scene,
+      type: "callout",
+      text: asString(scene.text) ?? voiceover ?? items?.join(" · ") ?? title,
+      position: asString(scene.position) ?? "bottom",
+      background: asString(scene.background) ?? "overlay",
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  if (type === "outro") {
+    return {
+      ...scene,
+      type: "outro",
+      title,
+      bullets: asStringArray(scene.bullets) ?? items ?? (voiceover ? [voiceover] : undefined),
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  if (type === "benefits") {
+    return {
+      ...scene,
+      type: "benefits",
+      title,
+      items: (items ?? [voiceover ?? title]).map((text) => ({ text })),
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  return {
+    ...scene,
+    type: "callout",
+    text: voiceover ?? items?.join(" · ") ?? title,
+    position: "bottom",
+    background: "overlay",
+    durationInSeconds: safeDuration,
+  }
+}
+
+function normalizeTransition(transition: unknown): unknown {
+  if (transition === undefined || transition === null) return transition
+  if (typeof transition === "string") return { type: transition === "cut" ? "none" : transition }
+  if (typeof transition !== "object") return transition
+  const record = transition as Record<string, unknown>
+  if (record.type === "cut") return { ...record, type: "none" }
+  return transition
+}
+
 function withTutorialDefaults(config: Record<string, unknown>): Record<string, unknown> {
   const title = typeof config.title === "string" ? config.title : "claqueta-video"
   return {
@@ -191,6 +333,8 @@ function withTutorialDefaults(config: Record<string, unknown>): Record<string, u
     composition: "ClaudeCodeTutorial",
     theme: "linea-directa",
     ...config,
+    scenes: Array.isArray(config.scenes) ? config.scenes.map(normalizeScene) : [],
+    transition: normalizeTransition(config.transition),
   }
 }
 
@@ -425,7 +569,7 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       description: "Validate a config object or saved config artifact against the render-service Zod endpoint.",
       parameters: Type.Object({ config: Type.Optional(Type.Any()), artifactId: Type.Optional(Type.String()) }),
       async execute(_id, params, signal) {
-        const config = configFromInput(store, params.config, params.artifactId)
+        const config = configFromInput(store, threadId, params.config, params.artifactId)
         const { status, body } = await fetchJson(`${renderServiceUrl}/api/validate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -445,17 +589,22 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
     defineTool({
       name: "submit_render",
       label: "Submit Render",
-      description: "Submit a validated config object or config artifact to the render-service.",
+      description:
+        "Submit a validated config object or config artifact to the render-service. V1 skips audio generation unless CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true.",
       parameters: Type.Object({
         config: Type.Optional(Type.Any()),
         artifactId: Type.Optional(Type.String()),
         skipAudioGeneration: Type.Optional(Type.Boolean()),
+        waitForCompletion: Type.Optional(Type.Boolean()),
+        timeoutMs: Type.Optional(Type.Number()),
       }),
-      async execute(_id, params, signal) {
+      async execute(_id, params, signal, onUpdate) {
+        const allowAudioGeneration = process.env.CLAQUETA_PI_ALLOW_AUDIO_GENERATION === "true"
+        const skipAudioGeneration = allowAudioGeneration ? (params.skipAudioGeneration ?? true) : true
         const config = {
-          ...configFromInput(store, params.config, params.artifactId),
+          ...configFromInput(store, threadId, params.config, params.artifactId),
           _threadId: threadId,
-          _skipAudioGeneration: params.skipAudioGeneration ?? true,
+          _skipAudioGeneration: skipAudioGeneration,
         }
         const { status, body } = await fetchJson(`${renderServiceUrl}/api/render`, {
           method: "POST",
@@ -473,7 +622,38 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
           type: "render_status",
           payload: { jobId, status: "submitted", artifactId: artifact.id },
         })
-        return textResult(`Render submitted: ${jobId}`, { jobId, artifact })
+
+        if (params.waitForCompletion === false) {
+          return textResult(`Render submitted: ${jobId}`, { jobId, artifact })
+        }
+
+        const timeoutMs = params.timeoutMs ?? 10 * 60 * 1000
+        const startedAt = Date.now()
+        let lastSignature = "submitted:0"
+        while (Date.now() - startedAt < timeoutMs) {
+          const statusResult = await fetchJson(`${renderServiceUrl}/api/render/${jobId}/status`, { signal })
+          if (statusResult.status < 200 || statusResult.status >= 300) {
+            throw new Error(`Render status failed (${statusResult.status}): ${JSON.stringify(statusResult.body)}`)
+          }
+          const job = statusResult.body as RenderJobStatus
+          const signature = `${job.status}:${job.progress}`
+          if (signature !== lastSignature) {
+            lastSignature = signature
+            eventBus.publish({ threadId, type: "render_status", payload: job })
+            onUpdate?.({ content: [{ type: "text", text: `Render ${job.status} ${job.progress}%` }], details: { job } })
+          }
+          if (job.status === "done") {
+            store.saveArtifact({ threadId, kind: "render_job", data: job, approved: true })
+            return textResult(`Render completed: ${jobId}`, { job })
+          }
+          if (job.status === "error") {
+            eventBus.publish({ threadId, type: "render_status", payload: job })
+            throw new Error(`Render failed: ${job.error ?? "unknown error"}`)
+          }
+          await sleep(5000, signal)
+        }
+
+        throw new Error(`Render timed out after ${timeoutMs}ms: ${jobId}`)
       },
     }),
 

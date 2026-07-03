@@ -1,0 +1,67 @@
+{
+  "title": "Dirección técnica — Tutorial breve de /compact en Claude Code",
+  "scenes": [
+    {
+      "sceneId": "s1",
+      "sceneType": "intro",
+      "technicalIntent": "Hook visual rápido: mostrar el comando /compact como solución a sesiones largas. Mantener movimiento sutil y texto grande.",
+      "timing": {
+        "start": 0,
+        "duration": 4
+      },
+      "beats": ["Título en pantalla", "Comando resaltado", "Micro animación de compresión"],
+      "assets": ["terminal-ui", "command-highlight"],
+      "risks": ["Evitar exceso de texto en la intro"]
+    },
+    {
+      "sceneId": "s2",
+      "sceneType": "terminal",
+      "technicalIntent": "Demostración principal en una terminal realista. Mostrar la ejecución de /compact y una respuesta breve que sugiera contexto compactado.",
+      "timing": {
+        "start": 4,
+        "duration": 8
+      },
+      "beats": ["Prompt visible", "Comando escrito", "Salida corta de confirmación"],
+      "assets": ["terminal-window", "typing-animation", "output-line"],
+      "risks": ["No inventar demasiada salida; debe verse creíble y breve"]
+    },
+    {
+      "sceneId": "s3",
+      "sceneType": "callout",
+      "technicalIntent": "Pausa didáctica para resumir cuándo usar /compact con tres casos concretos.",
+      "timing": {
+        "start": 12,
+        "duration": 6
+      },
+      "beats": ["Cambio de tema", "Sesión larga", "Reducir ruido"],
+      "assets": ["three-bullets", "icon-cards"],
+      "risks": ["No alargar la lista ni saturar con detalle"]
+    },
+    {
+      "sceneId": "s4",
+      "sceneType": "outro",
+      "technicalIntent": "Cierre con recap visual y recordatorio de utilidad. Terminar limpio, con sensación de herramienta práctica.",
+      "timing": {
+        "start": 18,
+        "duration": 4
+      },
+      "beats": ["Resumen final", "Comando /compact", "Cierre optimista"],
+      "assets": ["recap-card", "terminal-ui"],
+      "risks": ["No añadir nueva información en el cierre"]
+    }
+  ],
+  "warnings": [
+    "Mantener formato landscape 16:9.",
+    "Sin audio avanzado: voz simple y música mínima o nula.",
+    "Máximo 4 escenas y duración total breve."
+  ],
+  "audio": {
+    "style": "simple_voiceover",
+    "music": "none_or_very_subtle",
+    "mix": "voice-first"
+  },
+  "risks": [
+    "La respuesta del terminal debe ser genérica y segura.",
+    "Evitar jerga innecesaria para que el tutorial siga siendo breve."
+  ]
+}

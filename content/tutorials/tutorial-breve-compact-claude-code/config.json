@@ -1,0 +1,64 @@
+{
+  "id": "tutorial-breve-compact-claude-code",
+  "title": "Tutorial breve de /compact en Claude Code",
+  "description": "Explica en breve qué hace /compact, cuándo usarlo y cómo ejecutarlo en Claude Code.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "composition": "ClaudeCodeTutorial",
+  "theme": "linea-directa",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Qué hace /compact",
+      "durationInSeconds": 4,
+      "voiceover": "Si tu sesión está muy larga, /compact resume el contexto y ayuda a seguir trabajando sin arrastrar tanto historial.",
+      "visualNotes": "Pantalla limpia con el comando /compact destacado y una breve animación de resumen de contexto.",
+      "subtitle": "Si tu sesión está muy larga, /compact resume el contexto y ayuda a seguir trabajando sin arrastrar tanto historial."
+    },
+    {
+      "id": "s2",
+      "type": "terminal",
+      "title": "Ejecuta el comando",
+      "durationInSeconds": 8,
+      "voiceover": "En Claude Code, escribe /compact y confirma. El asistente condensará la conversación actual para seguir desde ahí.",
+      "visualNotes": "Terminal realista mostrando el comando /compact y una salida corta indicando que el contexto fue compactado.",
+      "lines": [
+        {
+          "kind": "command",
+          "text": "/compact"
+        },
+        {
+          "kind": "output",
+          "text": "✓ Contexto compactado"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "callout",
+      "title": "Cuándo usarlo",
+      "durationInSeconds": 6,
+      "voiceover": "Úsalo antes de cambiar de tema, cuando notes que la conversación se vuelve pesada o si quieres limpiar ruido sin perder lo importante.",
+      "visualNotes": "Callout con tres casos de uso: cambio de tema, sesión larga y limpieza de ruido.",
+      "text": "Úsalo antes de cambiar de tema, cuando notes que la conversación se vuelve pesada o si quieres limpiar ruido sin perder lo importante.",
+      "position": "bottom",
+      "background": "overlay"
+    },
+    {
+      "id": "s4",
+      "type": "outro",
+      "title": "Resumen",
+      "durationInSeconds": 4,
+      "voiceover": "En resumen: /compact mantiene la conversación útil y más ligera. Ideal para sesiones largas en Claude Code.",
+      "visualNotes": "Cierre con el comando /compact y un mensaje de ‘sesión compactada’.",
+      "bullets": [
+        "En resumen: /compact mantiene la conversación útil y más ligera. Ideal para sesiones largas en Claude Code."
+      ]
+    }
+  ],
+  "transition": {
+    "type": "none"
+  }
+}

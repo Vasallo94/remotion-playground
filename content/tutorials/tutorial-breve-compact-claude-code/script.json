@@ -1,0 +1,42 @@
+{
+  "title": "Tutorial breve de /compact en Claude Code",
+  "objective": "Explicar en menos de 30 segundos qué hace /compact, cuándo usarlo y cómo ejecutarlo en Claude Code.",
+  "audience": "Usuarios de Claude Code que quieren ahorrar contexto en sesiones largas.",
+  "tone": "claro, directo y práctico",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Qué hace /compact",
+      "voiceover": "Si tu sesión está muy larga, /compact resume el contexto y ayuda a seguir trabajando sin arrastrar tanto historial.",
+      "visualNotes": "Pantalla limpia con el comando /compact destacado y una breve animación de resumen de contexto.",
+      "durationInSeconds": 4
+    },
+    {
+      "id": "s2",
+      "type": "terminal",
+      "title": "Ejecuta el comando",
+      "voiceover": "En Claude Code, escribe /compact y confirma. El asistente condensará la conversación actual para seguir desde ahí.",
+      "visualNotes": "Terminal realista mostrando el comando /compact y una salida corta indicando que el contexto fue compactado.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s3",
+      "type": "callout",
+      "title": "Cuándo usarlo",
+      "voiceover": "Úsalo antes de cambiar de tema, cuando notes que la conversación se vuelve pesada o si quieres limpiar ruido sin perder lo importante.",
+      "visualNotes": "Callout con tres casos de uso: cambio de tema, sesión larga y limpieza de ruido.",
+      "durationInSeconds": 6
+    },
+    {
+      "id": "s4",
+      "type": "outro",
+      "title": "Resumen",
+      "voiceover": "En resumen: /compact mantiene la conversación útil y más ligera. Ideal para sesiones largas en Claude Code.",
+      "visualNotes": "Cierre con el comando /compact y un mensaje de ‘sesión compactada’.",
+      "durationInSeconds": 4
+    }
+  ],
+  "estimatedDurationSeconds": 22,
+  "notes": "Formato landscape. Sin audio avanzado. Mantener ejemplo simple y visuales tipo terminal."
+}

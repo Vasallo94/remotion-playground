@@ -4,6 +4,42 @@ Specs movidas aquí tras implementación exitosa.
 
 ---
 
+## 2026-07-02 — Runtime agéntico con Pi SDK
+
+### Objective
+
+Migrar progresivamente el runtime agéntico de Claqueta a Pi SDK empezando por el flujo de generación de `ClaudeCodeTutorial` desde UI/chat, manteniendo Remotion, render-service, schemas Zod, catálogo de escenas y checkpoints humano-en-el-loop.
+
+### Scope
+
+- Nuevo backend experimental `packages/agent-pi` en TypeScript con Pi SDK, Express, SSE, SQLite y sesiones Pi persistentes.
+- Tools cerradas para catálogo, guion, dirección, config, validación, render, status y publicación de artifacts.
+- Checkpoints de guion/dirección con artifacts versionados y pausa por `terminate: true`.
+- UI activable con `VITE_AGENT_RUNTIME=pi`, `usePiVideoStream`, `ScriptCard` editable y recuperación básica de thread/checkpoint.
+- Persistencia final de `script.json`, `script.md`, `direction.json` y `config.json` en `content/tutorials/<slug>/`.
+- Reutilización de `packages/render-service` para validar/renderizar, sin reescribir Remotion ni schemas existentes.
+
+### Acceptance Criteria
+
+1. Existe `packages/agent-pi/` como backend experimental TypeScript basado en Pi SDK.
+2. La UI puede usar eventos SSE del runtime Pi mediante `VITE_AGENT_RUNTIME=pi` conservando LangGraph como default.
+3. El chat sigue siendo el eje y muestra cards/checkpoints para guion y dirección.
+4. El usuario puede generar, editar y aprobar una escaleta/guion estructurado.
+5. Tras aprobar guion, Pi genera dirección técnica revisable y permite aprobación/crítica.
+6. Tras aprobar dirección, Pi genera `config.json`, valida Zod y lanza render.
+7. La validación fallida activa un intento automático de reparación; render fallido tiene retry policy en prompt y timeout/progreso en tool.
+8. Se publican artifacts aprobados en `content/tutorials/<slug>/` y drafts intermedios quedan en `.generated/`.
+9. La persistencia usa SQLite ligera para threads/artifacts/events y enlaza sesiones Pi.
+10. La escritura runtime V1 está limitada por allowlist.
+11. El model routing permite configurar proveedores/modelos por env.
+12. `code_evolution` queda documentado en diseño/roadmap, no implementado en V1.
+
+### Result
+
+Implementado y verificado. Tests: `pnpm --filter @remotion-platform/agent-pi typecheck` ✓, `pnpm --filter @remotion-platform/agent-pi test` ✓ (20 tests), `pnpm --filter @remotion-platform/web build` ✓. E2E manual `/compact` completado con thread `1a2f01ae-65b7-4fa8-87bc-0808846d0d15`, render `cd60beb2-fd72-46f1-ab93-28b7d3f1f945` y artifacts publicados en `content/tutorials/tutorial-breve-compact-claude-code/`.
+
+---
+
 ## 2026-05-19 — UI desde plan.json
 
 ### Objective
