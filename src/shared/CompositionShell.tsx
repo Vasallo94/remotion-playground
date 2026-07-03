@@ -1,5 +1,5 @@
 import React, { useMemo } from "react"
-import { AbsoluteFill, Audio, Sequence, staticFile, useVideoConfig } from "remotion"
+import { AbsoluteFill, Audio, Sequence, continueRender, delayRender, staticFile, useVideoConfig } from "remotion"
 import { TransitionSeries, linearTiming, type TransitionPresentation } from "@remotion/transitions"
 import { fade } from "@remotion/transitions/fade"
 import { slide } from "@remotion/transitions/slide"
@@ -34,6 +34,43 @@ interface CompositionShellProps<S extends CompositionShellScene> {
   renderScene: (scene: S, index: number) => React.ReactNode
   renderOverlay?: (scene: S, info: SceneInfo<S>, index: number) => React.ReactNode
   musicLoop?: boolean
+}
+
+function ThemeFontLoader({ theme }: { theme: ThemeName }) {
+  const fontFaces = getTheme(theme).fontFaces
+  const [handle] = React.useState(() => (fontFaces?.length ? delayRender(`Loading ${theme} fonts`) : null))
+
+  React.useEffect(() => {
+    if (!fontFaces?.length || handle === null) return
+
+    let cancelled = false
+    const loadFonts = async () => {
+      if (typeof FontFace === "undefined" || typeof document === "undefined") return
+      await Promise.all(
+        fontFaces.map(async (font) => {
+          const face = new FontFace(font.family, `url(${staticFile(font.file)})`, {
+            weight: font.weight ?? "400",
+            style: font.style ?? "normal",
+          })
+          const loaded = await face.load()
+          if (!cancelled) document.fonts.add(loaded)
+        }),
+      )
+      await document.fonts.ready
+    }
+
+    loadFonts()
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) continueRender(handle)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [fontFaces, handle, theme])
+
+  return null
 }
 
 export function CompositionShell<S extends CompositionShellScene>({
@@ -72,6 +109,7 @@ export function CompositionShell<S extends CompositionShellScene>({
   return (
     <ThemeContext.Provider value={theme}>
       <AbsoluteFill style={{ background: bg }}>
+        <ThemeFontLoader theme={theme} />
         {config.soundDesign?.enabled && config.soundDesign.musicBed && (
           <Audio
             src={staticFile(`audio/${config.id}/music-bed.mp3`)}

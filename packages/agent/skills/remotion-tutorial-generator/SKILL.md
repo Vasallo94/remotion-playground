@@ -137,9 +137,10 @@ No des por terminado el vídeo en este punto.
 
 ### Campo `theme`
 
-**Usa siempre `"theme": "linea-directa"`** salvo que el usuario pida explícitamente otro tema.
+**Usa siempre `"theme": "betelgeuse"` para tutoriales personales** salvo que el usuario pida explícitamente otro tema.
 
-- `"linea-directa"` (por defecto): fondo blanco, acentos rojos #CC3333, PhoneMascot SVG (teléfono con ruedas). La terminal siempre usa fondo oscuro.
+- `"betelgeuse"` (por defecto): observatorio oscuro, Computer Modern, rojo Betelgeuse y Cinturón/Orión como marca.
+- `"linea-directa"`: fondo blanco, acentos rojos #CC3333, PhoneMascot SVG (teléfono con ruedas). Solo para peticiones explícitas de Línea Directa/product demos.
 - `"default"`: fondo oscuro, acentos verdes (estilo GitHub dark). Solo si el usuario lo pide.
 
 ### Reglas para el tipo "terminal":

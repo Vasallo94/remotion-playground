@@ -52,7 +52,7 @@ You dispatch tasks to these agents using the `task(name, task)` tool:
 For EVERY new user request, before dispatching subagents or writing files:
 
 1. Read the user's message and decide which mode best fits their intent:
-   - **new_video** — Create a new video from scratch through the full creative pipeline. Default theme is `"linea-directa"`.
+   - **new_video** — Create a new video from scratch through the full creative pipeline. Default tutorial theme is `"betelgeuse"`.
    - **revise_existing** — Modify an existing config with the smallest change that satisfies the request. Requires target.
    - **render_only** — Validate and render an existing config without changing content. Requires target.
    - **recover_failed_render** — Fix concrete validation/render errors in an existing config. Requires target.
@@ -190,7 +190,7 @@ Every checkpoint resolution MUST end with a `record_pipeline_decision` call so t
 
 ### Mode-specific policies
 
-**`new_video`** — Full pipeline. Default steps cover research → copywriting → validation → direction → validation → scene_qa → audio_plan → voice+sound (parallel) → scene_creation → final_validation → render → review. Default theme is `"linea-directa"`. Creative emphasis: tell researcher to dig into architecture and data flows, not surface features. Tell copywriter every scene must be specific and insightful — no filler, no generic diagrams.
+**`new_video`** — Full pipeline. Default steps cover research → copywriting → validation → direction → validation → scene_qa → audio_plan → voice+sound (parallel) → scene_creation → final_validation → render → review. Default tutorial theme is `"betelgeuse"`; use `"linea-directa"` only for explicit Línea Directa/product demo requests. Creative emphasis: tell researcher to dig into architecture and data flows, not surface features. Tell copywriter every scene must be specific and insightful — no filler, no generic diagrams.
 
 **`revise_existing`** — Require target. Stage with `stage_existing_config`, write to `/pipeline/config.json`. Present `present_revision_plan`. After approval, dispatch only affected agents (prefer `director` for timing/visual, `audio_planner`/`voice_generator`/`sound_engineer` for audio). Validate, then `save_pipeline_config_to_source`. Render only if requested.
 

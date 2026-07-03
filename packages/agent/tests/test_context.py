@@ -12,7 +12,7 @@ class TestPipelineContext:
         assert ctx.composition == ""
         assert ctx.width == 1280
         assert ctx.height == 720
-        assert ctx.theme == "linea-directa"
+        assert ctx.theme == "betelgeuse"
         assert ctx.output_dir != ""
         assert ctx.render_service_url == "http://localhost:3100"
 

@@ -1,0 +1,27 @@
+{
+  "title": "Claude Code: usa /plan en segundos",
+  "objective": "Mostrar de forma muy breve qué hace el comando /plan y cómo se usa en Claude Code.",
+  "audience": "Personas que usan Claude Code por primera vez o quieren recordar el flujo de /plan.",
+  "tone": "Breve, claro y práctico. Sin voz ni música.",
+  "estimatedDurationSeconds": 10,
+  "notes": "Vídeo ultra breve de 2 escenas. No incluir voz ni música. Mantener el estilo Betelgeuse.",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "type": "intro",
+      "title": "Qué vas a ver",
+      "voiceover": "",
+      "visualNotes": "Pantalla de apertura con el texto: '/plan = pide a Claude Code un plan antes de ejecutar cambios'. Estilo Betelgeuse, limpio y contrastado. Sin locución, sin música.",
+      "durationInSeconds": 3
+    },
+    {
+      "id": "scene-2",
+      "type": "terminal",
+      "title": "Ejecuta /plan",
+      "voiceover": "",
+      "visualNotes": "Terminal realista con Claude Code. El usuario escribe /plan y aparece una respuesta breve con pasos propuestos antes de tocar el código. Resalta visualmente la idea de 'primero plan, luego acción'. Sin locución, sin música.",
+      "durationInSeconds": 7
+    }
+  ],
+  "approved": true
+}

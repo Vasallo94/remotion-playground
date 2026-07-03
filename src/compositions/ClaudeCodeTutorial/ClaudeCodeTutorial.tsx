@@ -60,7 +60,7 @@ function useTimestamps(configId: string, sceneCount: number, enabled: boolean): 
 }
 
 export const ClaudeCodeTutorial: React.FC<TutorialConfig> = (config) => {
-  const theme = getTheme(config.theme ?? "default")
+  const theme = getTheme(config.theme ?? "betelgeuse")
   const subtitlesEnabled = config.subtitles?.enabled !== false && Boolean(config.voiceover?.enabled)
   const sceneTimestamps = useTimestamps(config.id, config.scenes.length, subtitlesEnabled)
   const signature = config.signature ?? null
@@ -69,7 +69,7 @@ export const ClaudeCodeTutorial: React.FC<TutorialConfig> = (config) => {
   return (
     <CompositionShell
       config={config}
-      theme={config.theme ?? "default"}
+      theme={config.theme ?? "betelgeuse"}
       renderScene={(scene) => {
         const Scene = SCENE_MAP[scene.type]
         return Scene ? <Scene {...scene} /> : null

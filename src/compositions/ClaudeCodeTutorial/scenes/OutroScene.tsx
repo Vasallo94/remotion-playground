@@ -25,7 +25,7 @@ const OutroBullet: React.FC<{
         style={{
           width: 8,
           height: 8,
-          borderRadius: "50%",
+          borderRadius: tokens.radius,
           background: tokens.primary,
           flexShrink: 0,
           marginTop: 8,

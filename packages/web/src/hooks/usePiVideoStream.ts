@@ -65,6 +65,15 @@ function getMessageText(message: Message): string {
   return typeof message.content === "string" ? message.content : ""
 }
 
+function parsePiEvent(raw: string | undefined): PiEvent | null {
+  if (!raw || raw === "undefined") return null
+  try {
+    return JSON.parse(raw) as PiEvent
+  } catch {
+    return null
+  }
+}
+
 export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideoStreamReturn {
   const { threadId, onThreadId, onError } = options
   const [activeThreadId, setActiveThreadId] = useState<string | null>(threadId ?? null)
@@ -155,7 +164,12 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "render_status": {
-          const jobId = typeof event.payload.jobId === "string" ? event.payload.jobId : undefined
+          const jobId =
+            typeof event.payload.jobId === "string"
+              ? event.payload.jobId
+              : typeof event.payload.id === "string"
+                ? event.payload.id
+                : undefined
           const status = typeof event.payload.status === "string" ? event.payload.status : undefined
           if (jobId && status === "done") {
             addEnrichment({
@@ -209,7 +223,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     if (!activeThreadId) return
     const source = new EventSource(getPiEventsUrl(activeThreadId, lastSeqRef.current))
     source.onmessage = (message) => {
-      handleEvent(JSON.parse(message.data) as PiEvent)
+      const event = parsePiEvent(message.data)
+      if (event) handleEvent(event)
     }
     const eventTypes: PiEvent["type"][] = [
       "message_delta",
@@ -223,7 +238,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     ]
     for (const type of eventTypes) {
       source.addEventListener(type, (message) => {
-        handleEvent(JSON.parse((message as MessageEvent).data) as PiEvent)
+        const event = parsePiEvent((message as MessageEvent).data)
+        if (event) handleEvent(event)
       })
     }
     source.onerror = () => {

@@ -1,0 +1,46 @@
+{
+  "id": "claude-code-plan-betelgeuse",
+  "title": "Claude Code: usa /plan en segundos",
+  "description": "Tutorial muy breve sobre el comando /plan de Claude Code.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "composition": "ClaudeCodeTutorial",
+  "theme": "betelgeuse",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "type": "intro",
+      "title": "Qué vas a ver",
+      "durationInSeconds": 3,
+      "text": "/plan = plan antes de actuar",
+      "style": {
+        "accent": "betelgeuse"
+      }
+    },
+    {
+      "id": "scene-2",
+      "type": "terminal",
+      "title": "Ejecuta /plan",
+      "durationInSeconds": 7,
+      "command": "/plan",
+      "output": "Claude Code propone pasos antes de cambiar el código.",
+      "style": {
+        "accent": "betelgeuse"
+      },
+      "lines": [
+        {
+          "kind": "command",
+          "text": "/plan"
+        },
+        {
+          "kind": "output",
+          "text": "Claude Code propone pasos antes de cambiar el código."
+        }
+      ]
+    }
+  ],
+  "transition": {
+    "type": "none"
+  }
+}

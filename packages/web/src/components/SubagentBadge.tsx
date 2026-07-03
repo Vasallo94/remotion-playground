@@ -19,18 +19,15 @@ export function SubagentBadge({ agentName }: { agentName: string }) {
         alignItems: "center",
         gap: 8,
         padding: "6px 14px",
-        borderRadius: 20,
         backgroundColor: theme.colors.accent.primaryMuted,
         border: `1px solid ${theme.colors.accent.primary}`,
         fontSize: 13,
         color: theme.colors.accent.primary,
-        fontWeight: 500,
+        fontWeight: 700,
+        fontFamily: theme.fonts.mono,
       }}
     >
-      <span
-        className="animate-pulse"
-        style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: theme.colors.accent.primary }}
-      />
+      <span className="animate-pulse" style={{ width: 6, height: 10, backgroundColor: theme.colors.accent.primary }} />
       <span>{label}...</span>
     </div>
   )

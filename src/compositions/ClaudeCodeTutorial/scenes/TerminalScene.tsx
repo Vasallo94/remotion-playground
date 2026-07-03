@@ -58,7 +58,7 @@ const UserMessage: React.FC<MessageProps> = ({ line, frame, terminal, monoFont }
     <div
       style={{
         border: `1px solid ${terminal.userMessageBorder}`,
-        borderRadius: 8,
+        borderRadius: 0,
         padding: "10px 14px",
         marginBottom: 16,
         background: terminal.userMessageBg,
@@ -226,7 +226,7 @@ export const TerminalScene: React.FC<TerminalSceneProps> = ({ title, lines, timi
       <div
         style={{
           width: "90%",
-          borderRadius: 10,
+          borderRadius: tokens.radius,
           overflow: "hidden",
           boxShadow: t.shadow,
           opacity: windowSpring,
@@ -247,7 +247,7 @@ export const TerminalScene: React.FC<TerminalSceneProps> = ({ title, lines, timi
           }}
         >
           {t.dots.map((color, i) => (
-            <div key={i} style={{ width: 12, height: 12, borderRadius: "50%", background: color }} />
+            <div key={i} style={{ width: 12, height: 12, borderRadius: tokens.radius, background: color }} />
           ))}
           <div
             style={{

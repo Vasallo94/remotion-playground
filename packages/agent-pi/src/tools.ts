@@ -331,7 +331,7 @@ function withTutorialDefaults(config: Record<string, unknown>): Record<string, u
     width: 1280,
     height: 720,
     composition: "ClaudeCodeTutorial",
-    theme: "linea-directa",
+    theme: "betelgeuse",
     ...config,
     scenes: Array.isArray(config.scenes) ? config.scenes.map(normalizeScene) : [],
     transition: normalizeTransition(config.transition),

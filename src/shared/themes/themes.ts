@@ -1,4 +1,4 @@
-// src/compositions/ClaudeCodeTutorial/themes.ts
+// Shared Remotion theme tokens
 import { loadFont } from "@remotion/google-fonts/JetBrainsMono"
 import { useTheme } from "./ThemeContext"
 import type { ThemeName } from "../../compositions/ClaudeCodeTutorial/schema"
@@ -22,6 +22,13 @@ export type ThemeTokens = {
   // Typography
   fontFamily: string
   monoFontFamily: string
+  fontFaces?: Array<{
+    family: string
+    file: string
+    weight?: string
+    style?: string
+  }>
+  radius: number
   // Terminal
   terminal: {
     sceneBackground: string
@@ -60,6 +67,21 @@ export type ThemeTokens = {
   }
   // Overlay
   overlay: string
+  // Optional brand ornaments
+  constellation?: {
+    showIntro: boolean
+    lineColor: string
+    starColor: string
+    accentStarColor: string
+    opacity: number
+  }
+  watermark?: {
+    type: "pixel-logo" | "cinturon"
+    opacity: number
+    bottom: number
+    right: number
+    scale: number
+  }
   // Labels
   label: string
   labelColor: string
@@ -78,6 +100,7 @@ const defaultTheme: ThemeTokens = {
   secondary: "#79c0ff",
   fontFamily: "system-ui, sans-serif",
   monoFontFamily: monoFont,
+  radius: 10,
   terminal: {
     sceneBackground: "#0d1117",
     bg: "#0d1117",
@@ -128,6 +151,7 @@ const lineaDirectaTheme: ThemeTokens = {
   secondary: "#225050",
   fontFamily: "Arial, Helvetica, sans-serif",
   monoFontFamily: monoFont,
+  radius: 10,
   terminal: {
     sceneBackground: "radial-gradient(ellipse at 50% 60%, #2d1c22 0%, #141014 100%)",
     bg: "#0d0d0d",
@@ -178,6 +202,7 @@ const atomDarkTheme: ThemeTokens = {
   secondary: "#c678dd",
   fontFamily: "system-ui, sans-serif",
   monoFontFamily: monoFont,
+  radius: 10,
   terminal: {
     sceneBackground: "#21252b",
     bg: "#282c34",
@@ -228,6 +253,7 @@ const hAlphaTheme: ThemeTokens = {
   secondary: "#2c7782",
   fontFamily: '"Times New Roman", Georgia, "DejaVu Serif", ui-serif, serif',
   monoFontFamily: monoFont,
+  radius: 10,
   terminal: {
     sceneBackground: "#14313f",
     bg: "#14313f",
@@ -278,6 +304,7 @@ const claquetaTheme: ThemeTokens = {
   secondary: "#e8dcc3",
   fontFamily: 'Georgia, "Times New Roman", ui-serif, serif',
   monoFontFamily: monoFont,
+  radius: 10,
   terminal: {
     sceneBackground: "radial-gradient(ellipse at 50% 30%, #1a1612 0%, #0d0c0b 75%)",
     bg: "#14110e",
@@ -317,12 +344,91 @@ const claquetaTheme: ThemeTokens = {
   accentLine: "linear-gradient(90deg, #ffb347, #e8dcc3)",
 }
 
+const betelgeuseFontFaces: NonNullable<ThemeTokens["fontFaces"]> = [
+  { family: "Computer Modern Serif", file: "fonts/computer-modern/cmunrm.woff", weight: "400" },
+  { family: "Computer Modern Serif", file: "fonts/computer-modern/cmunbx.woff", weight: "700" },
+  { family: "Computer Modern Serif", file: "fonts/computer-modern/cmunit.woff", weight: "400", style: "italic" },
+  { family: "Computer Modern Sans", file: "fonts/computer-modern/cmunss.woff", weight: "400" },
+  { family: "Computer Modern Sans", file: "fonts/computer-modern/cmunsx.woff", weight: "700" },
+  { family: "Computer Modern Typewriter", file: "fonts/computer-modern/cmuntt.woff", weight: "400" },
+  { family: "Computer Modern Typewriter", file: "fonts/computer-modern/cmuntx.woff", weight: "700" },
+]
+
+const betelgeuseTheme: ThemeTokens = {
+  background: "#0A0E15",
+  backgroundGradient:
+    "radial-gradient(circle at 78% 22%, rgba(240,82,74,0.14) 0 1.2px, transparent 1.8px), radial-gradient(circle at 22% 18%, rgba(230,228,220,0.12) 0 1px, transparent 1.6px), radial-gradient(ellipse at 50% 35%, #121826 0%, #0A0E15 70%)",
+  foreground: "#E6E4DC",
+  foregroundMid: "#8A92A0",
+  foregroundLow: "#4C5668",
+  primary: "#F0524A",
+  primaryForeground: "#0A0E15",
+  secondary: "#B9C0CE",
+  fontFamily: '"Computer Modern Serif", Georgia, "Times New Roman", ui-serif, serif',
+  monoFontFamily: '"Computer Modern Typewriter", "SFMono-Regular", Consolas, monospace',
+  fontFaces: betelgeuseFontFaces,
+  radius: 0,
+  terminal: {
+    sceneBackground:
+      "radial-gradient(circle at 82% 20%, rgba(240,82,74,0.16) 0 1px, transparent 1.8px), radial-gradient(ellipse at 50% 32%, #121826 0%, #0A0E15 72%)",
+    bg: "#0F1520",
+    titleBar: "#121826",
+    titleText: "#8A92A0",
+    command: "#E6E4DC",
+    output: "#B9C0CE",
+    claude: "#F0524A",
+    shadow: "none",
+    dots: ["#E6E4DC", "#8A92A0", "#F0524A"],
+    labelColor: "#8A92A0",
+    successColor: "#7CDEB1",
+    statusBarBg: "#0A0E15",
+    borderColor: "#2E3850",
+    separatorColor: "#1F2634",
+    costColor: "#8A92A0",
+    userMessageBg: "rgba(240,82,74,0.08)",
+    userMessageBorder: "#F0524A",
+  },
+  card: {
+    bg: "#121826",
+    bgGradient: "#121826",
+    border: "#2E3850",
+    accentBorder: "#F0524A",
+    shadow: "none",
+  },
+  mascot: {
+    show: false,
+    cornerScale: 0.5,
+    cornerOpacity: 0.7,
+    cornerBottom: 20,
+    cornerRight: 24,
+  },
+  overlay: "rgba(10,14,21,0.84)",
+  constellation: {
+    showIntro: true,
+    lineColor: "#2E3850",
+    starColor: "#E6E4DC",
+    accentStarColor: "#F0524A",
+    opacity: 0.9,
+  },
+  watermark: {
+    type: "cinturon",
+    opacity: 0.62,
+    bottom: 20,
+    right: 26,
+    scale: 1,
+  },
+  label: "Claqueta · Betelgeuse",
+  labelColor: "#F0524A",
+  accentLine: "#F0524A",
+}
+
 const themes: Record<ThemeName, ThemeTokens> = {
   default: defaultTheme,
   "linea-directa": lineaDirectaTheme,
   "atom-dark": atomDarkTheme,
   "h-alpha": hAlphaTheme,
   claqueta: claquetaTheme,
+  betelgeuse: betelgeuseTheme,
 }
 
 export function getTheme(name: ThemeName): ThemeTokens {

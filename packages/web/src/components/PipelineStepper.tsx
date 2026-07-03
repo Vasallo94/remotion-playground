@@ -80,7 +80,6 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
                   style={{
                     width: 12,
                     height: 12,
-                    borderRadius: "50%",
                     backgroundColor: dotColor(step.status, isLoading),
                     flexShrink: 0,
                     display: "flex",
@@ -93,7 +92,7 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
                     <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                       <path
                         d="M1.5 4L3 5.5L6.5 2"
-                        stroke="#0D0D0D"
+                        stroke={theme.colors.text.inverse}
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -108,7 +107,6 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
                       flex: 1,
                       minHeight: 20,
                       backgroundColor: lineColor(step.status),
-                      borderRadius: 1,
                       transition: "background-color 300ms",
                     }}
                   />
@@ -162,8 +160,8 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
               marginTop: 8,
               padding: "6px 10px",
               borderRadius: theme.radius.sm,
-              backgroundColor: "rgba(34, 197, 94, 0.1)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
+              backgroundColor: "rgba(124, 222, 177, 0.08)",
+              border: `1px solid ${theme.colors.status.success}`,
             }}
           >
             <div style={{ fontSize: 12, color: theme.colors.status.success, fontWeight: 500 }}>Completado</div>
@@ -177,8 +175,8 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
               marginTop: 8,
               padding: "6px 10px",
               borderRadius: theme.radius.sm,
-              backgroundColor: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
+              backgroundColor: "rgba(240, 82, 74, 0.08)",
+              border: `1px solid ${theme.colors.status.error}`,
             }}
           >
             <div style={{ fontSize: 12, color: theme.colors.status.error, fontWeight: 500 }}>Error</div>
@@ -192,8 +190,8 @@ export function PipelineStepper({ plan, isLoading, hasError }: Props) {
               marginTop: 8,
               padding: "6px 10px",
               borderRadius: theme.radius.sm,
-              backgroundColor: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
+              backgroundColor: "rgba(240, 82, 74, 0.08)",
+              border: `1px solid ${theme.colors.status.error}`,
             }}
           >
             <div style={{ fontSize: 12, color: theme.colors.status.error, fontWeight: 500 }}>Bloqueado</div>

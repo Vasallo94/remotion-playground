@@ -70,7 +70,7 @@ def submit_render(
     fps: int = 30,
     width: int = 0,
     height: int = 0,
-    theme: str = "linea-directa",
+    theme: str = "betelgeuse",
     composition: str = "",
     product: str = "",
     headline: str = "",
@@ -91,7 +91,7 @@ def submit_render(
         fps: Frames per second (always 30).
         width: Video width in pixels (0 = resolve from runtime or default 1280).
         height: Video height in pixels (0 = resolve from runtime or default 720).
-        theme: Theme name (always "linea-directa" unless specified).
+        theme: Theme name (default "betelgeuse" for tutorials unless specified).
         composition: "ProductShort" for vertical shorts, empty string for tutorials (default).
         product: Product name (ProductShort only).
         headline: Marketing headline (ProductShort only).

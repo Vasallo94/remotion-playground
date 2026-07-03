@@ -102,7 +102,7 @@ MODE_CONTRACTS: dict[ModeName, ModeContract] = {
         ),
         rules=(
             "Use the existing full pipeline.",
-            'Default theme is "linea-directa" unless the user explicitly requests another theme.',
+            'Default tutorial theme is "betelgeuse" unless the user explicitly requests another theme.',
             "Do not write config.json until the escaleta has explicit human approval.",
         ),
     ),

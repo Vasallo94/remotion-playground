@@ -41,7 +41,6 @@ const markdownComponents = {
             display: "block",
             backgroundColor: theme.colors.bg.primary,
             padding: "10px 12px",
-            borderRadius: theme.radius.md,
             fontFamily: theme.fonts.mono,
             fontSize: 12,
             lineHeight: 1.5,
@@ -59,7 +58,6 @@ const markdownComponents = {
         style={{
           backgroundColor: theme.colors.bg.primary,
           padding: "1px 5px",
-          borderRadius: 3,
           fontFamily: theme.fonts.mono,
           fontSize: 12,
         }}
@@ -93,13 +91,12 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         style={{
           maxWidth: "80%",
           padding: "10px 14px",
-          borderRadius: isUser ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-          backgroundColor: isUser ? theme.colors.accent.primary : theme.colors.bg.elevated,
-          color: isUser ? "#fff" : theme.colors.text.primary,
+          backgroundColor: isUser ? theme.colors.accent.primaryMuted : theme.colors.bg.elevated,
+          color: isUser ? theme.colors.text.primary : theme.colors.text.primary,
           fontSize: 14,
           lineHeight: 1.6,
           ...(isUser ? { whiteSpace: "pre-wrap" as const } : {}),
-          border: isUser ? "none" : `1px solid ${theme.colors.border.default}`,
+          border: isUser ? `1px solid ${theme.colors.accent.primary}` : `1px solid ${theme.colors.border.default}`,
         }}
       >
         {isUser ? message.content : <Markdown components={markdownComponents}>{message.content}</Markdown>}

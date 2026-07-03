@@ -1,22 +1,80 @@
+@font-face {
+  font-family: "Computer Modern Serif";
+  src: url("./assets/fonts/cmunrm.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Serif";
+  src: url("./assets/fonts/cmunbx.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Serif";
+  src: url("./assets/fonts/cmunit.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Sans";
+  src: url("./assets/fonts/cmunss.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Sans";
+  src: url("./assets/fonts/cmunsx.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Typewriter";
+  src: url("./assets/fonts/cmuntt.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Computer Modern Typewriter";
+  src: url("./assets/fonts/cmuntx.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --bg-primary: #0d0d0d;
-  --bg-secondary: #141414;
-  --bg-elevated: #1a1a1a;
-  --bg-hover: #242424;
-  --accent: #cc3333;
-  --accent-hover: #e63939;
-  --accent-muted: rgba(204, 51, 51, 0.15);
-  --accent-glow: rgba(204, 51, 51, 0.3);
-  --text-primary: #e8e8e8;
-  --text-secondary: #888888;
-  --text-muted: #555555;
-  --border: #2a2a2a;
-  --border-subtle: #1e1e1e;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", monospace;
+  --bg-primary: #0a0e15;
+  --bg-secondary: #0f1520;
+  --bg-elevated: #121826;
+  --bg-hover: #182031;
+  --accent: #f0524a;
+  --accent-hover: #ff6a60;
+  --accent-muted: rgba(240, 82, 74, 0.12);
+  --accent-glow: rgba(240, 82, 74, 0.22);
+  --text-primary: #e6e4dc;
+  --text-secondary: #b9c0ce;
+  --text-muted: #8a92a0;
+  --border: #1f2634;
+  --border-subtle: #161d2a;
+  --border-high: #2e3850;
+  --success: #7cdeb1;
+  --warning: #d9a441;
+  --error: #f0524a;
+  --font-serif: "Computer Modern Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "Computer Modern Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Computer Modern Typewriter", "SFMono-Regular", Consolas, monospace;
 }
 
 *,
@@ -25,44 +83,83 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-primary);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(230, 228, 220, 0.18) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 84% 22%, rgba(240, 82, 74, 0.46) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 70% 72%, rgba(230, 228, 220, 0.12) 0 1px, transparent 1.6px), var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  text-transform: none;
+}
+
+::selection {
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: var(--border-high);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--accent);
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 var(--accent-glow);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(204, 51, 51, 0);
-  }
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(230, 228, 220, 0.1) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 62% 16%, rgba(230, 228, 220, 0.08) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 82% 66%, rgba(240, 82, 74, 0.28) 0 1.2px, transparent 1.8px), var(--bg-primary);
+}
+
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(31, 38, 52, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 38, 52, 0.35) 1px, transparent 1px);
+  background-size: 96px 96px;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.16));
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -73,18 +170,18 @@ body {
 @keyframes cardReveal {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 @keyframes blink {
   0%,
   100% {
-    opacity: 0.2;
+    opacity: 0.25;
   }
   50% {
     opacity: 1;
@@ -97,7 +194,7 @@ body {
     transform: rotate(0deg);
   }
   40% {
-    transform: rotate(-30deg);
+    transform: rotate(-24deg);
   }
 }
 
@@ -111,11 +208,11 @@ body {
 }
 
 .animate-slide-in {
-  animation: slideIn 200ms ease-out both;
+  animation: slideIn 180ms ease-out both;
 }
 
 .animate-card-reveal {
-  animation: cardReveal 300ms ease-out 200ms both;
+  animation: cardReveal 240ms ease-out 120ms both;
 }
 
 .animate-fade-in {
@@ -123,14 +220,13 @@ body {
 }
 
 .animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
+  animation: blink 1.4s step-end infinite;
 }
 
 .loading-dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 4px;
+  height: 10px;
   background: var(--accent);
   animation: blink 1.4s ease-in-out infinite;
 }
@@ -146,19 +242,9 @@ body {
   animation: clap 1.5s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
 .tool-row-active {
-  background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.07) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
+  background: rgba(240, 82, 74, 0.08);
+  border-left: 1px solid var(--accent);
 }
 
 .cursor-blink {

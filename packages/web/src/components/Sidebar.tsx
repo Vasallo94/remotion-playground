@@ -32,8 +32,8 @@ export function Sidebar({
   return (
     <div
       style={{
-        width: 260,
-        backgroundColor: theme.colors.bg.secondary,
+        width: 280,
+        backgroundColor: "rgba(15, 21, 32, 0.92)",
         borderRight: `1px solid ${theme.colors.border.default}`,
         display: "flex",
         flexDirection: "column",

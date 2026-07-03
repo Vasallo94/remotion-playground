@@ -415,8 +415,7 @@ export function SubagentCard({ subagent, defaultExpanded = true }: Props) {
           className={isActive ? "animate-pulse" : undefined}
           style={{
             width: 6,
-            height: 6,
-            borderRadius: "50%",
+            height: 10,
             background: palette.accent,
             flexShrink: 0,
           }}

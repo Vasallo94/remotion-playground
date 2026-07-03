@@ -1,0 +1,44 @@
+{
+  "title": "Claude Code /plan — dirección técnica Betelgeuse",
+  "scenes": [
+    {
+      "sceneId": "scene-1",
+      "sceneType": "intro",
+      "technicalIntent": "Hook visual inmediato: definir /plan como una pausa estratégica antes de ejecutar cambios.",
+      "timing": {
+        "start": 0,
+        "duration": 3
+      },
+      "beats": [
+        "Fondo Betelgeuse limpio y contrastado",
+        "Texto principal centrado: '/plan = plan antes de actuar'",
+        "Microacento animado para dar ritmo sin distracciones"
+      ],
+      "assets": ["Typography overlay", "Subtle glow/background shapes"],
+      "risks": ["Evitar demasiada información en una sola pantalla"]
+    },
+    {
+      "sceneId": "scene-2",
+      "sceneType": "terminal",
+      "technicalIntent": "Demostrar el comando /plan en una terminal realista y subrayar que Claude Code propone pasos antes de modificar nada.",
+      "timing": {
+        "start": 3,
+        "duration": 7
+      },
+      "beats": [
+        "Terminal con prompt visible",
+        "Entrada del comando /plan",
+        "Respuesta breve con lista de pasos propuestos",
+        "Resaltado visual sobre 'plan' y 'antes de ejecutar'"
+      ],
+      "assets": ["Terminal mockup", "Cursor blink", "Highlight callouts"],
+      "risks": ["No mostrar resultados largos ni ruido visual", "Mantener legible el output"]
+    }
+  ],
+  "warnings": ["Sin voz en off", "Sin música", "Mantener la duración total cercana a 10s"],
+  "audio": {
+    "voiceover": "none",
+    "music": "none"
+  },
+  "risks": ["El contenido debe ser extremadamente conciso para 2 escenas"]
+}

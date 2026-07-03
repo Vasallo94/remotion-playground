@@ -39,7 +39,7 @@ export const CalloutScene: React.FC<CalloutSceneProps> = ({ text, position, back
           background: tokens.card.bgGradient,
           border: `1px solid ${tokens.card.border}`,
           borderLeft: `4px solid ${tokens.card.accentBorder}`,
-          borderRadius: 10,
+          borderRadius: tokens.radius,
           padding: "28px 36px",
           opacity: phase1.opacity,
           transform: `scale(${phase1.scale})`,

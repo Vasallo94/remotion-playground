@@ -8,6 +8,50 @@ import { PixelLogo } from "../../../shared/components/pixel-art/PixelLogo"
 import { getBeatStartFrame } from "../../../utils/direction"
 import { usePhase1Entry } from "../../../shared/hooks/usePhase1Entry"
 
+const OrionConstellation: React.FC<{
+  tokens: ReturnType<typeof useThemeTokens>
+  opacity: number
+}> = ({ tokens, opacity }) => {
+  const constellation = tokens.constellation
+  if (!constellation?.showIntro) return null
+
+  return (
+    <svg
+      width="660"
+      height="430"
+      viewBox="0 0 660 430"
+      style={{ position: "absolute", top: 52, right: 70, opacity: opacity * constellation.opacity }}
+      aria-hidden="true"
+    >
+      <g fill="none" stroke={constellation.lineColor} strokeWidth="1.2">
+        <path d="M128 58 L238 140 L330 134 L450 72" />
+        <path d="M238 140 L268 228 L312 214 L350 200 L330 134" />
+        <path d="M268 228 L194 350" />
+        <path d="M350 200 L462 336" />
+      </g>
+      {[
+        [128, 58, 3.5],
+        [238, 140, 3.2],
+        [330, 134, 3.2],
+        [450, 72, 4.2],
+        [268, 228, 2.8],
+        [312, 214, 2.8],
+        [350, 200, 2.8],
+        [194, 350, 3.6],
+        [462, 336, 3.6],
+      ].map(([cx, cy, r], index) => (
+        <circle
+          key={index}
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill={index === 3 ? constellation.accentStarColor : constellation.starColor}
+        />
+      ))}
+    </svg>
+  )
+}
+
 export const IntroScene: React.FC<IntroSceneProps> = ({ title, subtitle, pixelLogo, beats }) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
@@ -38,6 +82,8 @@ export const IntroScene: React.FC<IntroSceneProps> = ({ title, subtitle, pixelLo
         gap: 20,
       }}
     >
+      <OrionConstellation tokens={tokens} opacity={phase1.opacity} />
+
       {tokens.mascot.show && (
         <div style={{ marginBottom: 2, opacity: phase1.opacity }}>
           <LineaDirectaBrandLockup scale={0.72} animation="reveal" compact />
@@ -103,7 +149,7 @@ export const IntroScene: React.FC<IntroSceneProps> = ({ title, subtitle, pixelLo
           width: lineWidth,
           height: 2,
           background: tokens.accentLine,
-          borderRadius: 1,
+          borderRadius: tokens.radius,
         }}
       />
 

@@ -14,6 +14,10 @@ function friendlyError(raw: string): string {
   return raw
 }
 
+function currentTime(): string {
+  return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+}
+
 export function ErrorBanner({ message, onRetry }: Props) {
   return (
     <div
@@ -21,34 +25,38 @@ export function ErrorBanner({ message, onRetry }: Props) {
       aria-live="assertive"
       className="animate-fade-in"
       style={{
-        padding: "10px 14px",
+        padding: "10px 12px",
         margin: "8px 0",
-        backgroundColor: "rgba(239, 68, 68, 0.1)",
+        backgroundColor: theme.colors.bg.elevated,
         color: theme.colors.status.error,
-        borderRadius: theme.radius.md,
-        border: `1px solid rgba(239, 68, 68, 0.3)`,
-        fontSize: 13,
+        border: `1px solid ${theme.colors.border.default}`,
+        borderLeft: `2px solid ${theme.colors.status.error}`,
+        fontSize: 12,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 12,
+        fontFamily: theme.fonts.mono,
       }}
     >
-      <span>Error: {friendlyError(message)}</span>
+      <span>
+        [{currentTime()}] [error] {friendlyError(message)}
+      </span>
       {onRetry && (
         <button
           onClick={onRetry}
           aria-label="Reintentar operacion"
           style={{
             padding: "4px 10px",
-            backgroundColor: theme.colors.status.error,
-            color: "#fff",
-            border: "none",
-            borderRadius: 4,
+            backgroundColor: "transparent",
+            color: theme.colors.status.error,
+            border: `1px solid ${theme.colors.status.error}`,
             cursor: "pointer",
             fontSize: 12,
+            fontFamily: theme.fonts.mono,
           }}
         >
-          Reintentar
+          retry
         </button>
       )}
     </div>

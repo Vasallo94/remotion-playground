@@ -4,6 +4,45 @@ Specs movidas aquí tras implementación exitosa.
 
 ---
 
+## 2026-07-03 — Betelgeuse visual system para Claqueta
+
+## Descripción
+
+Aplicar el sistema visual personal Betelgeuse a Claqueta para sustituir la estética por defecto de Línea Directa en la experiencia de generación de tutoriales: frontend web, theme Remotion para `ClaudeCodeTutorial` y runtime Pi.
+
+## Criterios de aceptación
+
+- [x] El frontend `packages/web` usa paleta Betelgeuse oscura, tipografía Computer Modern, radio 0, sin sombras y feedback en formato log.
+- [x] El header/empty state incorporan el monograma Cinturón y el lenguaje de observatorio/carta estelar sin depender de assets de Línea Directa.
+- [x] `ClaudeCodeTutorial` acepta un theme personal `betelgeuse` con cielo oscuro, rojo Betelgeuse, Computer Modern, Orión en intro y Cinturón como watermark.
+- [x] Los defaults de `ClaudeCodeTutorial` y del runtime Pi para configs nuevos usan `theme: "betelgeuse"` salvo petición explícita de otro theme.
+- [x] Se mantienen disponibles los themes históricos (`linea-directa`, `h-alpha`, `atom-dark`, `claqueta`) para configs existentes.
+- [x] Tests/build relevantes pasan antes de E2E.
+- [x] Se puede arrancar web con `VITE_AGENT_RUNTIME=pi` y conversar con `agent-pi` desde el frontend.
+
+## Casos de test
+
+- Prompt nuevo desde Pi → `generate_remotion_config` sin `theme` explícito produce `theme: "betelgeuse"`.
+- Config mínimo con `theme: "betelgeuse"` → validación Zod/Remotion acepta el theme.
+- `pnpm --filter @remotion-platform/web build` → compila con fuentes/assets Betelgeuse.
+- `pnpm --filter @remotion-platform/agent-pi test` → mantiene el flujo de generación y defaults.
+- Render/validate de config de prueba Betelgeuse → no usa assets de Línea Directa.
+
+## Notas de implementación
+
+- No eliminar el theme `linea-directa`; solo deja de ser el default para tutoriales personales.
+- Reutilizar tokens de `/Users/enriquebook/Personal/Developer/betelgeuse-design`.
+- No reescribir render-service ni schemas ajenos al campo `theme`.
+- E2E final debe hablar con Pi desde UI, no solo por curl.
+
+## Resultado
+
+Implementado y verificado. Frontend migrado a Betelgeuse, Remotion acepta `theme: "betelgeuse"` con Orión/Cinturón y Computer Modern, y los defaults de Pi/LangGraph/skills apuntan a Betelgeuse para tutoriales personales.
+
+Validación: `agent-pi typecheck` ✓, `agent-pi test` ✓ (20), `web build` ✓, `pnpm run lint` ✓, `pnpm run test:visual` ✓ (6), pytest subset agente ✓ (90), validate config Betelgeuse ✓, still frame Betelgeuse ✓. E2E UI con Pi completado con thread `815822ee-c5e7-4771-9daf-0bb46c316c47`, render `6bc5367b-969d-40bf-900e-83b931d9f696` y artifacts en `content/tutorials/claude-code-plan-betelgeuse/`.
+
+---
+
 ## 2026-07-02 — Runtime agéntico con Pi SDK
 
 ### Objective

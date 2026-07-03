@@ -115,7 +115,7 @@ describe("Claqueta tools", () => {
     })
     const config = result.details.config as Record<string, unknown>
     assert.equal(config.composition, "ClaudeCodeTutorial")
-    assert.equal(config.theme, "linea-directa")
+    assert.equal(config.theme, "betelgeuse")
     assert.equal(config.fps, 30)
     assert.equal(
       store.listArtifacts(threadId).some((artifact) => artifact.kind === "config"),
@@ -184,7 +184,7 @@ describe("Claqueta tools", () => {
       fps: 30,
       width: 1280,
       height: 720,
-      theme: "linea-directa",
+      theme: "betelgeuse",
       scenes: [{ type: "intro", title: "Hola", durationInSeconds: 3 }],
     }
 

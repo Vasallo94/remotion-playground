@@ -18,12 +18,12 @@ export function ThreadList({ threads, currentThreadId, onSelect, onDelete, onNew
           width: "100%",
           padding: "8px 12px",
           backgroundColor: theme.colors.accent.primary,
-          color: "#fff",
-          border: "none",
-          borderRadius: theme.radius.md,
+          color: theme.colors.text.inverse,
+          border: `1px solid ${theme.colors.accent.primary}`,
           cursor: "pointer",
           fontSize: 13,
-          fontWeight: 500,
+          fontWeight: 700,
+          fontFamily: theme.fonts.mono,
           marginBottom: 8,
         }}
       >

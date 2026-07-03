@@ -19,7 +19,7 @@ Two composition formats:
   "title": "Video title",
   "description": "One-line description",
   "fps": 30, "width": 1280, "height": 720,
-  "theme": "linea-directa",
+  "theme": "betelgeuse",
   "brief": {
     "platform": "linkedin",
     "audience": "...",
@@ -172,8 +172,8 @@ Rules: exactly 2 speakers (API limit), speaker names in text must match config n
 
 ## Themes
 
-- Default is `"linea-directa"` — never use `"default"` unless explicitly requested
-- Available: `"default"` (dark/green), `"linea-directa"` (white/red), `"atom-dark"` (dark/blue)
+- Default tutorial theme is `"betelgeuse"` — never use `"default"` unless explicitly requested
+- Available: `"betelgeuse"` (personal dark observatory), `"linea-directa"` (white/red), `"default"` (dark/green), `"atom-dark"` (dark/blue), `"h-alpha"` and `"claqueta"`
 - Access tokens via `useThemeTokens()` hook — never check theme name directly
 
 ## Validation

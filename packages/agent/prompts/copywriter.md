@@ -76,7 +76,7 @@ The config MUST include these top-level fields:
   "fps": 30,
   "width": 1280,
   "height": 720,
-  "theme": "linea-directa",
+  "theme": "betelgeuse",
   "transition": null,
   "brief": {
     "platform": "linkedin",
@@ -147,7 +147,7 @@ Every scene's visual content MUST be specific, insightful, and directly relevant
   - A 30-60 second duration is only acceptable for explicitly requested shorts or narrow single-tip clips.
   - If a selected catalog template is shorter than the user's topic requires, expand it with additional explanation/demo/pitfall/recap scenes while keeping the same narrative arc.
 - NEVER repeat the same scene type consecutively (two callouts in a row = forbidden)
-- Theme is always `"linea-directa"` unless the user says otherwise
+- Theme is `"betelgeuse"` for personal/tutorial videos unless the user says otherwise; keep `"linea-directa"` only for explicit Línea Directa/product demo requests
 - Field names are case-sensitive — use ONLY the exact names above
 - First scene must establish a hook/promise, not just a generic title
 - Final scene must provide a concrete takeaway or CTA

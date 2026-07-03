@@ -276,20 +276,34 @@ export function ChatThread({
             gap: 12,
           }}
         >
-          <div style={{ fontSize: 28, fontWeight: 700, color: theme.colors.text.muted, letterSpacing: "-0.02em" }}>
-            Claqueta
+          <svg width="96" height="54" viewBox="0 0 72 40" aria-hidden="true">
+            <line x1="10" y1="30" x2="62" y2="10" stroke={theme.colors.border.high} strokeWidth="1" />
+            <circle cx="10" cy="30" r="3.5" fill={theme.colors.text.primary} />
+            <circle cx="36" cy="20" r="3.5" fill={theme.colors.text.primary} />
+            <circle cx="62" cy="10" r="3.5" fill={theme.colors.accent.primary} />
+          </svg>
+          <div
+            style={{
+              fontSize: 30,
+              fontWeight: 700,
+              color: theme.colors.text.primary,
+              letterSpacing: "0.01em",
+              fontFamily: theme.fonts.serif,
+            }}
+          >
+            Observatorio Claqueta
           </div>
           <div
             style={{
               fontSize: 14,
               color: theme.colors.text.muted,
-              maxWidth: 360,
+              maxWidth: 430,
               textAlign: "center",
-              lineHeight: 1.6,
+              lineHeight: 1.7,
             }}
           >
-            Describe el video que necesitas y el pipeline de agentes se encargara de investigar, escribir, dirigir y
-            renderizar.
+            Describe el video que necesitas. Pi investiga, escribe, dirige y renderiza; tu criterio aprueba cada punto
+            de control.
           </div>
         </div>
       )}

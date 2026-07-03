@@ -40,12 +40,12 @@ export function InputBar({ value, onChange, onSend, disabled, activeTarget }: Pr
               disabled={disabled}
               style={{
                 padding: "4px 7px",
-                borderRadius: theme.radius.sm,
-                border: `1px solid ${theme.colors.border.subtle}`,
+                border: `1px solid ${theme.colors.border.default}`,
                 backgroundColor: theme.colors.bg.elevated,
                 color: theme.colors.text.secondary,
                 fontSize: 11,
                 cursor: disabled ? "not-allowed" : "pointer",
+                fontFamily: theme.fonts.mono,
               }}
             >
               {action}
@@ -76,7 +76,7 @@ export function InputBar({ value, onChange, onSend, disabled, activeTarget }: Pr
             fontSize: 14,
             fontFamily: theme.fonts.sans,
             outline: "none",
-            transition: "border-color 150ms",
+            letterSpacing: "0.01em",
           }}
           onFocus={(e) => (e.target.style.borderColor = theme.colors.accent.primary)}
           onBlur={(e) => (e.target.style.borderColor = theme.colors.border.default)}
@@ -88,12 +88,11 @@ export function InputBar({ value, onChange, onSend, disabled, activeTarget }: Pr
           style={{
             padding: "10px 20px",
             backgroundColor: theme.colors.accent.primary,
-            color: "#fff",
-            border: "none",
-            borderRadius: theme.radius.md,
+            color: theme.colors.text.inverse,
+            border: `1px solid ${theme.colors.accent.primary}`,
             cursor: disabled || !value.trim() ? "not-allowed" : "pointer",
             fontSize: 14,
-            fontWeight: 500,
+            fontWeight: 700,
             opacity: disabled || !value.trim() ? 0.5 : 1,
             transition: "opacity 150ms, background-color 150ms",
           }}

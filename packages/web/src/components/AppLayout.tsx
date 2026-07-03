@@ -7,7 +7,7 @@ interface Props {
 
 export function AppLayout({ sidebar, main }: Props) {
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div className="app-shell" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       {sidebar}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>{main}</div>
     </div>

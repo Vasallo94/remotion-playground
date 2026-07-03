@@ -1,5 +1,6 @@
 import React from "react"
 import { interpolate, useCurrentFrame } from "remotion"
+import { useThemeTokens } from "../themes"
 import { PixelLogo } from "./pixel-art/PixelLogo"
 import { PixelSmoke } from "./pixel-art/PixelSmoke"
 
@@ -10,6 +11,35 @@ interface LogoWatermarkProps {
   logoScale?: number
 }
 
+const CinturonWatermark: React.FC<{ bottom: number; right: number; opacity: number; scale: number }> = ({
+  bottom,
+  right,
+  opacity,
+  scale,
+}) => {
+  const frame = useCurrentFrame()
+  const tokens = useThemeTokens()
+  const fadeIn = interpolate(frame, [0, 30], [0, opacity], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  })
+
+  return (
+    <svg
+      width={72 * scale}
+      height={40 * scale}
+      viewBox="0 0 72 40"
+      style={{ position: "absolute", bottom, right, opacity: fadeIn, zIndex: 50 }}
+      aria-hidden="true"
+    >
+      <line x1="10" y1="30" x2="62" y2="10" stroke={tokens.foregroundLow} strokeWidth="1" />
+      <circle cx="10" cy="30" r="3.5" fill={tokens.foreground} />
+      <circle cx="36" cy="20" r="3.5" fill={tokens.foreground} />
+      <circle cx="62" cy="10" r="3.5" fill={tokens.primary} />
+    </svg>
+  )
+}
+
 export const LogoWatermark: React.FC<LogoWatermarkProps> = ({
   bottom = 12,
   right = 16,
@@ -17,6 +47,19 @@ export const LogoWatermark: React.FC<LogoWatermarkProps> = ({
   logoScale = 1.2,
 }) => {
   const frame = useCurrentFrame()
+  const tokens = useThemeTokens()
+  const watermark = tokens.watermark
+
+  if (watermark?.type === "cinturon") {
+    return (
+      <CinturonWatermark
+        bottom={watermark.bottom ?? bottom}
+        right={watermark.right ?? right}
+        opacity={watermark.opacity ?? opacity}
+        scale={watermark.scale ?? logoScale}
+      />
+    )
+  }
 
   // Fade in over first 30 frames
   const fadeIn = interpolate(frame, [0, 30], [0, opacity], {

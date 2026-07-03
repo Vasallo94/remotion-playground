@@ -50,14 +50,14 @@ Timing map — each line has `startFrame` + `durationFrames`:
 
 ### Theme system
 
-`ThemeContext` provides `"default"` (dark, green accents) or `"linea-directa"` (white bg, red #CC3333, PhoneMascot SVG). All design tokens are centralized in `themes.ts` via `ThemeTokens` type. Scene components read tokens via `useThemeTokens()` hook — never check theme name directly.
+`ThemeContext` provides multiple themes, including `"betelgeuse"` (personal default: dark observatory, Computer Modern, red Betelgeuse), `"linea-directa"` (white bg, red #CC3333, PhoneMascot SVG), `"default"`, `"atom-dark"`, `"h-alpha"` and `"claqueta"`. All design tokens are centralized in `themes.ts` via `ThemeTokens` type. Scene components read tokens via `useThemeTokens()` hook — never check theme name directly.
 
 Key token groups:
 
 - **terminal.\***: sceneBackground, bg, command, output, Codex, labelColor, successColor, statusBarBg, borderColor, separatorColor, costColor, userMessageBg, userMessageBorder
 - **mascot.\***: show, cornerScale, cornerOpacity, cornerBottom, cornerRight
 - **card.\***: bg, bgGradient, border, accentBorder, shadow
-- **Top-level**: primary, secondary, fontFamily, monoFontFamily, labelColor, accentLine, overlay
+- **Top-level**: primary, secondary, fontFamily, monoFontFamily, fontFaces, radius, labelColor, accentLine, overlay, constellation, watermark
 
 ### PhoneMascot
 
@@ -82,7 +82,7 @@ Key token groups:
 - **Never check theme name directly in scenes.** Use `useThemeTokens()` and read token values. The `isLD` / `useTheme()` pattern is deprecated.
 - **Scene prop types are exported from `schema.ts`.** Import `IntroSceneProps` etc. directly — don't use `Extract<z.infer<...>>`.
 - **Escaleta validation required.** All video generation skills must present a full escaleta (script) to the user via `AskUserQuestion` and obtain explicit approval before generating `config.json`. The iteration loop has no round limit. Research remains automatic.
-- **Default theme is `"linea-directa"`.** All video compositions must use `"linea-directa"` theme unless the user explicitly requests `"default"`. Never generate a config.json with `"theme": "default"` by default.
+- **Default tutorial theme is `"betelgeuse"`.** New personal `ClaudeCodeTutorial` configs must use `"betelgeuse"` unless the user explicitly requests another theme. Keep `"linea-directa"` available for legacy content and Línea Directa product demos. Never generate a config.json with `"theme": "default"` by default.
 
 ## Code style
 
