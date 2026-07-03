@@ -1,0 +1,83 @@
+{
+  "title": "Eclipse solar del 12 de agosto de 2026 en España: cómo verlo con seguridad",
+  "objective": "Explicar qué eclipse será, dónde se verá mejor en España y cómo planificarlo con seguridad visual, logística y expectativas realistas.",
+  "audience": "Público general interesado en observar el eclipse con seguridad",
+  "tone": "Educativo, claro, práctico y sin hype",
+  "estimatedDurationSeconds": 68,
+  "notes": "Formato vertical para YouTube Shorts y LinkedIn. Estilo visual Betelgeuse. Enfatizar consulta de fuentes oficiales (IGN y AEMET) para horarios, visibilidad y meteorología. Evitar promesas exactas de duración porque dependen de la ubicación.",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Qué pasa el 12 de agosto",
+      "voiceover": "El 12 de agosto de 2026 habrá un eclipse solar visible en España. No es un evento para improvisar: puede ser una gran oportunidad, pero solo si miras la hora, el lugar y la seguridad.",
+      "visualNotes": "Plano vertical con fecha grande, mapa de España y Sol/Luna alineándose. Estilo Betelgeuse, limpio y sobrio.",
+      "durationInSeconds": 7
+    },
+    {
+      "id": "s2",
+      "type": "terminal",
+      "title": "Qué eclipse es y por qué importa",
+      "voiceover": "Será un eclipse solar parcial en gran parte del país, con mejor observación en las zonas donde el Sol quede más cubierto. En España interesa especialmente porque caerá en horario útil y con mucha gente planificando salir a verlo.",
+      "visualNotes": "Animación de disco solar con cobertura parcial y mapa resaltando España. Mostrar porcentaje variable sin números fijos.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s3",
+      "type": "callout",
+      "title": "Dónde se verá mejor",
+      "voiceover": "Las mejores vistas dependerán de tu zona exacta: normalmente habrá diferencias entre norte, centro, litoral y archipiélagos. La idea clave es comprobar tu localidad concreta, no solo la comunidad autónoma.",
+      "visualNotes": "Callout con mapa de España y mensaje: 'Tu ubicación exacta cambia la observación'.",
+      "durationInSeconds": 7
+    },
+    {
+      "id": "s4",
+      "type": "terminal",
+      "title": "Horarios: consulta fuentes oficiales",
+      "voiceover": "Los horarios de comienzo, máximo y fin cambian según tu posición. Antes de salir, revisa el Instituto Geográfico Nacional y confirma también la previsión de AEMET.",
+      "visualNotes": "Pantalla tipo terminal con checklist: IGN, AEMET, ubicación exacta, hora local.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s5",
+      "type": "callout",
+      "title": "Seguridad visual",
+      "voiceover": "Nunca mires el Sol directamente. Usa solo gafas certificadas ISO 12312-2 y comprueba que estén en buen estado. Si no son certificadas, no sirven.",
+      "visualNotes": "Aviso grande de seguridad, icono de gafas certificadas y símbolo de prohibido sobre el Sol.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s6",
+      "type": "terminal",
+      "title": "Cámaras, prismáticos y telescopios",
+      "voiceover": "Con cámaras, prismáticos o telescopios, el riesgo aumenta mucho. No los uses sin filtro solar adecuado: puedes dañar el equipo y, peor aún, tus ojos en segundos.",
+      "visualNotes": "Lista de equipo con aviso rojo de 'filtro solar obligatorio'. Mostrar sensor/lente con advertencia.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s7",
+      "type": "callout",
+      "title": "Planificación práctica",
+      "voiceover": "Busca un punto con horizonte despejado, mira la meteorología el mismo día, calcula tráfico y llega con margen. En eclipses, el mejor plan suele ser llegar antes de lo que crees.",
+      "visualNotes": "Checklist animada: horizonte, nubes, tráfico, margen de llegada. Estilo sobrio, práctico.",
+      "durationInSeconds": 8
+    },
+    {
+      "id": "s8",
+      "type": "terminal",
+      "title": "Fotografiar sin arriesgarte",
+      "voiceover": "Si quieres fotos, prioriza la seguridad: filtro solar correcto, trípode y pruebas previas. Si no tienes equipo adecuado, una buena opción es vivirlo a simple vista con protección certificada.",
+      "visualNotes": "Equipo fotográfico con filtro solar, trípode y nota: 'No improvises con el Sol'.",
+      "durationInSeconds": 7
+    },
+    {
+      "id": "s9",
+      "type": "outro",
+      "title": "Expectativas y cierre",
+      "voiceover": "Espera una observación variable según nubes, lugar y afluencia. Checklist final: gafas ISO 12312-2, ubicación exacta, IGN, AEMET y salida con tiempo. Guárdalo y compártelo.",
+      "visualNotes": "Resumen final en pantalla con checklist rápido y CTA a fuentes oficiales.",
+      "durationInSeconds": 7
+    }
+  ],
+  "approved": true
+}

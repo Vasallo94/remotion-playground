@@ -1,0 +1,129 @@
+{
+  "title": "Eclipse solar del 12 de agosto de 2026 en España — dirección técnica V1",
+  "scenes": [
+    {
+      "sceneId": "s1",
+      "sceneType": "intro",
+      "technicalIntent": "Abrir con contexto rápido y ubicuar el evento en España con tono sobrio.",
+      "timing": {
+        "start": 0,
+        "end": 7
+      },
+      "beats": ["Fecha en grande", "Mapa de España", "Alineación Sol-Luna", "Mensaje de seguridad y planificación"],
+      "assets": ["Mapa de España", "Animación Sol/Luna", "Tipografía Betelgeuse"],
+      "risks": ["No sobrecargar con demasiada información en el primer plano"]
+    },
+    {
+      "sceneId": "s2",
+      "sceneType": "terminal",
+      "technicalIntent": "Explicar que es un eclipse solar parcial y por qué interesa en España, con lenguaje claro y visualización concreta.",
+      "timing": {
+        "start": 7,
+        "end": 15
+      },
+      "beats": ["Disco solar parcial", "Mapa con cobertura variable", "Texto: parcial / cobertura según zona"],
+      "assets": ["Overlay de terminal estilizado", "Animación de eclipse parcial", "Mapa de cobertura"],
+      "risks": ["Evitar dar porcentajes o datos exactos no verificados en esta pieza"]
+    },
+    {
+      "sceneId": "s3",
+      "sceneType": "callout",
+      "technicalIntent": "Subrayar que la visibilidad cambia por ubicación exacta.",
+      "timing": {
+        "start": 15,
+        "end": 22
+      },
+      "beats": [
+        "Callout central: tu ubicación cambia la observación",
+        "Mapa por regiones",
+        "Recordatorio de localidad exacta"
+      ],
+      "assets": ["Callout card", "Mapa de España", "Glow sutil Betelgeuse"],
+      "risks": ["No simplificar en exceso con solo comunidades autónomas"]
+    },
+    {
+      "sceneId": "s4",
+      "sceneType": "terminal",
+      "technicalIntent": "Insertar prueba práctica de consulta oficial de horarios y ubicación.",
+      "timing": {
+        "start": 22,
+        "end": 30
+      },
+      "beats": ["Checklist IGN", "Checklist AEMET", "Ubicación exacta", "Hora local"],
+      "assets": ["Terminal mockup", "Iconos de verificación"],
+      "risks": ["No simular horarios concretos dentro del vídeo si cambian por localidad"]
+    },
+    {
+      "sceneId": "s5",
+      "sceneType": "callout",
+      "technicalIntent": "Aviso de seguridad visual contundente y memorable.",
+      "timing": {
+        "start": 30,
+        "end": 38
+      },
+      "beats": ["Nunca mires el Sol directamente", "Gafas ISO 12312-2", "Inspección de estado"],
+      "assets": ["Panel de advertencia", "Icono de gafas certificadas", "Símbolo de prohibición"],
+      "risks": ["Evitar estética alarmista excesiva; debe ser preventiva, no sensacionalista"]
+    },
+    {
+      "sceneId": "s6",
+      "sceneType": "terminal",
+      "technicalIntent": "Mostrar que instrumentos ópticos requieren filtro solar y elevan el riesgo.",
+      "timing": {
+        "start": 38,
+        "end": 46
+      },
+      "beats": ["Cámaras/prismáticos/telescopios", "Filtro solar obligatorio", "Riesgo para ojos y equipo"],
+      "assets": ["Lista de equipo", "Advertencia roja", "Filtro sobre lente"],
+      "risks": ["No dar a entender que cualquier filtro sirve"]
+    },
+    {
+      "sceneId": "s7",
+      "sceneType": "callout",
+      "technicalIntent": "Dar consejos logísticos accionables para una buena observación.",
+      "timing": {
+        "start": 46,
+        "end": 54
+      },
+      "beats": ["Horizonte despejado", "Meteorología", "Tráfico", "Llegar con margen"],
+      "assets": ["Checklist animada", "Iconos climáticos", "Icono de carretera"],
+      "risks": ["No prometer condiciones ideales ni acceso fácil"]
+    },
+    {
+      "sceneId": "s8",
+      "sceneType": "terminal",
+      "technicalIntent": "Explicar fotografía segura y realista sin incentivar improvisaciones.",
+      "timing": {
+        "start": 54,
+        "end": 61
+      },
+      "beats": ["Filtro solar correcto", "Trípode", "Pruebas previas", "Priorizar observación segura"],
+      "assets": ["Equipo fotográfico", "Terminal de consejos", "Nota de seguridad"],
+      "risks": ["Evitar tutorial fotográfico demasiado técnico para este formato"]
+    },
+    {
+      "sceneId": "s9",
+      "sceneType": "outro",
+      "technicalIntent": "Cerrar con expectativas realistas, checklist rápido y CTA a fuentes oficiales.",
+      "timing": {
+        "start": 61,
+        "end": 68
+      },
+      "beats": ["Nubes/afluencia afectan la experiencia", "Checklist final", "CTA IGN/AEMET"],
+      "assets": ["Resumen final", "Checklist visual", "Botón CTA sobrio"],
+      "risks": ["No cerrar con hype; mantener tono práctico"]
+    }
+  ],
+  "warnings": [
+    "Conviene mantener ritmo alto pero sereno, con cortes muy limpios y textos cortos en pantalla.",
+    "El vídeo debe quedar vertical 1080x1920 y no depender de textos largos para retener audiencia."
+  ],
+  "audio": {
+    "voiceoverStyle": "Narración clara, pausada y confiada, sin épica.",
+    "music": "Cama sutil, tecnológica y discreta, volumen bajo."
+  },
+  "risks": [
+    "Asegurar que las menciones a seguridad solar sean inequívocas.",
+    "No usar datos exactos no contrastados para cobertura/horarios en pantalla."
+  ]
+}
