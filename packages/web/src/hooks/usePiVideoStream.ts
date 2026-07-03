@@ -4,7 +4,7 @@ import type { SubagentStreamInterface } from "@langchain/langgraph-sdk/react"
 import { fetchPiThread, getPiEventsUrl, resumePiCheckpoint, sendPiChat } from "../api"
 import type { CheckpointType, Enrichment } from "../types"
 import type { ActiveVideoTarget } from "../types"
-import type { PlanState } from "../lib/planState"
+import { extractPlanStateFromPipelinePlan, type PipelinePlan, type PlanState } from "../lib/planState"
 
 interface PiEvent {
   seq?: number
@@ -15,6 +15,7 @@ interface PiEvent {
     | "tool_end"
     | "checkpoint"
     | "artifact_updated"
+    | "plan_updated"
     | "render_status"
     | "error"
     | "agent_end"
@@ -83,6 +84,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const [checkpointType, setCheckpointType] = useState<CheckpointType | null>(null)
   const [checkpointData, setCheckpointData] = useState<Record<string, unknown> | null>(null)
   const [enrichments, setEnrichments] = useState<Enrichment[]>([])
+  const [planState, setPlanState] = useState<PlanState | null>(null)
   const lastSeqRef = useRef(0)
   const activeAssistantIdRef = useRef<string | null>(null)
   const messagesRef = useRef(messages)
@@ -163,6 +165,11 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           }
           return
         }
+        case "plan_updated": {
+          const plan = event.payload.plan as PipelinePlan | undefined
+          setPlanState(extractPlanStateFromPipelinePlan(plan))
+          return
+        }
         case "render_status": {
           const jobId =
             typeof event.payload.jobId === "string"
@@ -210,6 +217,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           setCheckpointType(CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic")
           setCheckpointData(checkpoint.payload)
         }
+        setPlanState(extractPlanStateFromPipelinePlan(snapshot.plan as PipelinePlan | null))
       })
       .catch(() => {
         // SSE replay below is the primary recovery path; snapshot fetch is best-effort.
@@ -232,6 +240,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
       "tool_end",
       "checkpoint",
       "artifact_updated",
+      "plan_updated",
       "render_status",
       "error",
       "agent_end",
@@ -294,6 +303,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     setCheckpointType(null)
     setCheckpointData(null)
     setEnrichments([])
+    setPlanState(null)
     setError(null)
     setIsLoading(false)
   }, [])
@@ -309,7 +319,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     checkpointData,
     isInterrupted: checkpointType != null,
     enrichments,
-    planState: null,
+    planState,
     submit,
     resume,
     switchThread,

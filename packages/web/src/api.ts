@@ -75,6 +75,20 @@ export interface PiThreadSnapshot {
       payload: Record<string, unknown>
     }
   }
+  plan: null | {
+    schemaVersion: number
+    id: string
+    threadId: string
+    mode: string
+    goal: string
+    status: string
+    steps: Array<Record<string, unknown>>
+    decisions: Array<Record<string, unknown>>
+    currentStepId: string | null
+    progress: { completed: number; total: number }
+    createdAt: string
+    updatedAt: string
+  }
   artifacts: Array<{
     id: string
     kind: string

@@ -14,7 +14,16 @@ import {
   writeTextArtifact,
 } from "./artifacts.js"
 import { PROJECT_ROOT, assertProjectPath, contentTutorialDir, ensureDirectory, projectRelativePath } from "./paths.js"
-import type { ArtifactKind, ArtifactRecord, DirectionDraft, RenderJobStatus, ScriptDraft } from "./types.js"
+import type {
+  ArtifactKind,
+  ArtifactRecord,
+  DirectionDraft,
+  PipelineDecision,
+  PipelinePlan,
+  PipelineStep,
+  RenderJobStatus,
+  ScriptDraft,
+} from "./types.js"
 
 const SceneScriptSchema = Type.Object({
   id: Type.String(),
@@ -49,6 +58,205 @@ const DirectionDraftSchema = Type.Object({
   audio: Type.Optional(Type.Record(Type.String(), Type.Any())),
   risks: Type.Optional(Type.Array(Type.String())),
 })
+
+const PipelineStepSchema = Type.Object({
+  id: Type.String(),
+  owner: Type.String(),
+  title: Type.String(),
+  status: Type.Union([
+    Type.Literal("pending"),
+    Type.Literal("in_progress"),
+    Type.Literal("completed"),
+    Type.Literal("blocked"),
+    Type.Literal("skipped"),
+    Type.Literal("failed"),
+  ]),
+  summary: Type.Optional(Type.String()),
+  artifactPaths: Type.Optional(Type.Array(Type.String())),
+  blockers: Type.Optional(Type.Array(Type.String())),
+  startedAt: Type.Optional(Type.String()),
+  completedAt: Type.Optional(Type.String()),
+  modelRoute: Type.Optional(Type.String()),
+})
+
+const PipelinePlanSchema = Type.Object({
+  mode: Type.String(),
+  goal: Type.String(),
+  steps: Type.Optional(Type.Array(PipelineStepSchema)),
+  target: Type.Optional(Type.Record(Type.String(), Type.Any())),
+})
+
+const PIPELINE_STEP_STATUSES = ["pending", "in_progress", "completed", "blocked", "skipped", "failed"] as const
+
+const DEFAULT_PIPELINE_STEPS: Record<string, Array<Pick<PipelineStep, "id" | "owner" | "title">>> = {
+  new_video: [
+    { id: "research", owner: "researcher", title: "Research topic and audience" },
+    { id: "copywriting", owner: "copywriter", title: "Create escaleta and config" },
+    { id: "draft_validation", owner: "orchestrator", title: "Validate draft config" },
+    { id: "direction", owner: "director", title: "Polish timing and beats" },
+    { id: "scene_qa", owner: "scene_qa", title: "Review scene stills" },
+    { id: "audio_plan", owner: "audio_planner", title: "Plan voiceover and sound" },
+    { id: "voice_generation", owner: "voice_generator", title: "Generate voiceover" },
+    { id: "sound_assets", owner: "sound_engineer", title: "Prepare music and SFX" },
+    { id: "scene_creation", owner: "scene_creator", title: "Create missing custom scenes" },
+    { id: "final_validation", owner: "validator", title: "Validate final config and assets" },
+    { id: "render", owner: "orchestrator", title: "Render video" },
+    { id: "review", owner: "reviewer", title: "Review rendered output" },
+  ],
+  revise_existing: [
+    { id: "target_staging", owner: "orchestrator", title: "Stage target config" },
+    { id: "revision_plan", owner: "orchestrator", title: "Approve revision plan" },
+    { id: "revision", owner: "director", title: "Apply approved revision" },
+    { id: "validation", owner: "validator", title: "Validate revised config" },
+    { id: "save", owner: "orchestrator", title: "Persist source config" },
+    { id: "render", owner: "orchestrator", title: "Render when requested" },
+  ],
+  render_only: [
+    { id: "target_loading", owner: "orchestrator", title: "Load target config" },
+    { id: "validation", owner: "orchestrator", title: "Validate config" },
+    { id: "render", owner: "orchestrator", title: "Render video" },
+  ],
+  recover_failed_render: [
+    { id: "target_staging", owner: "orchestrator", title: "Stage failed config" },
+    { id: "recovery_plan", owner: "orchestrator", title: "Approve technical recovery" },
+    { id: "repair", owner: "validator", title: "Repair blocking issues" },
+    { id: "validation", owner: "orchestrator", title: "Validate repaired config" },
+    { id: "render", owner: "orchestrator", title: "Render repaired config" },
+  ],
+  audit_only: [
+    { id: "target_loading", owner: "orchestrator", title: "Load target config" },
+    { id: "audit", owner: "validator", title: "Audit config" },
+    { id: "report", owner: "orchestrator", title: "Report recommendations" },
+  ],
+  variant: [
+    { id: "source_staging", owner: "orchestrator", title: "Stage source config" },
+    { id: "variant_plan", owner: "orchestrator", title: "Approve variant plan" },
+    { id: "variant_creation", owner: "copywriter", title: "Create derived config" },
+    { id: "validation", owner: "validator", title: "Validate variant" },
+    { id: "render", owner: "orchestrator", title: "Render when requested" },
+  ],
+  asset_regeneration: [
+    { id: "target_staging", owner: "orchestrator", title: "Stage target config" },
+    { id: "asset_plan", owner: "audio_planner", title: "Plan requested asset regeneration" },
+    { id: "asset_generation", owner: "voice_generator", title: "Regenerate requested assets" },
+    { id: "validation", owner: "validator", title: "Validate regenerated assets" },
+  ],
+  question: [{ id: "answer", owner: "orchestrator", title: "Answer or guide user" }],
+}
+
+function nowIso(): string {
+  return new Date().toISOString()
+}
+
+function defaultPipelineSteps(mode: string): PipelineStep[] {
+  const source = DEFAULT_PIPELINE_STEPS[mode] ?? DEFAULT_PIPELINE_STEPS.question
+  return source.map((step) => ({
+    ...step,
+    status: "pending",
+    summary: "",
+    artifactPaths: [],
+    blockers: [],
+  }))
+}
+
+function normalizePipelineStep(step: Partial<PipelineStep> & { id: string }, index: number): PipelineStep {
+  return {
+    id: step.id || `step_${index + 1}`,
+    owner: step.owner ?? "orchestrator",
+    title: step.title ?? step.id ?? `Step ${index + 1}`,
+    status: PIPELINE_STEP_STATUSES.includes(step.status as (typeof PIPELINE_STEP_STATUSES)[number])
+      ? (step.status as PipelineStep["status"])
+      : "pending",
+    summary: step.summary ?? "",
+    artifactPaths: Array.isArray(step.artifactPaths)
+      ? step.artifactPaths.filter((item): item is string => typeof item === "string")
+      : [],
+    blockers: Array.isArray(step.blockers)
+      ? step.blockers.filter((item): item is string => typeof item === "string")
+      : [],
+    startedAt: typeof step.startedAt === "string" ? step.startedAt : undefined,
+    completedAt: typeof step.completedAt === "string" ? step.completedAt : undefined,
+    modelRoute: typeof step.modelRoute === "string" ? step.modelRoute : undefined,
+  }
+}
+
+function deriveCurrentStepId(steps: PipelineStep[]): string | null {
+  let firstPending: string | null = null
+  for (const step of steps) {
+    if (step.status === "in_progress") return step.id
+    if (step.status === "pending" && !firstPending) firstPending = step.id
+  }
+  return firstPending
+}
+
+function deriveProgress(steps: PipelineStep[]): { completed: number; total: number } {
+  let completed = 0
+  for (const step of steps) {
+    if (step.status === "completed" || step.status === "skipped") completed += 1
+  }
+  return { completed, total: steps.length }
+}
+
+function derivePlanStatus(steps: PipelineStep[]): PipelinePlan["status"] {
+  if (steps.every((step) => step.status === "completed" || step.status === "skipped")) return "completed"
+  if (steps.some((step) => step.status === "failed")) return "failed"
+  if (steps.some((step) => step.status === "blocked")) return "blocked"
+  return "active"
+}
+
+function normalizePlan(plan: PipelinePlan): PipelinePlan {
+  const steps = plan.steps.map((step, index) => normalizePipelineStep(step, index))
+  return {
+    ...plan,
+    steps,
+    currentStepId: deriveCurrentStepId(steps),
+    progress: deriveProgress(steps),
+    status: derivePlanStatus(steps),
+    updatedAt: nowIso(),
+  }
+}
+
+function createPipelinePlanRecord(threadId: string, mode: string, goal: string, steps?: PipelineStep[]): PipelinePlan {
+  const normalizedSteps = (steps?.length ? steps : defaultPipelineSteps(mode)).map((step, index) =>
+    normalizePipelineStep(step, index),
+  )
+  const now = nowIso()
+  const plan: PipelinePlan = {
+    schemaVersion: 1,
+    id: randomUUID(),
+    threadId,
+    mode,
+    goal,
+    status: derivePlanStatus(normalizedSteps),
+    steps: normalizedSteps,
+    decisions: [],
+    currentStepId: deriveCurrentStepId(normalizedSteps),
+    progress: deriveProgress(normalizedSteps),
+    createdAt: now,
+    updatedAt: now,
+  }
+  return plan
+}
+
+function nextPipelineStep(plan: PipelinePlan): PipelineStep | null {
+  const blocked = plan.steps.find((step) => step.status === "blocked")
+  if (blocked) return blocked
+  const inProgress = plan.steps.find((step) => step.status === "in_progress")
+  if (inProgress) return inProgress
+  return plan.steps.find((step) => step.status === "pending") ?? null
+}
+
+function publishPipelinePlanUpdate(
+  store: AgentPiStore,
+  eventBus: ThreadEventBus,
+  threadId: string,
+  plan: PipelinePlan,
+  change: Record<string, unknown>,
+): PipelinePlan {
+  const saved = store.savePipelinePlan(normalizePlan(plan))
+  eventBus.publish({ threadId, type: "plan_updated", payload: { plan: saved, ...change } })
+  return saved
+}
 
 export interface ClaquetaToolContext {
   threadId: string
@@ -394,6 +602,166 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
           sourcePath: projectRelativePath(configPath),
           config,
           summary: summarizeConfig(configPath),
+        })
+      },
+    }),
+
+    defineTool({
+      name: "create_pipeline_plan",
+      label: "Create Pipeline Plan",
+      description: "Create or replace the shared pipeline plan for this thread.",
+      parameters: PipelinePlanSchema,
+      async execute(_id, params) {
+        const plan = createPipelinePlanRecord(
+          threadId,
+          params.mode,
+          params.goal,
+          params.steps as PipelineStep[] | undefined,
+        )
+        const saved = publishPipelinePlanUpdate(store, eventBus, threadId, plan, { action: "create" })
+        return textResult("Pipeline plan created.", { plan: saved, planPath: "/pipeline/plan.json" })
+      },
+    }),
+
+    defineTool({
+      name: "read_pipeline_plan",
+      label: "Read Pipeline Plan",
+      description: "Read the current shared pipeline plan for this thread.",
+      parameters: Type.Object({}),
+      async execute() {
+        const plan = store.getPipelinePlan(threadId)
+        if (!plan) {
+          return textResult("No pipeline plan found.", { exists: false, planPath: "/pipeline/plan.json" })
+        }
+        return textResult("Pipeline plan loaded.", { exists: true, plan, planPath: "/pipeline/plan.json" })
+      },
+    }),
+
+    defineTool({
+      name: "update_pipeline_step",
+      label: "Update Pipeline Step",
+      description: "Update one step in the shared pipeline plan.",
+      parameters: Type.Object({
+        stepId: Type.String(),
+        status: Type.Union([
+          Type.Literal("pending"),
+          Type.Literal("in_progress"),
+          Type.Literal("completed"),
+          Type.Literal("blocked"),
+          Type.Literal("skipped"),
+          Type.Literal("failed"),
+        ]),
+        summary: Type.Optional(Type.String()),
+        owner: Type.Optional(Type.String()),
+        artifactPaths: Type.Optional(Type.Array(Type.String())),
+        blockers: Type.Optional(Type.Array(Type.String())),
+        startedAt: Type.Optional(Type.String()),
+        completedAt: Type.Optional(Type.String()),
+        modelRoute: Type.Optional(Type.String()),
+      }),
+      async execute(_id, params) {
+        const plan = store.getPipelinePlan(threadId)
+        if (!plan) throw new Error("The orchestrator must call create_pipeline_plan first.")
+        const stepIndex = plan.steps.findIndex((step) => step.id === params.stepId)
+        const existingStep = stepIndex >= 0 ? plan.steps[stepIndex] : undefined
+        const nextStep: PipelineStep = {
+          id: params.stepId,
+          owner: params.owner ?? existingStep?.owner ?? "orchestrator",
+          title: existingStep?.title ?? params.stepId.replaceAll("_", " "),
+          status: params.status as PipelineStep["status"],
+          summary: params.summary ?? existingStep?.summary ?? "",
+          artifactPaths: params.artifactPaths ?? existingStep?.artifactPaths ?? [],
+          blockers: params.blockers ?? existingStep?.blockers ?? [],
+          startedAt: params.startedAt ?? existingStep?.startedAt,
+          completedAt: params.completedAt ?? existingStep?.completedAt,
+          modelRoute: params.modelRoute ?? existingStep?.modelRoute,
+        }
+        const steps = stepIndex >= 0 ? [...plan.steps] : [...plan.steps, nextStep]
+        if (stepIndex >= 0) steps[stepIndex] = nextStep
+        const saved = publishPipelinePlanUpdate(
+          store,
+          eventBus,
+          threadId,
+          { ...plan, steps },
+          { action: "update_step", stepId: params.stepId, status: params.status },
+        )
+        return textResult("Pipeline step updated.", { plan: saved, step: nextStep, planPath: "/pipeline/plan.json" })
+      },
+    }),
+
+    defineTool({
+      name: "record_pipeline_decision",
+      label: "Record Pipeline Decision",
+      description: "Record a human decision or checkpoint resolution in the shared plan.",
+      parameters: Type.Object({
+        decisionId: Type.String(),
+        checkpointId: Type.String(),
+        stepId: Type.String(),
+        status: Type.Union([
+          Type.Literal("approved"),
+          Type.Literal("changes_requested"),
+          Type.Literal("selected"),
+          Type.Literal("skipped"),
+        ]),
+        summary: Type.String(),
+        payload: Type.Optional(Type.Any()),
+      }),
+      async execute(_id, params) {
+        const plan = store.getPipelinePlan(threadId)
+        if (!plan) throw new Error("The orchestrator must call create_pipeline_plan first.")
+        const decision: PipelineDecision = {
+          id: params.decisionId,
+          checkpointId: params.checkpointId,
+          stepId: params.stepId,
+          status: params.status as PipelineDecision["status"],
+          summary: params.summary,
+          payload: params.payload,
+          createdAt: nowIso(),
+        }
+        const step = plan.steps.find((item) => item.id === params.stepId)
+        const updatedPlan = {
+          ...plan,
+          decisions: [...plan.decisions, decision],
+          steps: step ? [...plan.steps] : plan.steps,
+        }
+        const saved = publishPipelinePlanUpdate(store, eventBus, threadId, updatedPlan, {
+          action: "record_decision",
+          decisionId: params.decisionId,
+          stepId: params.stepId,
+          status: params.status,
+        })
+        return textResult("Pipeline decision recorded.", { plan: saved, decision, planPath: "/pipeline/plan.json" })
+      },
+    }),
+
+    defineTool({
+      name: "get_next_pipeline_step",
+      label: "Get Next Pipeline Step",
+      description: "Return the next actionable step from the shared pipeline plan.",
+      parameters: Type.Object({}),
+      async execute() {
+        const plan = store.getPipelinePlan(threadId)
+        if (!plan) {
+          return textResult("No pipeline plan found.", {
+            status: "no_plan",
+            instruction: "Call create_pipeline_plan first.",
+            planPath: "/pipeline/plan.json",
+          })
+        }
+        const nextStep = nextPipelineStep(plan)
+        if (!nextStep) {
+          return textResult("All pipeline steps are complete.", {
+            status: "all_completed",
+            progress: plan.progress,
+            planPath: "/pipeline/plan.json",
+          })
+        }
+        return textResult("Next pipeline step found.", {
+          status:
+            nextStep.status === "blocked" ? "blocked" : nextStep.status === "in_progress" ? "in_progress" : "next_step",
+          step: nextStep,
+          progress: plan.progress,
+          planPath: "/pipeline/plan.json",
         })
       },
     }),

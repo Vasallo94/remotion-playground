@@ -28,7 +28,12 @@ export function createApp(runtime = createDefaultRuntime()) {
       res.status(404).json({ error: "Thread not found" })
       return
     }
-    res.json({ thread, artifacts: runtime.store.listArtifacts(thread.id), events: runtime.store.listEvents(thread.id) })
+    res.json({
+      thread,
+      plan: runtime.store.getPipelinePlan(thread.id),
+      artifacts: runtime.store.listArtifacts(thread.id),
+      events: runtime.store.listEvents(thread.id),
+    })
   })
 
   app.post("/api/pi/chat", async (req, res) => {

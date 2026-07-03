@@ -2,7 +2,15 @@ import Database from "better-sqlite3"
 import { join } from "node:path"
 import { randomUUID } from "node:crypto"
 import { ensureDirectory, PROJECT_ROOT } from "./paths.js"
-import type { ArtifactKind, ArtifactRecord, CheckpointRecord, PiSseEvent, ThreadRecord, ThreadStatus } from "./types.js"
+import type {
+  ArtifactKind,
+  ArtifactRecord,
+  CheckpointRecord,
+  PiSseEvent,
+  PipelinePlan,
+  ThreadRecord,
+  ThreadStatus,
+} from "./types.js"
 
 interface ThreadRow {
   id: string
@@ -32,6 +40,13 @@ interface EventRow {
   type: PiSseEvent["type"]
   payload_json: string
   created_at: string
+}
+
+interface PipelinePlanRow {
+  thread_id: string
+  plan_json: string
+  created_at: string
+  updated_at: string
 }
 
 export interface CreateThreadInput {
@@ -134,6 +149,26 @@ export class AgentPiStore {
       .run(status, threadId)
   }
 
+  getPipelinePlan(threadId: string): PipelinePlan | null {
+    const row = this.db.prepare("SELECT * FROM pipeline_plans WHERE thread_id = ?").get(threadId) as
+      | PipelinePlanRow
+      | undefined
+    return row ? this.mapPipelinePlan(row) : null
+  }
+
+  savePipelinePlan(plan: PipelinePlan): PipelinePlan {
+    this.db
+      .prepare(
+        `INSERT INTO pipeline_plans (thread_id, plan_json)
+         VALUES (?, ?)
+         ON CONFLICT(thread_id) DO UPDATE SET
+           plan_json = excluded.plan_json,
+           updated_at = datetime('now')`,
+      )
+      .run(plan.threadId, JSON.stringify(plan))
+    return this.getPipelinePlan(plan.threadId) ?? plan
+  }
+
   saveArtifact<TData = unknown>(input: SaveArtifactInput<TData>): ArtifactRecord<TData> {
     const id = input.id ?? randomUUID()
     const nextVersion = this.nextArtifactVersion(input.threadId, input.kind)
@@ -231,6 +266,10 @@ export class AgentPiStore {
     }
   }
 
+  private mapPipelinePlan(row: PipelinePlanRow): PipelinePlan {
+    return JSON.parse(row.plan_json) as PipelinePlan
+  }
+
   private migrate(): void {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS threads (
@@ -268,6 +307,14 @@ export class AgentPiStore {
       );
 
       CREATE INDEX IF NOT EXISTS idx_events_thread_seq ON events(thread_id, seq);
+
+      CREATE TABLE IF NOT EXISTS pipeline_plans (
+        thread_id TEXT PRIMARY KEY,
+        plan_json TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+      );
 
       CREATE TABLE IF NOT EXISTS pi_sessions (
         thread_id TEXT PRIMARY KEY,

@@ -49,4 +49,15 @@ describe("encodeSseEvent", () => {
     assert.match(encoded, /^data: /m)
     assert.match(encoded, /\n\n$/)
   })
+
+  it("encodes plan updates too", () => {
+    const encoded = encodeSseEvent({
+      seq: 8,
+      threadId: "thread-1",
+      type: "plan_updated",
+      payload: { plan: { id: "plan-1" } },
+      createdAt: "2026-07-02T00:00:00Z",
+    })
+    assert.match(encoded, /^event: plan_updated/m)
+  })
 })

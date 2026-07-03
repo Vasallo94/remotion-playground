@@ -2,6 +2,48 @@ export type ThreadStatus = "idle" | "running" | "waiting" | "done" | "error"
 
 export type ArtifactKind = "script" | "script_markdown" | "direction" | "config" | "render_job"
 
+export type PipelineStepStatus = "pending" | "in_progress" | "completed" | "blocked" | "skipped" | "failed"
+export type PipelinePlanStatus = "active" | "blocked" | "completed" | "failed"
+export type PipelineDecisionStatus = "approved" | "changes_requested" | "selected" | "skipped"
+
+export interface PipelineStep {
+  id: string
+  owner: string
+  title: string
+  status: PipelineStepStatus
+  summary: string
+  artifactPaths: string[]
+  blockers: string[]
+  startedAt?: string
+  completedAt?: string
+  modelRoute?: string
+}
+
+export interface PipelineDecision {
+  id: string
+  checkpointId: string
+  stepId: string
+  status: PipelineDecisionStatus
+  summary: string
+  payload?: unknown
+  createdAt: string
+}
+
+export interface PipelinePlan {
+  schemaVersion: number
+  id: string
+  threadId: string
+  mode: string
+  goal: string
+  status: PipelinePlanStatus
+  steps: PipelineStep[]
+  decisions: PipelineDecision[]
+  currentStepId: string | null
+  progress: { completed: number; total: number }
+  createdAt: string
+  updatedAt: string
+}
+
 export type CheckpointKind = "script_checkpoint" | "direction_checkpoint"
 
 export type PiSseEventType =
@@ -10,6 +52,7 @@ export type PiSseEventType =
   | "tool_end"
   | "checkpoint"
   | "artifact_updated"
+  | "plan_updated"
   | "render_status"
   | "error"
   | "agent_end"

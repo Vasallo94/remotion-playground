@@ -51,6 +51,40 @@ describe("AgentPiStore", () => {
     assert.equal(cleared?.checkpoint, null)
   })
 
+  it("stores pipeline plans per thread", () => {
+    store = new AgentPiStore(":memory:")
+    const thread = store.createThread()
+    const plan = store.savePipelinePlan({
+      schemaVersion: 1,
+      id: "plan-1",
+      threadId: thread.id,
+      mode: "new_video",
+      goal: "Create a tutorial",
+      status: "active",
+      steps: [
+        {
+          id: "research",
+          owner: "researcher",
+          title: "Research",
+          status: "in_progress",
+          summary: "",
+          artifactPaths: [],
+          blockers: [],
+        },
+      ],
+      decisions: [],
+      currentStepId: "research",
+      progress: { completed: 0, total: 1 },
+      createdAt: "2026-07-02T00:00:00.000Z",
+      updatedAt: "2026-07-02T00:00:00.000Z",
+    })
+
+    const found = store.getPipelinePlan(thread.id)
+    assert.equal(found?.id, plan.id)
+    assert.equal(found?.steps[0].status, "in_progress")
+    assert.equal(found?.progress.total, 1)
+  })
+
   it("appends replayable SSE events", () => {
     store = new AgentPiStore(":memory:")
     const thread = store.createThread()

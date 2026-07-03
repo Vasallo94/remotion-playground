@@ -89,6 +89,41 @@ function startMockRenderService(): Promise<void> {
 }
 
 describe("Claqueta tools", () => {
+  it("persists and updates the pipeline plan", async () => {
+    const created = await executeTool("create_pipeline_plan", {
+      mode: "new_video",
+      goal: "Create a tutorial",
+    })
+    assert.equal(created.details.planPath, "/pipeline/plan.json")
+    assert.equal(store.listEvents(threadId).at(-1)?.type, "plan_updated")
+
+    const read = await executeTool("read_pipeline_plan", {})
+    assert.equal(read.details.exists, true)
+    assert.equal((read.details.plan as { steps: Array<{ id: string; status: string }> }).steps[0].id, "research")
+
+    const updated = await executeTool("update_pipeline_step", {
+      stepId: "research",
+      status: "in_progress",
+      summary: "Collecting references",
+    })
+    assert.equal((updated.details.step as { status: string }).status, "in_progress")
+
+    const next = await executeTool("get_next_pipeline_step", {})
+    assert.equal(next.details.status, "in_progress")
+
+    await executeTool("record_pipeline_decision", {
+      decisionId: "decision-1",
+      checkpointId: "cp-1",
+      stepId: "research",
+      status: "approved",
+      summary: "Looks good",
+    })
+
+    const plan = store.getPipelinePlan(threadId)
+    assert.equal(plan?.decisions.length, 1)
+    assert.equal(plan?.status, "active")
+  })
+
   it("saves and presents a script checkpoint", async () => {
     const script = {
       title: "Tutorial /compact",

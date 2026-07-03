@@ -1,4 +1,4 @@
-export interface PlanStep {
+export interface PipelineStep {
   id: string
   owner: string
   title: string
@@ -6,6 +6,36 @@ export interface PlanStep {
   summary: string
   artifactPaths: string[]
   blockers: string[]
+  startedAt?: string
+  completedAt?: string
+  modelRoute?: string
+}
+
+export type PlanStep = PipelineStep
+
+export interface PipelineDecision {
+  id: string
+  checkpointId: string
+  stepId: string
+  status: "approved" | "changes_requested" | "selected" | "skipped"
+  summary: string
+  payload?: unknown
+  createdAt: string
+}
+
+export interface PipelinePlan {
+  schemaVersion: number
+  id: string
+  threadId: string
+  mode: string
+  goal: string
+  status: "active" | "blocked" | "completed" | "failed"
+  steps: PipelineStep[]
+  decisions: PipelineDecision[]
+  currentStepId: string | null
+  progress: { completed: number; total: number }
+  createdAt: string
+  updatedAt: string
 }
 
 export interface PlanState {
@@ -59,6 +89,50 @@ const MODE_LABELS: Record<string, string> = {
   question: "Consulta",
 }
 
+function normalizePipelineStep(step: Record<string, unknown>): PipelineStep {
+  return {
+    id: String(step.id ?? ""),
+    owner: String(step.owner ?? ""),
+    title: String(step.title ?? step.id ?? ""),
+    status:
+      step.status === "completed" ||
+      step.status === "in_progress" ||
+      step.status === "blocked" ||
+      step.status === "skipped" ||
+      step.status === "failed"
+        ? step.status
+        : "pending",
+    summary: String(step.summary ?? ""),
+    artifactPaths: Array.isArray(step.artifactPaths) ? step.artifactPaths.map((item) => String(item)) : [],
+    blockers: Array.isArray(step.blockers) ? step.blockers.map((item) => String(item)) : [],
+    startedAt: typeof step.startedAt === "string" ? step.startedAt : undefined,
+    completedAt: typeof step.completedAt === "string" ? step.completedAt : undefined,
+    modelRoute: typeof step.modelRoute === "string" ? step.modelRoute : undefined,
+  }
+}
+
+function derivePlanState(plan: Pick<PipelinePlan, "mode" | "goal" | "status" | "steps">): PlanState {
+  const steps = plan.steps.map((step) => normalizePipelineStep(step as unknown as Record<string, unknown>))
+
+  let completed = 0
+  let inProgress: PlanStep | undefined
+  let nextPending: PlanStep | undefined
+  for (const step of steps) {
+    if (step.status === "completed" || step.status === "skipped") completed += 1
+    else if (step.status === "in_progress" && !inProgress) inProgress = step
+    else if (step.status === "pending" && !nextPending) nextPending = step
+  }
+
+  return {
+    mode: plan.mode,
+    goal: plan.goal,
+    status: plan.status,
+    steps,
+    currentStepId: inProgress?.id ?? nextPending?.id ?? null,
+    progress: { completed, total: steps.length },
+  }
+}
+
 export function stepLabel(step: PlanStep): string {
   return STEP_LABELS[step.id] ?? step.title
 }
@@ -67,8 +141,18 @@ export function modeLabel(mode: string): string {
   return MODE_LABELS[mode] ?? mode
 }
 
+export function extractPlanStateFromPipelinePlan(plan: PipelinePlan | null | undefined): PlanState | null {
+  if (!plan) return null
+  return derivePlanState(plan)
+}
+
 export function extractPlanState(values: Record<string, unknown> | undefined): PlanState | null {
   if (!values) return null
+
+  const embeddedPlan = values.plan as PipelinePlan | undefined
+  if (embeddedPlan && typeof embeddedPlan === "object") {
+    return extractPlanStateFromPipelinePlan(embeddedPlan)
+  }
 
   const files = values.files as Record<string, { content: string }> | undefined
   if (!files) return null
@@ -77,34 +161,19 @@ export function extractPlanState(values: Record<string, unknown> | undefined): P
   if (!planFile?.content) return null
 
   try {
-    const raw = JSON.parse(typeof planFile.content === "string" ? planFile.content : "")
-    const steps: PlanStep[] = (raw.steps ?? []).map((s: Record<string, unknown>) => ({
-      id: String(s.id ?? ""),
-      owner: String(s.owner ?? ""),
-      title: String(s.title ?? ""),
-      status: s.status ?? "pending",
-      summary: String(s.summary ?? ""),
-      artifactPaths: Array.isArray(s.artifactPaths) ? s.artifactPaths : [],
-      blockers: Array.isArray(s.blockers) ? s.blockers : [],
-    }))
-
-    let completed = 0
-    let inProgress: PlanStep | undefined
-    let nextPending: PlanStep | undefined
-    for (const s of steps) {
-      if (s.status === "completed" || s.status === "skipped") completed++
-      else if (s.status === "in_progress" && !inProgress) inProgress = s
-      else if (s.status === "pending" && !nextPending) nextPending = s
+    const raw = JSON.parse(typeof planFile.content === "string" ? planFile.content : "") as Partial<PipelinePlan> & {
+      steps?: Record<string, unknown>[]
     }
-
-    return {
+    if (!Array.isArray(raw.steps)) return null
+    return derivePlanState({
       mode: String(raw.mode ?? ""),
       goal: String(raw.goal ?? ""),
-      status: String(raw.status ?? "active"),
-      steps,
-      currentStepId: inProgress?.id ?? nextPending?.id ?? null,
-      progress: { completed, total: steps.length },
-    }
+      status:
+        raw.status === "blocked" || raw.status === "completed" || raw.status === "failed" || raw.status === "active"
+          ? raw.status
+          : "active",
+      steps: raw.steps,
+    })
   } catch {
     return null
   }
