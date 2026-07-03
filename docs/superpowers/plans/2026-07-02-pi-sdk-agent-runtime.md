@@ -12,57 +12,57 @@
 
 ## Task 1: Preparar paquete `agent-pi`
 
-- [ ] Crear `packages/agent-pi/` con `package.json`, `tsconfig.json` y `src/index.ts`.
-- [ ] Añadir scripts `dev`, `typecheck` y `test`.
-- [ ] Añadir dependencias: Pi SDK, servidor HTTP, SSE y SQLite ligera.
-- [ ] Verificar que el workspace compila sin tocar el runtime actual.
+- [x] Crear `packages/agent-pi/` con `package.json`, `tsconfig.json` y `src/index.ts`.
+- [x] Añadir scripts `dev`, `typecheck` y `test`.
+- [x] Añadir dependencias: Pi SDK, servidor HTTP, SSE y SQLite ligera.
+- [x] Verificar que el workspace compila sin tocar el runtime actual.
 
 ## Task 2: Persistencia de threads, artifacts y sesiones Pi
 
-- [ ] Diseñar SQLite mínima: `threads`, `artifacts`, `events`, `pi_sessions`.
-- [ ] Crear store para asociar `threadId` con sesión Pi y artifacts.
-- [ ] Guardar snapshots de `script`, `direction`, `config` y render jobs.
-- [ ] Tests de crear/recuperar thread y artifacts.
+- [x] Diseñar SQLite mínima: `threads`, `artifacts`, `events`, `pi_sessions`.
+- [x] Crear store para asociar `threadId` con sesión Pi y artifacts.
+- [x] Guardar snapshots de `script`, `direction`, `config` y render jobs.
+- [x] Tests de crear/recuperar thread y artifacts.
 
 ## Task 3: Sesión Pi y normalización de eventos
 
-- [ ] Crear `createClaquetaPiSession()` con Pi SDK.
-- [ ] Configurar modelo mediante router/env, no hardcodear un único provider.
-- [ ] Normalizar eventos Pi a eventos SSE propios: `message_delta`, `tool_start`, `tool_end`, `checkpoint`, `artifact_updated`, `render_status`, `error`, `agent_end`.
-- [ ] Tests de normalización con fixtures.
+- [x] Crear `createClaquetaPiSession()` con Pi SDK.
+- [x] Configurar modelo mediante router/env, no hardcodear un único provider.
+- [x] Normalizar eventos Pi a eventos SSE propios: `message_delta`, `tool_start`, `tool_end`, `checkpoint`, `artifact_updated`, `render_status`, `error`, `agent_end`.
+- [x] Tests de normalización con fixtures.
 
 ## Task 4: API SSE y endpoints de chat
 
-- [ ] Exponer `POST /api/pi/chat` para enviar mensajes.
-- [ ] Exponer `POST /api/pi/resume` para decisiones de checkpoints.
-- [ ] Exponer `GET /api/pi/events/:threadId` como stream SSE.
-- [ ] Manejar reconexión básica y replay desde SQLite.
+- [x] Exponer `POST /api/pi/chat` para enviar mensajes.
+- [x] Exponer `POST /api/pi/resume` para decisiones de checkpoints.
+- [x] Exponer `GET /api/pi/events/:threadId` como stream SSE.
+- [x] Manejar reconexión básica y replay desde SQLite.
 
 ## Task 5: Policy de escritura y paths
 
-- [ ] Implementar allowlist en código para `content/tutorials/**`, `.generated/**`, `public/audio/**`, `public/voiceover/**`.
-- [ ] Rechazar traversal, symlinks fuera y rutas absolutas no permitidas.
-- [ ] Tests de rutas válidas e inválidas.
+- [x] Implementar allowlist en código para `content/tutorials/**`, `.generated/**`, `public/audio/**`, `public/voiceover/**`.
+- [x] Rechazar traversal, symlinks fuera y rutas absolutas no permitidas.
+- [x] Tests de rutas válidas e inválidas.
 
 ## Task 6: Tools cerradas V1
 
-- [ ] `list_scene_catalog`.
-- [ ] `list_existing_configs`.
-- [ ] `load_existing_config`.
-- [ ] `save_script_artifact`.
-- [ ] `save_direction_artifact`.
-- [ ] `generate_remotion_config`.
-- [ ] `validate_video_config`.
-- [ ] `submit_render`.
-- [ ] `check_render_status`.
-- [ ] Tests de tools con render-service mockeado.
+- [x] `list_scene_catalog`.
+- [x] `list_existing_configs`.
+- [x] `load_existing_config`.
+- [x] `save_script_artifact`.
+- [x] `save_direction_artifact`.
+- [x] `generate_remotion_config`.
+- [x] `validate_video_config`.
+- [x] `submit_render`.
+- [x] `check_render_status`.
+- [x] Tests de tools con render-service mockeado.
 
 ## Task 7: Checkpoints de guion y dirección
 
-- [ ] Definir payload `script_checkpoint` para card editable.
-- [ ] Definir payload `direction_checkpoint` para card revisable.
-- [ ] Implementar pause/resume de checkpoint en el backend.
-- [ ] Guardar cada versión de script/direction como artifact.
+- [x] Definir payload `script_checkpoint` para card editable.
+- [x] Definir payload `direction_checkpoint` para card revisable.
+- [x] Implementar pause/resume de checkpoint en el backend.
+- [x] Guardar cada versión de script/direction como artifact.
 
 ## Task 8: Prompt y passes internos
 
@@ -80,11 +80,11 @@
 
 ## Task 10: Frontend Pi-native
 
-- [ ] Crear hook `usePiVideoStream` basado en SSE.
-- [ ] Reemplazar el flujo de chat nuevo por eventos Pi, reutilizando componentes existentes cuando sirvan.
-- [ ] Crear/ajustar `ScriptCard` editable.
-- [ ] Crear/ajustar `DirectionCard` revisable.
-- [ ] Mantener `RenderResultCard` o equivalente para el MP4 final.
+- [x] Crear hook `usePiVideoStream` basado en SSE.
+- [x] Reemplazar el flujo de chat nuevo por eventos Pi, reutilizando componentes existentes cuando sirvan.
+- [x] Crear/ajustar `ScriptCard` editable.
+- [x] Crear/ajustar `DirectionCard` revisable.
+- [x] Mantener `RenderResultCard` o equivalente para el MP4 final.
 - [ ] Permitir recuperar threads/artifacts al recargar.
 
 ## Task 11: Render y recuperación de errores

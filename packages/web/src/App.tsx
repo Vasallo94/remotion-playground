@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { StoredVideoArtifact } from "./types"
 import { fetchConfigs, fetchJobStatus, fetchLatestRender } from "./api"
 import { useVideoStream } from "./hooks/useVideoStream"
+import { usePiVideoStream } from "./hooks/usePiVideoStream"
 import { usePipelineTracker } from "./hooks/usePipelineTracker"
 import { loadingLabelFromPlan, isRenderingStep } from "./lib/planState"
 import { AppLayout } from "./components/AppLayout"
@@ -21,6 +22,9 @@ import {
   setActiveVideoTarget,
   type StoredThread,
 } from "./lib/threadStorage"
+
+const AGENT_RUNTIME = import.meta.env.VITE_AGENT_RUNTIME ?? "langgraph"
+const useSelectedVideoStream = AGENT_RUNTIME === "pi" ? usePiVideoStream : useVideoStream
 
 // ---------------------------------------------------------------------------
 // Helpers — kept from previous version
@@ -95,7 +99,7 @@ export default function App() {
   const pipeline = usePipelineTracker()
 
   // ----- Core stream hook -----
-  const videoStream = useVideoStream({
+  const videoStream = useSelectedVideoStream({
     threadId,
     onThreadId: (id) => {
       setThreadId(id)
@@ -276,6 +280,7 @@ export default function App() {
   const checkpointHandlers = useMemo(
     () => ({
       escaleta: createCheckpointHandlers(),
+      script: createCheckpointHandlers(),
       direction: createCheckpointHandlers(),
       sound_chart: createCheckpointHandlers(),
       audio_chart: createCheckpointHandlers(),

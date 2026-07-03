@@ -9,6 +9,7 @@ import type {
   Enrichment,
   InteractionRequestData,
   RevisionPlanData,
+  ScriptCheckpointData,
   SoundChartData,
   TargetSelectionData,
   ValidationReportData,
@@ -20,6 +21,7 @@ import { DirectionCard } from "./DirectionCard"
 import { GenericCheckpointCard } from "./GenericCheckpointCard"
 import { InteractionRequestCard } from "./InteractionRequestCard"
 import { SoundChartCard } from "./SoundChartCard"
+import { ScriptCard } from "./ScriptCard"
 import { SubagentCard } from "./SubagentCard"
 import { ErrorBanner } from "./ErrorBanner"
 import { MessageBubble } from "./MessageBubble"
@@ -145,6 +147,8 @@ function renderCheckpointCard(
       return <SoundChartCard data={data as unknown as AudioChartData} {...cardProps} />
     case "direction":
       return <DirectionCard data={data as unknown as DirectionData} {...cardProps} />
+    case "script":
+      return <ScriptCard data={data as unknown as ScriptCheckpointData} {...cardProps} />
     case "escaleta":
       return <CheckpointCard data={data as unknown as CheckpointData} {...cardProps} />
     case "validation":

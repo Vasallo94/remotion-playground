@@ -2,6 +2,7 @@ export type MessageRole = "user" | "assistant"
 export type CheckpointType =
   | "interaction"
   | "escaleta"
+  | "script"
   | "direction"
   | "sound_chart"
   | "audio_chart"
@@ -20,6 +21,7 @@ export interface ChatMessage {
     | CheckpointData
     | SoundChartData
     | AudioChartData
+    | ScriptCheckpointData
     | DirectionData
     | ValidationReportData
     | InteractionRequestData
@@ -61,6 +63,27 @@ export interface ScenePreview {
   text?: string
   durationInSeconds: number
   [key: string]: unknown
+}
+
+export interface ScriptCheckpointData {
+  type: "script_checkpoint"
+  artifactId?: string
+  version?: number
+  path?: string
+  title: string
+  objective: string
+  audience?: string
+  tone?: string
+  estimatedDurationSeconds?: number
+  notes?: string
+  scenes: Array<{
+    id: string
+    type: string
+    title?: string
+    voiceover?: string
+    visualNotes?: string
+    durationInSeconds: number
+  }>
 }
 
 export interface DirectionData {

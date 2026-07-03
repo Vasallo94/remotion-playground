@@ -9,7 +9,7 @@
 
 ## Start all services
 
-Open 3 terminals:
+Open the terminals you need:
 
 ### Terminal 1: Render service
 
@@ -19,7 +19,7 @@ npm install  # first time only
 npm run dev
 ```
 
-### Terminal 2: Agent API
+### Terminal 2: Agent API (LangGraph legacy)
 
 ```bash
 cd packages/agent
@@ -27,15 +27,31 @@ uv sync  # first time only
 LLM_MODEL=google_genai:gemini-2.5-pro uv run uvicorn src.api:app --port 8000 --reload
 ```
 
+### Terminal 2b: Agent Pi runtime (experimental)
+
+```bash
+cd packages/agent-pi
+pnpm install  # first time only, from repo root also works
+CLAQUETA_PI_MODEL=anthropic/claude-sonnet-4-5 pnpm dev
+```
+
+The Pi runtime listens on `http://127.0.0.1:3200` and exposes `/api/pi/chat`, `/api/pi/resume` and `/api/pi/events/:threadId`.
+
 ### Terminal 3: Web frontend
 
 ```bash
 cd packages/web
-npm install  # first time only
-npm run dev
+pnpm install  # first time only, from repo root also works
+pnpm dev
 ```
 
 Open http://localhost:5173 in the browser.
+
+To test the experimental Pi runtime in the web UI, start the frontend with:
+
+```bash
+VITE_AGENT_RUNTIME=pi VITE_AGENT_PI_URL=http://127.0.0.1:3200 pnpm dev
+```
 
 ## Test flow
 
