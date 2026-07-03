@@ -18,6 +18,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Security
 
+- **Dependabot — auditorías pnpm/uv a cero** — `pnpm-lock.yaml` queda como único lockfile JavaScript canónico (se eliminan los `package-lock.json` de `packages/web` y `packages/render-service`) y se actualizan overrides/lockfiles para cerrar alertas en `ws`, `protobufjs`, `vite`, `esbuild`, `js-yaml`, `cryptography`, `langchain`, `langgraph-checkpoint`, `langgraph-sdk`, `langsmith`, `pydantic-settings`, `pyjwt`, `python-multipart` y `starlette`; `pnpm audit` y `pip-audit` sobre requirements exportado de `uv.lock` quedan sin vulnerabilidades.
 - **Dependabot — 6 alertas resueltas (1 crítica, 5 moderadas)** mediante bumps en los cuatro lockfiles del monorepo:
   - `vitest` `3.2.4 → 3.2.6` (raíz, **crítica** [GHSA-5xrq-8626-4rwp](https://github.com/advisories/GHSA-5xrq-8626-4rwp): lectura/ejecución de archivos arbitrarios con el servidor de Vitest UI activo)
   - `qs` `6.15.1 → 6.15.2` ([GHSA-q8mj-m7cp-5q26](https://github.com/advisories/GHSA-q8mj-m7cp-5q26): DoS por `TypeError` en `qs.stringify`) — transitiva vía `express@5`; forzada en raíz con `pnpm.overrides` y regenerada en `packages/render-service/package-lock.json`
