@@ -109,6 +109,39 @@ describe("Claqueta tools", () => {
     assert.equal(store.listEvents(threadId).at(-1)?.type, "checkpoint")
   })
 
+  it("exports scene-level visual planning fields to markdown", async () => {
+    const script = {
+      title: "Visual planning demo",
+      objective: "Test scene planning export",
+      scenes: [
+        {
+          id: "s1",
+          type: "callout",
+          title: "Hook",
+          narrativeRole: "hook",
+          visualType: "builtin",
+          componentId: "callout",
+          visualRationale: "Usa un callout para abrir con una idea clara",
+          requiredAssets: ["headline copy", "brand accent"],
+          missingCapabilities: ["confirmed screenshot"],
+          riskNotes: ["Could feel static if text is too long"],
+          durationInSeconds: 4,
+        },
+      ],
+    }
+
+    await executeTool("create_script_draft", { script })
+    const markdownArtifact = store.listArtifacts(threadId).find((artifact) => artifact.kind === "script_markdown")
+    assert(markdownArtifact)
+    assert.match(markdownArtifact.data as string, /Función narrativa.*hook/)
+    assert.match(markdownArtifact.data as string, /Tipo visual.*builtin/)
+    assert.match(markdownArtifact.data as string, /Componente.*callout/)
+    assert.match(markdownArtifact.data as string, /Razón visual.*Usa un callout/)
+    assert.match(markdownArtifact.data as string, /Recursos requeridos:/)
+    assert.match(markdownArtifact.data as string, /Capacidades faltantes:/)
+    assert.match(markdownArtifact.data as string, /Notas de riesgo:/)
+  })
+
   it("generates config with ClaudeCodeTutorial defaults", async () => {
     const result = await executeTool("generate_remotion_config", {
       config: { title: "Compact demo", scenes: [{ type: "intro", title: "Hola", durationInSeconds: 3 }] },

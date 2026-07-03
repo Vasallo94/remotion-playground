@@ -57,6 +57,13 @@ export interface SceneScriptDraft {
   title?: string
   voiceover?: string
   visualNotes?: string
+  narrativeRole?: string
+  visualType?: string
+  componentId?: string
+  visualRationale?: string
+  requiredAssets?: string[]
+  missingCapabilities?: string[]
+  riskNotes?: string[]
   durationInSeconds: number
 }
 

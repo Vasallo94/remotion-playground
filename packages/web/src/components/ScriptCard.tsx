@@ -16,6 +16,18 @@ function cloneScenes(scenes: EditableScene[]): EditableScene[] {
   return scenes.map((scene) => ({ ...scene }))
 }
 
+function listToText(items?: string[]): string {
+  return items?.join("\n") ?? ""
+}
+
+function textToList(value: string): string[] | undefined {
+  const items = value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+  return items.length > 0 ? items : undefined
+}
+
 export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Props) {
   const [title, setTitle] = useState(data.title)
   const [objective, setObjective] = useState(data.objective)
@@ -151,6 +163,87 @@ export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Prop
                 style={inputStyle()}
               />
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <label style={fieldLabelStyle()}>
+                Función narrativa
+                <input
+                  value={scene.narrativeRole ?? ""}
+                  onChange={(event) => updateScene(index, { narrativeRole: event.target.value })}
+                  disabled={disabled}
+                  placeholder="hook | demo | proof | takeaway"
+                  style={inputStyle()}
+                />
+              </label>
+              <label style={fieldLabelStyle()}>
+                Tipo visual
+                <input
+                  value={scene.visualType ?? ""}
+                  onChange={(event) => updateScene(index, { visualType: event.target.value })}
+                  disabled={disabled}
+                  placeholder="builtin | custom"
+                  style={inputStyle()}
+                />
+              </label>
+              <label style={fieldLabelStyle()}>
+                ID de componente
+                <input
+                  value={scene.componentId ?? ""}
+                  onChange={(event) => updateScene(index, { componentId: event.target.value })}
+                  disabled={disabled}
+                  placeholder="opcional"
+                  style={inputStyle()}
+                />
+              </label>
+            </div>
+
+            <div style={{ display: "grid", gap: 8, marginBottom: 8 }}>
+              <label style={fieldLabelStyle()}>
+                Razón visual
+                <textarea
+                  value={scene.visualRationale ?? ""}
+                  onChange={(event) => updateScene(index, { visualRationale: event.target.value })}
+                  disabled={disabled}
+                  placeholder="Por qué esta escena/componente resuelve mejor el objetivo"
+                  style={{ ...inputStyle(), minHeight: 58, resize: "vertical" }}
+                />
+              </label>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <label style={fieldLabelStyle()}>
+                Recursos requeridos
+                <textarea
+                  value={listToText(scene.requiredAssets)}
+                  onChange={(event) => updateScene(index, { requiredAssets: textToList(event.target.value) })}
+                  disabled={disabled}
+                  placeholder="Una línea por recurso"
+                  style={{ ...inputStyle(), minHeight: 58, resize: "vertical" }}
+                />
+              </label>
+              <label style={fieldLabelStyle()}>
+                Capacidades faltantes
+                <textarea
+                  value={listToText(scene.missingCapabilities)}
+                  onChange={(event) => updateScene(index, { missingCapabilities: textToList(event.target.value) })}
+                  disabled={disabled}
+                  placeholder="Qué falta para ejecutar esta escena"
+                  style={{ ...inputStyle(), minHeight: 58, resize: "vertical" }}
+                />
+              </label>
+            </div>
+
+            <label style={fieldLabelStyle()}>
+              Notas de riesgo
+              <textarea
+                value={listToText(scene.riskNotes)}
+                onChange={(event) => updateScene(index, { riskNotes: textToList(event.target.value) })}
+                disabled={disabled}
+                placeholder="Una línea por riesgo"
+                style={{ ...inputStyle(), minHeight: 52, resize: "vertical", marginBottom: 8 }}
+              />
+            </label>
+
             <textarea
               value={scene.voiceover ?? ""}
               onChange={(event) => updateScene(index, { voiceover: event.target.value })}
@@ -225,5 +318,14 @@ function inputStyle(): CSSProperties {
     color: theme.colors.text.primary,
     fontSize: 13,
     fontFamily: theme.fonts.sans,
+  }
+}
+
+function fieldLabelStyle(): CSSProperties {
+  return {
+    display: "grid",
+    gap: 4,
+    fontSize: 12,
+    color: theme.colors.text.muted,
   }
 }

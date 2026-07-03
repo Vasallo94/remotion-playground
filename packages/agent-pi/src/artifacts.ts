@@ -56,6 +56,12 @@ export function writeTextArtifact(
   })
 }
 
+function pushMarkdownList(lines: string[], label: string, items?: string[]): void {
+  if (!items?.length) return
+  lines.push(`- **${label}:**`)
+  for (const item of items) lines.push(`  - ${item}`)
+}
+
 export function scriptToMarkdown(script: ScriptDraft): string {
   const lines = [
     `# ${script.title}`,
@@ -69,14 +75,17 @@ export function scriptToMarkdown(script: ScriptDraft): string {
   ].filter((line): line is string => line !== undefined)
 
   for (const [index, scene] of script.scenes.entries()) {
-    lines.push(
-      `### ${index + 1}. ${scene.title ?? scene.type}`,
-      "",
-      `- **Tipo:** ${scene.type}`,
-      `- **Duración:** ${scene.durationInSeconds}s`,
-    )
+    lines.push(`### ${index + 1}. ${scene.title ?? scene.type}`, "", `- **Tipo:** ${scene.type}`)
+    if (scene.narrativeRole) lines.push(`- **Función narrativa:** ${scene.narrativeRole}`)
+    if (scene.visualType) lines.push(`- **Tipo visual:** ${scene.visualType}`)
+    if (scene.componentId) lines.push(`- **Componente:** ${scene.componentId}`)
+    if (scene.visualRationale) lines.push(`- **Razón visual:** ${scene.visualRationale}`)
+    lines.push(`- **Duración:** ${scene.durationInSeconds}s`)
     if (scene.voiceover) lines.push(`- **Voiceover:** ${scene.voiceover}`)
     if (scene.visualNotes) lines.push(`- **Notas visuales:** ${scene.visualNotes}`)
+    pushMarkdownList(lines, "Recursos requeridos", scene.requiredAssets)
+    pushMarkdownList(lines, "Capacidades faltantes", scene.missingCapabilities)
+    pushMarkdownList(lines, "Notas de riesgo", scene.riskNotes)
     lines.push("")
   }
 

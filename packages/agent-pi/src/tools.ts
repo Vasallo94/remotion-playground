@@ -22,6 +22,13 @@ const SceneScriptSchema = Type.Object({
   title: Type.Optional(Type.String()),
   voiceover: Type.Optional(Type.String()),
   visualNotes: Type.Optional(Type.String()),
+  narrativeRole: Type.Optional(Type.String()),
+  visualType: Type.Optional(Type.String()),
+  componentId: Type.Optional(Type.String()),
+  visualRationale: Type.Optional(Type.String()),
+  requiredAssets: Type.Optional(Type.Array(Type.String())),
+  missingCapabilities: Type.Optional(Type.Array(Type.String())),
+  riskNotes: Type.Optional(Type.Array(Type.String())),
   durationInSeconds: Type.Number(),
 })
 
