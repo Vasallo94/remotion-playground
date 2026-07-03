@@ -1,19 +1,18 @@
 import {
   AuthStorage,
   createAgentSession,
-  createExtensionRuntime,
   ModelRegistry,
   SessionManager,
   SettingsManager,
   type AgentSession,
   type AgentSessionEvent,
-  type ResourceLoader,
 } from "@earendil-works/pi-coding-agent"
 import type { Api, Model } from "@earendil-works/pi-ai/compat"
 import { createClaquetaTools } from "./tools.js"
 import { ThreadEventBus, normalizePiEvent } from "./events.js"
 import { ModelRouter } from "./modelRouter.js"
-import { CLAQUETA_PI_SYSTEM_PROMPT, checkpointResumePrompt } from "./prompt.js"
+import { checkpointResumePrompt } from "./prompt.js"
+import { createClaquetaResourceLoader } from "./resourceLoader.js"
 import { AgentPiStore } from "./store.js"
 import { PROJECT_ROOT } from "./paths.js"
 import { nextDraftFileName, scriptToMarkdown, writeJsonArtifact, writeTextArtifact } from "./artifacts.js"
@@ -37,20 +36,6 @@ function isScriptDraft(value: unknown): value is ScriptDraft {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false
   const draft = value as Partial<ScriptDraft>
   return typeof draft.title === "string" && typeof draft.objective === "string" && Array.isArray(draft.scenes)
-}
-
-function createClaquetaResourceLoader(): ResourceLoader {
-  return {
-    getExtensions: () => ({ extensions: [], errors: [], runtime: createExtensionRuntime() }),
-    getSkills: () => ({ skills: [], diagnostics: [] }),
-    getPrompts: () => ({ prompts: [], diagnostics: [] }),
-    getThemes: () => ({ themes: [], diagnostics: [] }),
-    getAgentsFiles: () => ({ agentsFiles: [] }),
-    getSystemPrompt: () => CLAQUETA_PI_SYSTEM_PROMPT,
-    getAppendSystemPrompt: () => [],
-    extendResources: () => {},
-    reload: async () => {},
-  }
 }
 
 export class AgentRuntimeManager {
