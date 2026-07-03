@@ -110,13 +110,15 @@ export function createCheckpointPayload(
   type: "script_checkpoint" | "direction_checkpoint",
   artifact: ArtifactRecord<ScriptDraft | DirectionDraft>,
 ): Record<string, unknown> {
+  const data = artifact.data
   return {
     id: randomUUID(),
     type,
     artifactId: artifact.id,
     version: artifact.version,
     path: artifact.path,
-    ...artifact.data,
+    ...data,
+    ...(type === "direction_checkpoint" ? { warnings: (data as DirectionDraft).warnings ?? [] } : {}),
   }
 }
 

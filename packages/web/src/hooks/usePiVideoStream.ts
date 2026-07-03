@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Message } from "@langchain/langgraph-sdk"
 import type { SubagentStreamInterface } from "@langchain/langgraph-sdk/react"
-import { getPiEventsUrl, resumePiCheckpoint, sendPiChat } from "../api"
+import { fetchPiThread, getPiEventsUrl, resumePiCheckpoint, sendPiChat } from "../api"
 import type { CheckpointType, Enrichment } from "../types"
 import type { ActiveVideoTarget } from "../types"
 import type { PlanState } from "../lib/planState"
@@ -130,8 +130,30 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           activeAssistantIdRef.current = null
           return
         }
-        case "artifact_updated":
+        case "artifact_updated": {
+          if (event.payload.kind === "checkpoint_decision") {
+            const checkpoint = event.payload.checkpoint as
+              | { type?: string; payload?: Record<string, unknown> }
+              | undefined
+            const cpType = checkpoint?.type ? (CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic") : checkpointType
+            const cpData = checkpoint?.payload ?? checkpointData
+            if (cpType && cpData) {
+              addEnrichment({
+                id: crypto.randomUUID(),
+                type: "resolved_checkpoint",
+                content: "",
+                data: {
+                  checkpointType: cpType,
+                  checkpointData: cpData,
+                  userDecision: event.payload.decision,
+                },
+              })
+            }
+            setCheckpointType(null)
+            setCheckpointData(null)
+          }
           return
+        }
         case "render_status": {
           const jobId = typeof event.payload.jobId === "string" ? event.payload.jobId : undefined
           const status = typeof event.payload.status === "string" ? event.payload.status : undefined
@@ -160,8 +182,28 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
       }
     },
-    [addEnrichment, appendAssistantDelta, onError],
+    [addEnrichment, appendAssistantDelta, checkpointData, checkpointType, onError],
   )
+
+  useEffect(() => {
+    if (!activeThreadId) return
+    let cancelled = false
+    fetchPiThread(activeThreadId)
+      .then((snapshot) => {
+        if (cancelled) return
+        const checkpoint = snapshot.thread.checkpoint
+        if (checkpoint) {
+          setCheckpointType(CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic")
+          setCheckpointData(checkpoint.payload)
+        }
+      })
+      .catch(() => {
+        // SSE replay below is the primary recovery path; snapshot fetch is best-effort.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [activeThreadId])
 
   useEffect(() => {
     if (!activeThreadId) return
@@ -215,18 +257,6 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const resume = useCallback(
     (decision: Record<string, unknown>) => {
       if (!activeThreadId) return
-      if (checkpointType && checkpointData) {
-        addEnrichment({
-          id: crypto.randomUUID(),
-          type: "resolved_checkpoint",
-          content: "",
-          data: {
-            checkpointType,
-            checkpointData: { ...checkpointData },
-            userDecision: decision,
-          },
-        })
-      }
       setError(null)
       setIsLoading(true)
       setCheckpointType(null)
@@ -237,7 +267,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
         onError?.(err)
       })
     },
-    [activeThreadId, addEnrichment, checkpointData, checkpointType, onError],
+    [activeThreadId, onError],
   )
 
   const switchThread = useCallback((newThreadId: string | null) => {

@@ -63,6 +63,36 @@ export async function resumePiCheckpoint(
   return res.json()
 }
 
+export interface PiThreadSnapshot {
+  thread: {
+    id: string
+    title: string | null
+    status: string
+    checkpoint: null | {
+      id: string
+      type: string
+      artifactId: string | null
+      payload: Record<string, unknown>
+    }
+  }
+  artifacts: Array<{
+    id: string
+    kind: string
+    version: number
+    path: string | null
+    data: unknown
+    approved: boolean
+    createdAt: string
+  }>
+  events: Array<Record<string, unknown>>
+}
+
+export async function fetchPiThread(threadId: string): Promise<PiThreadSnapshot> {
+  const res = await fetch(`${AGENT_PI_URL}/api/pi/thread/${threadId}`)
+  if (!res.ok) throw new Error(`Pi thread fetch failed: ${await res.text()}`)
+  return res.json()
+}
+
 export function getPiEventsUrl(threadId: string, since?: number): string {
   const url = new URL(`${AGENT_PI_URL}/api/pi/events/${threadId}`)
   if (since != null) url.searchParams.set("since", String(since))

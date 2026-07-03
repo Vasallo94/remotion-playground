@@ -16,6 +16,8 @@ import { ModelRouter } from "./modelRouter.js"
 import { CLAQUETA_PI_SYSTEM_PROMPT, checkpointResumePrompt } from "./prompt.js"
 import { AgentPiStore } from "./store.js"
 import { PROJECT_ROOT } from "./paths.js"
+import { nextDraftFileName, scriptToMarkdown, writeJsonArtifact, writeTextArtifact } from "./artifacts.js"
+import type { ScriptDraft } from "./types.js"
 
 export interface AgentRuntimeOptions {
   cwd?: string
@@ -29,6 +31,12 @@ export interface AgentRuntimeOptions {
 interface ManagedSession {
   session: AgentSession
   unsubscribe: () => void
+}
+
+function isScriptDraft(value: unknown): value is ScriptDraft {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false
+  const draft = value as Partial<ScriptDraft>
+  return typeof draft.title === "string" && typeof draft.objective === "string" && Array.isArray(draft.scenes)
 }
 
 function createClaquetaResourceLoader(): ResourceLoader {
@@ -119,10 +127,12 @@ export class AgentRuntimeManager {
     return session
   }
 
-  async sendMessage(threadId: string, message: string): Promise<void> {
+  async sendMessage(threadId: string, message: string, options: { displayUserMessage?: boolean } = {}): Promise<void> {
     const session = await this.getOrCreateSession(threadId)
     this.store.updateThreadStatus(threadId, "running")
-    this.eventBus.publish({ threadId, type: "message_delta", payload: { role: "user", delta: message } })
+    if (options.displayUserMessage !== false) {
+      this.eventBus.publish({ threadId, type: "message_delta", payload: { role: "user", delta: message } })
+    }
     try {
       await session.prompt(message, session.isStreaming ? { streamingBehavior: "followUp" } : undefined)
       const thread = this.store.getThread(threadId)
@@ -141,13 +151,39 @@ export class AgentRuntimeManager {
     if (decision.approved === true && thread.checkpoint.artifactId) {
       this.store.markArtifactApproved(thread.checkpoint.artifactId)
     }
+    if (decision.approved === true && thread.checkpoint.type === "script_checkpoint") {
+      const script = decision.script
+      if (isScriptDraft(script)) {
+        const artifact = writeJsonArtifact(
+          this.store,
+          threadId,
+          "script",
+          nextDraftFileName(this.store, threadId, "script"),
+          script,
+          true,
+        )
+        const markdown = writeTextArtifact(
+          this.store,
+          threadId,
+          "script_markdown",
+          nextDraftFileName(this.store, threadId, "script_markdown", "md"),
+          scriptToMarkdown(script),
+          true,
+        )
+        this.eventBus.publish({
+          threadId,
+          type: "artifact_updated",
+          payload: { kind: "script", artifact, markdownPath: markdown.path, approved: true },
+        })
+      }
+    }
     this.store.clearCheckpoint(threadId, "running")
     this.eventBus.publish({
       threadId,
       type: "artifact_updated",
       payload: { kind: "checkpoint_decision", checkpoint: thread.checkpoint, decision },
     })
-    await this.sendMessage(threadId, checkpointResumePrompt(decision))
+    await this.sendMessage(threadId, checkpointResumePrompt(decision), { displayUserMessage: false })
   }
 
   dispose(): void {

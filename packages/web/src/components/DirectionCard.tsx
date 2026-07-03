@@ -14,6 +14,7 @@ interface Props {
 export function DirectionCard({ data, onApprove, onRequestChanges, disabled }: Props) {
   const [feedback, setFeedback] = useState("")
   const [showFeedback, setShowFeedback] = useState(false)
+  const warnings = data.warnings ?? []
 
   return (
     <div
@@ -89,7 +90,7 @@ export function DirectionCard({ data, onApprove, onRequestChanges, disabled }: P
         </tbody>
       </table>
 
-      {data.warnings.length > 0 && (
+      {warnings.length > 0 && (
         <div
           style={{
             padding: "10px 12px",
@@ -111,7 +112,7 @@ export function DirectionCard({ data, onApprove, onRequestChanges, disabled }: P
           >
             Avisos del director
           </div>
-          {data.warnings.map((w, i) => (
+          {warnings.map((w, i) => (
             <div key={i} style={{ fontSize: 12, color: theme.colors.text.secondary, marginBottom: 4, lineHeight: 1.5 }}>
               - {w}
             </div>

@@ -85,7 +85,7 @@
 - [x] Crear/ajustar `ScriptCard` editable.
 - [x] Crear/ajustar `DirectionCard` revisable.
 - [x] Mantener `RenderResultCard` o equivalente para el MP4 final.
-- [ ] Permitir recuperar threads/artifacts al recargar.
+- [x] Permitir recuperar threads/artifacts al recargar.
 
 ## Task 11: Render y recuperación de errores
 
