@@ -1,12 +1,13 @@
 import { describe, it, afterEach, beforeEach } from "node:test"
 import assert from "node:assert/strict"
 import { createServer, type Server } from "node:http"
-import { mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { AgentPiStore } from "../src/store.js"
 import { ThreadEventBus } from "../src/events.js"
 import { createClaquetaTools } from "../src/tools.js"
+import { PROJECT_ROOT } from "../src/paths.js"
 
 let store: AgentPiStore
 let eventBus: ThreadEventBus
@@ -27,6 +28,7 @@ afterEach(() => {
   server = undefined
   store.close()
   rmSync(join(dbPath, ".."), { recursive: true, force: true })
+  rmSync(join(PROJECT_ROOT, "content/tutorials/agent-pi-tools-test"), { recursive: true, force: true })
 })
 
 function toolByName(name: string) {
@@ -119,6 +121,36 @@ describe("Claqueta tools", () => {
       store.listArtifacts(threadId).some((artifact) => artifact.kind === "config"),
       true,
     )
+  })
+
+  it("publishes approved artifacts to content/tutorials", async () => {
+    const script = {
+      title: "Agent Pi tools test",
+      objective: "Verify publishing",
+      scenes: [{ id: "s1", type: "intro", title: "Hook", durationInSeconds: 3 }],
+    }
+    await executeTool("save_script_artifact", { script, approved: true })
+    await executeTool("save_direction_artifact", {
+      direction: { scenes: [{ sceneId: "s1", sceneType: "intro", technicalIntent: "Open" }], warnings: [] },
+      approved: true,
+    })
+    const generated = await executeTool("generate_remotion_config", {
+      config: {
+        id: "agent-pi-tools-test",
+        title: "Agent Pi tools test",
+        scenes: [{ type: "intro", title: "Hola", durationInSeconds: 3 }],
+      },
+    })
+
+    await executeTool("publish_approved_artifacts", {
+      slug: "agent-pi-tools-test",
+      configArtifactId: (generated.details.artifact as { id: string }).id,
+    })
+
+    assert.equal(existsSync(join(PROJECT_ROOT, "content/tutorials/agent-pi-tools-test/script.json")), true)
+    assert.equal(existsSync(join(PROJECT_ROOT, "content/tutorials/agent-pi-tools-test/script.md")), true)
+    assert.equal(existsSync(join(PROJECT_ROOT, "content/tutorials/agent-pi-tools-test/direction.json")), true)
+    assert.equal(existsSync(join(PROJECT_ROOT, "content/tutorials/agent-pi-tools-test/config.json")), true)
   })
 
   it("calls render-service validation and render endpoints", async () => {

@@ -1,7 +1,7 @@
 import { defineTool } from "@earendil-works/pi-coding-agent"
 import { Type } from "typebox"
 import { randomUUID } from "node:crypto"
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { AgentPiStore } from "./store.js"
 import { ThreadEventBus } from "./events.js"
@@ -13,8 +13,8 @@ import {
   writeJsonArtifact,
   writeTextArtifact,
 } from "./artifacts.js"
-import { PROJECT_ROOT, assertProjectPath, projectRelativePath } from "./paths.js"
-import type { DirectionDraft, RenderJobStatus, ScriptDraft } from "./types.js"
+import { PROJECT_ROOT, assertProjectPath, contentTutorialDir, ensureDirectory, projectRelativePath } from "./paths.js"
+import type { ArtifactKind, ArtifactRecord, DirectionDraft, RenderJobStatus, ScriptDraft } from "./types.js"
 
 const SceneScriptSchema = Type.Object({
   id: Type.String(),
@@ -165,6 +165,18 @@ function configFromInput(store: AgentPiStore, config: unknown, artifactId?: stri
     throw new Error("A config object or config artifactId is required")
   }
   return config as Record<string, unknown>
+}
+
+function latestArtifact<TData>(
+  store: AgentPiStore,
+  threadId: string,
+  kind: ArtifactKind,
+  approvedOnly = false,
+): ArtifactRecord<TData> | undefined {
+  return store
+    .listArtifacts(threadId)
+    .filter((artifact) => artifact.kind === kind && (!approvedOnly || artifact.approved))
+    .at(-1) as ArtifactRecord<TData> | undefined
 }
 
 function withTutorialDefaults(config: Record<string, unknown>): Record<string, unknown> {
@@ -462,6 +474,56 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
           payload: { jobId, status: "submitted", artifactId: artifact.id },
         })
         return textResult(`Render submitted: ${jobId}`, { jobId, artifact })
+      },
+    }),
+
+    defineTool({
+      name: "publish_approved_artifacts",
+      label: "Publish Approved Artifacts",
+      description:
+        "Copy the latest approved script/direction and generated config into content/tutorials/<slug>/ after the human-approved flow.",
+      parameters: Type.Object({
+        slug: Type.Optional(Type.String()),
+        configArtifactId: Type.Optional(Type.String()),
+      }),
+      async execute(_id, params) {
+        const configArtifact = params.configArtifactId
+          ? store.getArtifact<Record<string, unknown>>(params.configArtifactId)
+          : latestArtifact<Record<string, unknown>>(store, threadId, "config")
+        if (!configArtifact) throw new Error("No config artifact available to publish")
+
+        const config = configArtifact.data
+        const title =
+          typeof config.title === "string" ? config.title : typeof config.id === "string" ? config.id : threadId
+        const slug = params.slug ?? (typeof config.id === "string" ? config.id : configIdFromTitle(title))
+        const targetDir = contentTutorialDir(slug)
+        ensureDirectory(targetDir)
+
+        const written: Record<string, string> = {}
+        const writeJson = (fileName: string, data: unknown) => {
+          const absolutePath = `${targetDir}/${fileName}`
+          writeFileSync(absolutePath, JSON.stringify(data, null, 2) + "\n", "utf-8")
+          written[fileName] = projectRelativePath(absolutePath)
+        }
+        const writeText = (fileName: string, text: string) => {
+          const absolutePath = `${targetDir}/${fileName}`
+          writeFileSync(absolutePath, text.endsWith("\n") ? text : `${text}\n`, "utf-8")
+          written[fileName] = projectRelativePath(absolutePath)
+        }
+
+        writeJson("config.json", config)
+
+        const script = latestArtifact<ScriptDraft>(store, threadId, "script", true)
+        if (script) {
+          writeJson("script.json", script.data)
+          writeText("script.md", scriptToMarkdown(script.data))
+        }
+
+        const direction = latestArtifact<DirectionDraft>(store, threadId, "direction", true)
+        if (direction) writeJson("direction.json", direction.data)
+
+        eventBus.publish({ threadId, type: "artifact_updated", payload: { kind: "published_artifacts", written } })
+        return textResult("Approved artifacts published to content/tutorials.", { written })
       },
     }),
 
