@@ -144,38 +144,39 @@ describe("Claqueta tools", () => {
     assert.equal(store.listEvents(threadId).at(-1)?.type, "checkpoint")
   })
 
-  it("rejects script drafts that invent visual types outside the catalog contract", async () => {
-    await assert.rejects(
-      executeTool("create_script_draft", {
-        script: {
-          title: "Bad visual planning",
-          objective: "Avoid invented scene contracts",
-          scenes: [
-            {
-              id: "s1",
-              type: "callout",
-              title: "Horarios",
-              visualType: "ui-dashboard",
-              durationInSeconds: 4,
-            },
-          ],
-        },
-      }),
-      /visualType must be 'builtin' or 'custom'/i,
-    )
+  it("returns recoverable validation feedback for invented visual types", async () => {
+    const result = await executeTool("create_script_draft", {
+      script: {
+        title: "Bad visual planning",
+        objective: "Avoid invented scene contracts",
+        scenes: [
+          {
+            id: "s1",
+            type: "callout",
+            title: "Horarios",
+            visualType: "ui-dashboard",
+            durationInSeconds: 4,
+          },
+        ],
+      },
+    })
+
+    assert.equal(result.details.valid, false)
+    assert.match((result.details.errors as string[]).join("\n"), /visualType must be 'builtin' or 'custom'/i)
+    assert.equal(store.listEvents(threadId).at(-1)?.type, "error")
   })
 
-  it("rejects script drafts that invent scene types", async () => {
-    await assert.rejects(
-      executeTool("create_script_draft", {
-        script: {
-          title: "Bad scene type",
-          objective: "Avoid fallback callouts",
-          scenes: [{ id: "s1", type: "explainer", title: "Mapa", durationInSeconds: 4 }],
-        },
-      }),
-      /unknown type 'explainer'/i,
-    )
+  it("returns recoverable validation feedback for invented scene types", async () => {
+    const result = await executeTool("create_script_draft", {
+      script: {
+        title: "Bad scene type",
+        objective: "Avoid fallback callouts",
+        scenes: [{ id: "s1", type: "explainer", title: "Mapa", durationInSeconds: 4 }],
+      },
+    })
+
+    assert.equal(result.details.valid, false)
+    assert.match((result.details.errors as string[]).join("\n"), /unknown type 'explainer'/i)
   })
 
   it("exports scene-level visual planning fields to markdown", async () => {

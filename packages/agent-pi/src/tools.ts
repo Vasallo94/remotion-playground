@@ -117,34 +117,55 @@ function isRegisteredCustomComponent(componentId: string): boolean {
   return (loadSceneCatalog().scenes?.tutorial?.custom ?? []).some((scene) => scene.componentId === componentId)
 }
 
-function validateScriptDraftCatalog(script: ScriptDraft): void {
+function validateScriptDraftCatalog(script: ScriptDraft): string[] {
+  const errors: string[] = []
   script.scenes.forEach((scene, index) => {
     const label = scene.title || scene.id || `scene ${index + 1}`
     if (scene.type === "custom") {
       if (!scene.componentId) {
-        throw new Error(`Script scene '${label}' uses type=custom but does not define componentId.`)
-      }
-      if (!isRegisteredCustomComponent(scene.componentId)) {
-        throw new Error(
+        errors.push(`Script scene '${label}' uses type=custom but does not define componentId.`)
+      } else if (!isRegisteredCustomComponent(scene.componentId)) {
+        errors.push(
           `Script scene '${label}' uses unknown componentId '${scene.componentId}'. Use list_scene_catalog first.`,
         )
       }
     } else if (!BUILTIN_SCENE_TYPES.has(scene.type)) {
-      throw new Error(
+      errors.push(
         `Script scene '${label}' uses unknown type '${scene.type}'. Use a supported builtin type or type=custom with a registered componentId from list_scene_catalog.`,
       )
     }
 
     if (scene.visualType && !VISUAL_TYPE_VALUES.has(scene.visualType)) {
-      throw new Error(
+      errors.push(
         `Script scene '${label}' uses visualType '${scene.visualType}'. visualType must be 'builtin' or 'custom'; put concrete custom scene ids in componentId.`,
       )
     }
 
     if (scene.componentId && !isRegisteredCustomComponent(scene.componentId) && scene.componentId !== scene.type) {
-      throw new Error(`Script scene '${label}' references unknown componentId '${scene.componentId}'.`)
+      errors.push(`Script scene '${label}' references unknown componentId '${scene.componentId}'.`)
     }
   })
+  return errors
+}
+
+function assertValidScriptDraftCatalog(script: ScriptDraft): void {
+  const errors = validateScriptDraftCatalog(script)
+  if (errors.length > 0) throw new Error(errors.join("\n"))
+}
+
+function rejectedScriptDraftResult(threadId: string, eventBus: ThreadEventBus, errors: string[]) {
+  eventBus.publish({
+    threadId,
+    type: "error",
+    payload: {
+      recoverable: true,
+      message: `Script draft rejected by scene catalog validation: ${errors.join(" | ")}`,
+    },
+  })
+  return textResult(
+    "Script draft rejected by scene catalog validation. Fix the scene type/visualType/componentId values using list_scene_catalog, then call create_script_draft again. Do not present a manual escaleta in chat.",
+    { valid: false, errors },
+  )
 }
 
 const PipelineStepSchema = Type.Object({
@@ -869,7 +890,8 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       parameters: Type.Object({ script: ScriptDraftSchema }),
       async execute(_id, params) {
         const script = params.script as ScriptDraft
-        validateScriptDraftCatalog(script)
+        const catalogErrors = validateScriptDraftCatalog(script)
+        if (catalogErrors.length > 0) return rejectedScriptDraftResult(threadId, eventBus, catalogErrors)
         const artifact = writeJsonArtifact(
           store,
           threadId,
@@ -901,7 +923,8 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       async execute(_id, params) {
         let artifact = params.artifactId ? store.getArtifact<ScriptDraft>(params.artifactId) : null
         if (!artifact && params.script) {
-          validateScriptDraftCatalog(params.script as ScriptDraft)
+          const catalogErrors = validateScriptDraftCatalog(params.script as ScriptDraft)
+          if (catalogErrors.length > 0) return rejectedScriptDraftResult(threadId, eventBus, catalogErrors)
           artifact = writeJsonArtifact(
             store,
             threadId,
@@ -930,7 +953,7 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       parameters: Type.Object({ script: ScriptDraftSchema, approved: Type.Optional(Type.Boolean()) }),
       async execute(_id, params) {
         const script = params.script as ScriptDraft
-        validateScriptDraftCatalog(script)
+        assertValidScriptDraftCatalog(script)
         const approved = params.approved ?? true
         const artifact = writeJsonArtifact(
           store,
