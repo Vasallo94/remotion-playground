@@ -48,6 +48,8 @@ const SceneScriptSchema = Type.Object({
   narrativeRole: Type.Optional(Type.String()),
   visualType: Type.Optional(SceneVisualTypeSchema),
   componentId: Type.Optional(Type.String()),
+  visualRole: Type.Optional(Type.String()),
+  propsPlan: Type.Optional(Type.Record(Type.String(), Type.Any())),
   visualRationale: Type.Optional(Type.String()),
   requiredAssets: Type.Optional(Type.Array(Type.String())),
   missingCapabilities: Type.Optional(Type.Array(Type.String())),
@@ -142,6 +144,9 @@ function validateScriptDraftCatalog(script: ScriptDraft): string[] {
         errors.push(
           `Script scene '${label}' uses unknown componentId '${scene.componentId}'. Use list_scene_catalog first.`,
         )
+      }
+      if (!scene.propsPlan || Object.keys(scene.propsPlan).length === 0) {
+        errors.push(`Script scene '${label}' uses type=custom but does not include propsPlan for the chosen component.`)
       }
     } else if (!BUILTIN_SCENE_TYPES.has(scene.type)) {
       errors.push(

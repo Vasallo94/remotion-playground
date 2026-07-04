@@ -79,6 +79,8 @@ export function scriptToMarkdown(script: ScriptDraft): string {
     if (scene.narrativeRole) lines.push(`- **Función narrativa:** ${scene.narrativeRole}`)
     if (scene.visualType) lines.push(`- **Tipo visual:** ${scene.visualType}`)
     if (scene.componentId) lines.push(`- **Componente:** ${scene.componentId}`)
+    if (scene.visualRole) lines.push(`- **Rol visual:** ${scene.visualRole}`)
+    if (scene.propsPlan) lines.push(`- **Plan de props:** \`${JSON.stringify(scene.propsPlan)}\``)
     if (scene.visualRationale) lines.push(`- **Razón visual:** ${scene.visualRationale}`)
     lines.push(`- **Duración:** ${scene.durationInSeconds}s`)
     if (scene.voiceover) lines.push(`- **Voiceover:** ${scene.voiceover}`)

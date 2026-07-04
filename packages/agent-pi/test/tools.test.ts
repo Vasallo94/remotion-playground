@@ -179,6 +179,28 @@ describe("Claqueta tools", () => {
     assert.match((result.details.errors as string[]).join("\n"), /unknown type 'explainer'/i)
   })
 
+  it("requires a props plan for custom script scenes", async () => {
+    const result = await executeTool("create_script_draft", {
+      script: {
+        title: "Missing props plan",
+        objective: "Avoid vague custom scenes",
+        scenes: [
+          {
+            id: "s1",
+            type: "custom",
+            title: "Diagrama",
+            visualType: "custom",
+            componentId: "block-diagram",
+            durationInSeconds: 4,
+          },
+        ],
+      },
+    })
+
+    assert.equal(result.details.valid, false)
+    assert.match((result.details.errors as string[]).join("\n"), /does not include propsPlan/i)
+  })
+
   it("exports scene-level visual planning fields to markdown", async () => {
     const script = {
       title: "Visual planning demo",
@@ -191,6 +213,8 @@ describe("Claqueta tools", () => {
           narrativeRole: "hook",
           visualType: "builtin",
           componentId: "callout",
+          visualRole: "callout de apertura",
+          propsPlan: { text: "Idea principal", position: "center" },
           visualRationale: "Usa un callout para abrir con una idea clara",
           requiredAssets: ["headline copy", "brand accent"],
           missingCapabilities: ["confirmed screenshot"],
@@ -206,6 +230,8 @@ describe("Claqueta tools", () => {
     assert.match(markdownArtifact.data as string, /Función narrativa.*hook/)
     assert.match(markdownArtifact.data as string, /Tipo visual.*builtin/)
     assert.match(markdownArtifact.data as string, /Componente.*callout/)
+    assert.match(markdownArtifact.data as string, /Rol visual.*callout de apertura/)
+    assert.match(markdownArtifact.data as string, /Plan de props.*Idea principal/)
     assert.match(markdownArtifact.data as string, /Razón visual.*Usa un callout/)
     assert.match(markdownArtifact.data as string, /Recursos requeridos:/)
     assert.match(markdownArtifact.data as string, /Capacidades faltantes:/)

@@ -40,10 +40,12 @@ script:
 - objective
 - audience
 - tone
-- scenes[] con id, type, title, voiceover, visualNotes, narrativeRole, visualType, componentId, visualRationale, requiredAssets, missingCapabilities, riskNotes, durationInSeconds
+- scenes[] con id, type, title, voiceover, visualNotes, narrativeRole, visualType, componentId, visualRole, propsPlan, visualRationale, requiredAssets, missingCapabilities, riskNotes, durationInSeconds
 - En scenes[].type usa solo tipos Remotion exactos: intro, terminal, callout, outro, hero, benefits, pricing, cta o custom.
 - En scenes[].visualType usa solo builtin o custom. No escribas ui-dashboard, hero-safety, map-graphic, motion-graphics ni nombres inventados en visualType.
 - En scenes[].componentId usa solo ids registrados del catálogo y solo cuando type=custom o para referenciar claramente una escena registrada.
+- En scenes[].visualRole explica en lenguaje humano qué papel visual cumple el componente: diagrama conceptual, comparación, checklist, ejemplo paso a paso, métrica, etc.
+- En scenes[].propsPlan resume la estructura de props prevista para esa escena (bloques, filas, pasos, items, métricas, nodos...). Debe ser JSON pequeño y específico, no texto genérico.
 - estimatedDurationSeconds
 - notes opcional
 
@@ -63,7 +65,7 @@ config ClaudeCodeTutorial:
 
 - Para tutoriales Codex/Claude Code, prefiere: intro breve, terminal realista, callout con principio, outro con resumen.
 - Para temas no-CLI evita encadenar callouts de texto. Alterna escenas visuales registradas del catálogo (timeline, media-card, bullet-slide, step-list, comparison-table, icon-grid, problem-solution, big-number, etc.) cuando encajen con el contenido.
-- Cada escena debe declarar su contenido visible, función narrativa, tipo visual/componente elegido, razón visual y necesidades faltantes.
+- Cada escena debe declarar su contenido visible, función narrativa, tipo visual/componente elegido, rol visual humano, propsPlan concreto, razón visual y necesidades faltantes.
 - Evita texto genérico. Muestra comandos, outputs, datos, listas, mapas conceptuales o decisiones concretas según el tema.
 - Duraciones realistas: intro 2-5s, terminal 6-20s, callout 2-6s, outro 3-8s.
 - Si falta una escena visual exacta, usa una alternativa registrada y explica el trade-off; no inventes componentes.

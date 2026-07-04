@@ -28,6 +28,23 @@ function textToList(value: string): string[] | undefined {
   return items.length > 0 ? items : undefined
 }
 
+function jsonToText(value?: Record<string, unknown>): string {
+  return value ? JSON.stringify(value, null, 2) : ""
+}
+
+function textToJson(value: string): Record<string, unknown> | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : undefined
+  } catch {
+    return { resumen: trimmed }
+  }
+}
+
 export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Props) {
   const [title, setTitle] = useState(data.title)
   const [objective, setObjective] = useState(data.objective)
@@ -199,6 +216,29 @@ export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Prop
             <div style={{ color: theme.colors.text.muted, fontSize: 11, margin: "-2px 0 8px 50px" }}>
               Tipo Remotion actual: <code>{scene.type}</code>. Valores válidos: intro, terminal, callout, outro, hero,
               benefits, pricing, cta o custom con componentId del catálogo.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <label style={fieldLabelStyle()}>
+                Rol visual humano
+                <input
+                  value={scene.visualRole ?? ""}
+                  onChange={(event) => updateScene(index, { visualRole: event.target.value })}
+                  disabled={disabled}
+                  placeholder="diagrama conceptual | comparativa | checklist | pasos"
+                  style={inputStyle()}
+                />
+              </label>
+              <label style={fieldLabelStyle()}>
+                Plan de props
+                <textarea
+                  value={jsonToText(scene.propsPlan)}
+                  onChange={(event) => updateScene(index, { propsPlan: textToJson(event.target.value) })}
+                  disabled={disabled}
+                  placeholder={'{"blocks":["problema","objetivo","restricciones"]}'}
+                  style={{ ...inputStyle(), minHeight: 58, resize: "vertical", fontFamily: theme.fonts.mono }}
+                />
+              </label>
             </div>
 
             <div style={{ display: "grid", gap: 8, marginBottom: 8 }}>

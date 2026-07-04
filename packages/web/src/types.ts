@@ -85,6 +85,8 @@ export interface ScriptCheckpointData {
     narrativeRole?: string
     visualType?: string
     componentId?: string
+    visualRole?: string
+    propsPlan?: Record<string, unknown>
     visualRationale?: string
     requiredAssets?: string[]
     missingCapabilities?: string[]
