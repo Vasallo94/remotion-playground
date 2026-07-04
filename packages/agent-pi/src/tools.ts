@@ -25,14 +25,28 @@ import type {
   ScriptDraft,
 } from "./types.js"
 
+const SceneScriptTypeSchema = Type.Union([
+  Type.Literal("intro"),
+  Type.Literal("terminal"),
+  Type.Literal("callout"),
+  Type.Literal("outro"),
+  Type.Literal("hero"),
+  Type.Literal("benefits"),
+  Type.Literal("pricing"),
+  Type.Literal("cta"),
+  Type.Literal("custom"),
+])
+
+const SceneVisualTypeSchema = Type.Union([Type.Literal("builtin"), Type.Literal("custom")])
+
 const SceneScriptSchema = Type.Object({
   id: Type.String(),
-  type: Type.String(),
+  type: SceneScriptTypeSchema,
   title: Type.Optional(Type.String()),
   voiceover: Type.Optional(Type.String()),
   visualNotes: Type.Optional(Type.String()),
   narrativeRole: Type.Optional(Type.String()),
-  visualType: Type.Optional(Type.String()),
+  visualType: Type.Optional(SceneVisualTypeSchema),
   componentId: Type.Optional(Type.String()),
   visualRationale: Type.Optional(Type.String()),
   requiredAssets: Type.Optional(Type.Array(Type.String())),
