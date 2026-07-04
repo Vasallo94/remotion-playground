@@ -269,6 +269,18 @@ describe("Claqueta tools", () => {
     )
   })
 
+  it("fails unknown scene types instead of downgrading them to callouts", async () => {
+    await assert.rejects(
+      executeTool("generate_remotion_config", {
+        config: {
+          title: "Unknown type demo",
+          scenes: [{ type: "explainer", title: "Mapa", durationInSeconds: 5 }],
+        },
+      }),
+      /unknown scene type/i,
+    )
+  })
+
   it("publishes approved artifacts to content/tutorials", async () => {
     const script = {
       title: "Agent Pi tools test",

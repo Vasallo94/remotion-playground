@@ -88,6 +88,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const [pipelineEvents, setPipelineEvents] = useState<PipelineEvent[]>([])
   const [planState, setPlanState] = useState<PlanState | null>(null)
   const lastSeqRef = useRef(0)
+  const videoResultJobIdsRef = useRef(new Set<string>())
   const activeAssistantIdRef = useRef<string | null>(null)
   const messagesRef = useRef(messages)
   messagesRef.current = messages
@@ -120,6 +121,24 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const appendPipelineEvent = useCallback((event: Omit<PipelineEvent, "id" | "timestamp">) => {
     setPipelineEvents((prev) => [...prev, { id: crypto.randomUUID(), timestamp: new Date(), ...event }])
   }, [])
+
+  const addVideoResult = useCallback(
+    (jobId: string, title: unknown, fileSize: unknown) => {
+      if (videoResultJobIdsRef.current.has(jobId)) return
+      videoResultJobIdsRef.current.add(jobId)
+      addEnrichment({
+        id: crypto.randomUUID(),
+        type: "video_result",
+        content: "Video listo:",
+        data: {
+          jobId,
+          title: typeof title === "string" ? title : null,
+          fileSize: typeof fileSize === "number" ? fileSize : null,
+        },
+      })
+    },
+    [addEnrichment],
+  )
 
   const handleEvent = useCallback(
     (event: PiEvent) => {
@@ -215,12 +234,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
             type: status === "done" ? "success" : status === "error" ? "error" : "info",
           })
           if (jobId && status === "done") {
-            addEnrichment({
-              id: crypto.randomUUID(),
-              type: "video_result",
-              content: "Video listo:",
-              data: { jobId, title: event.payload.title ?? null, fileSize: event.payload.file_size ?? null },
-            })
+            addVideoResult(jobId, event.payload.title, event.payload.file_size)
           }
           return
         }
@@ -247,7 +261,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
       }
     },
-    [addEnrichment, appendAssistantDelta, appendPipelineEvent, checkpointData, checkpointType, onError],
+    [addEnrichment, addVideoResult, appendAssistantDelta, appendPipelineEvent, checkpointData, checkpointType, onError],
   )
 
   useEffect(() => {
@@ -262,6 +276,13 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           setCheckpointData(checkpoint.payload)
         }
         setPlanState(extractPlanStateFromPipelinePlan(snapshot.plan as PipelinePlan | null))
+        const latestCompletedRender = [...snapshot.events].reverse().find((event) => {
+          const payload = event.payload as Record<string, unknown> | undefined
+          return event.type === "render_status" && payload?.status === "done" && typeof payload.id === "string"
+        })
+        const renderPayload = latestCompletedRender?.payload as Record<string, unknown> | undefined
+        const jobId = typeof renderPayload?.id === "string" ? renderPayload.id : undefined
+        if (jobId) addVideoResult(jobId, renderPayload?.title, renderPayload?.file_size)
       })
       .catch(() => {
         // SSE replay below is the primary recovery path; snapshot fetch is best-effort.
@@ -269,7 +290,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     return () => {
       cancelled = true
     }
-  }, [activeThreadId])
+  }, [activeThreadId, addVideoResult])
 
   useEffect(() => {
     if (!activeThreadId) return
@@ -341,6 +362,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
 
   const switchThread = useCallback((newThreadId: string | null) => {
     lastSeqRef.current = 0
+    videoResultJobIdsRef.current.clear()
     activeAssistantIdRef.current = null
     setActiveThreadId(newThreadId)
     setMessages([])

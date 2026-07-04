@@ -586,14 +586,9 @@ function normalizeScene(rawScene: unknown): Record<string, unknown> {
     }
   }
 
-  return {
-    ...scene,
-    type: "callout",
-    text: voiceover ?? items?.join(" · ") ?? title,
-    position: "bottom",
-    background: "overlay",
-    durationInSeconds: safeDuration,
-  }
+  throw new Error(
+    `Unknown scene type '${type}' in scene '${title}'. Use a supported builtin scene type or a registered custom component from list_scene_catalog.`,
+  )
 }
 
 function normalizeTransition(transition: unknown): unknown {
@@ -1066,7 +1061,8 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
           payload: { jobId, status: "submitted", artifactId: artifact.id },
         })
 
-        if (params.waitForCompletion === false) {
+        const allowAsyncRender = process.env.CLAQUETA_PI_ALLOW_ASYNC_RENDER === "true"
+        if (allowAsyncRender && params.waitForCompletion === false) {
           return textResult(`Render submitted: ${jobId}`, { jobId, artifact })
         }
 
