@@ -110,8 +110,41 @@ function summarizeSceneCatalog(catalog: SceneCatalogData) {
   }
 }
 
+const BUILTIN_SCENE_TYPES = new Set(["intro", "terminal", "callout", "outro", "hero", "benefits", "pricing", "cta"])
+const VISUAL_TYPE_VALUES = new Set(["builtin", "custom"])
+
 function isRegisteredCustomComponent(componentId: string): boolean {
   return (loadSceneCatalog().scenes?.tutorial?.custom ?? []).some((scene) => scene.componentId === componentId)
+}
+
+function validateScriptDraftCatalog(script: ScriptDraft): void {
+  script.scenes.forEach((scene, index) => {
+    const label = scene.title || scene.id || `scene ${index + 1}`
+    if (scene.type === "custom") {
+      if (!scene.componentId) {
+        throw new Error(`Script scene '${label}' uses type=custom but does not define componentId.`)
+      }
+      if (!isRegisteredCustomComponent(scene.componentId)) {
+        throw new Error(
+          `Script scene '${label}' uses unknown componentId '${scene.componentId}'. Use list_scene_catalog first.`,
+        )
+      }
+    } else if (!BUILTIN_SCENE_TYPES.has(scene.type)) {
+      throw new Error(
+        `Script scene '${label}' uses unknown type '${scene.type}'. Use a supported builtin type or type=custom with a registered componentId from list_scene_catalog.`,
+      )
+    }
+
+    if (scene.visualType && !VISUAL_TYPE_VALUES.has(scene.visualType)) {
+      throw new Error(
+        `Script scene '${label}' uses visualType '${scene.visualType}'. visualType must be 'builtin' or 'custom'; put concrete custom scene ids in componentId.`,
+      )
+    }
+
+    if (scene.componentId && !isRegisteredCustomComponent(scene.componentId) && scene.componentId !== scene.type) {
+      throw new Error(`Script scene '${label}' references unknown componentId '${scene.componentId}'.`)
+    }
+  })
 }
 
 const PipelineStepSchema = Type.Object({
@@ -836,6 +869,7 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       parameters: Type.Object({ script: ScriptDraftSchema }),
       async execute(_id, params) {
         const script = params.script as ScriptDraft
+        validateScriptDraftCatalog(script)
         const artifact = writeJsonArtifact(
           store,
           threadId,
@@ -867,6 +901,7 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       async execute(_id, params) {
         let artifact = params.artifactId ? store.getArtifact<ScriptDraft>(params.artifactId) : null
         if (!artifact && params.script) {
+          validateScriptDraftCatalog(params.script as ScriptDraft)
           artifact = writeJsonArtifact(
             store,
             threadId,
@@ -895,6 +930,7 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       parameters: Type.Object({ script: ScriptDraftSchema, approved: Type.Optional(Type.Boolean()) }),
       async execute(_id, params) {
         const script = params.script as ScriptDraft
+        validateScriptDraftCatalog(script)
         const approved = params.approved ?? true
         const artifact = writeJsonArtifact(
           store,

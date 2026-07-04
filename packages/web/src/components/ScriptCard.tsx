@@ -176,7 +176,7 @@ export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Prop
                 />
               </label>
               <label style={fieldLabelStyle()}>
-                Tipo visual
+                Tipo visual (builtin/custom)
                 <input
                   value={scene.visualType ?? ""}
                   onChange={(event) => updateScene(index, { visualType: event.target.value })}
@@ -186,15 +186,19 @@ export function ScriptCard({ data, onApprove, onRequestChanges, disabled }: Prop
                 />
               </label>
               <label style={fieldLabelStyle()}>
-                ID de componente
+                ID de componente registrado
                 <input
                   value={scene.componentId ?? ""}
                   onChange={(event) => updateScene(index, { componentId: event.target.value })}
                   disabled={disabled}
-                  placeholder="opcional"
+                  placeholder="solo si type=custom"
                   style={inputStyle()}
                 />
               </label>
+            </div>
+            <div style={{ color: theme.colors.text.muted, fontSize: 11, margin: "-2px 0 8px 50px" }}>
+              Tipo Remotion actual: <code>{scene.type}</code>. Valores válidos: intro, terminal, callout, outro, hero,
+              benefits, pricing, cta o custom con componentId del catálogo.
             </div>
 
             <div style={{ display: "grid", gap: 8, marginBottom: 8 }}>
