@@ -5,7 +5,7 @@ import type { UseStreamOptions, SubagentStreamInterface, UseStream } from "@lang
 import { ASSISTANT_ID } from "../api"
 import { appendTargetMetadata } from "../lib/targetMetadata"
 import { extractPlanState, type PlanState } from "../lib/planState"
-import type { ActiveVideoTarget, CheckpointType, Enrichment } from "../types"
+import type { ActiveVideoTarget, CheckpointType, Enrichment, PipelineEvent } from "../types"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -76,6 +76,8 @@ export interface VideoStreamReturn {
   isInterrupted: boolean
   /** Local enrichments (video results, system messages). */
   enrichments: Enrichment[]
+  /** Basic pipeline events for the sidebar log. Pi runtime fills this directly. */
+  pipelineEvents?: PipelineEvent[]
   /** Pipeline plan state extracted from agent state, or null if no plan exists. */
   planState: PlanState | null
 

@@ -59,6 +59,61 @@ const DirectionDraftSchema = Type.Object({
   risks: Type.Optional(Type.Array(Type.String())),
 })
 
+type SceneCatalogEntry = Record<string, unknown> & {
+  type?: string
+  componentId?: string
+  description?: string
+  narrativeRoles?: unknown
+  durationRange?: unknown
+  bestFor?: unknown
+  avoidWhen?: unknown
+  exampleUse?: unknown
+  props?: unknown
+}
+
+type SceneCatalogData = {
+  scenes?: {
+    tutorial?: {
+      builtin?: SceneCatalogEntry[]
+      custom?: SceneCatalogEntry[]
+    }
+  }
+}
+
+function loadSceneCatalog(): SceneCatalogData {
+  return readJsonFile(join(PROJECT_ROOT, "src/shared/scene-catalog.json")) as SceneCatalogData
+}
+
+function summarizeSceneCatalog(catalog: SceneCatalogData) {
+  const summarizeEntry = (scene: SceneCatalogEntry) => ({
+    type: scene.type,
+    componentId: scene.componentId,
+    description: asString(scene.description),
+    narrativeRoles: Array.isArray(scene.narrativeRoles)
+      ? scene.narrativeRoles.filter((value): value is string => typeof value === "string")
+      : undefined,
+    durationRange: Array.isArray(scene.durationRange) ? scene.durationRange : undefined,
+    bestFor: Array.isArray(scene.bestFor)
+      ? scene.bestFor.filter((value): value is string => typeof value === "string")
+      : undefined,
+    avoidWhen: Array.isArray(scene.avoidWhen)
+      ? scene.avoidWhen.filter((value): value is string => typeof value === "string")
+      : undefined,
+    propsExpected: scene.props ?? undefined,
+    exampleUse: asString(scene.exampleUse),
+  })
+
+  const tutorial = catalog.scenes?.tutorial
+  return {
+    builtin: (tutorial?.builtin ?? []).map(summarizeEntry),
+    custom: (tutorial?.custom ?? []).map(summarizeEntry),
+  }
+}
+
+function isRegisteredCustomComponent(componentId: string): boolean {
+  return (loadSceneCatalog().scenes?.tutorial?.custom ?? []).some((scene) => scene.componentId === componentId)
+}
+
 const PipelineStepSchema = Type.Object({
   id: Type.String(),
   owner: Type.String(),
@@ -435,26 +490,22 @@ function asStringArray(value: unknown): string[] | undefined {
 }
 
 function normalizeTerminalLines(scene: Record<string, unknown>): Array<Record<string, unknown>> {
-  const rawLines = Array.isArray(scene.lines) ? scene.lines : undefined
-  if (rawLines?.length) {
-    return rawLines.map((line) => {
-      if (typeof line !== "object" || line === null) return { kind: "output", text: String(line) }
-      const record = line as Record<string, unknown>
-      const rawKind = asString(record.kind)?.toLowerCase()
-      const kind =
-        rawKind === "command" || rawKind === "output" || rawKind === "claude" || rawKind === "blank"
-          ? rawKind
-          : "output"
-      return { ...record, kind, text: asString(record.text) ?? "" }
-    })
+  const rawLines = Array.isArray(scene.lines) ? scene.lines : []
+  if (rawLines.length === 0) {
+    const sceneLabel = asString(scene.title) ?? asString(scene.id) ?? "terminal scene"
+    throw new Error(
+      `Terminal scene '${sceneLabel}' must define non-empty lines. Provide real terminal content instead of relying on the removed /compact fallback.`,
+    )
   }
 
-  const command = asString(scene.command) ?? "/compact"
-  const output = asString(scene.expectedOutput) ?? asString(scene.output) ?? "✓ Contexto compactado"
-  return [
-    { kind: "command", text: command },
-    { kind: "output", text: output },
-  ]
+  return rawLines.map((line) => {
+    if (typeof line !== "object" || line === null) return { kind: "output", text: String(line) }
+    const record = line as Record<string, unknown>
+    const rawKind = asString(record.kind)?.toLowerCase()
+    const kind =
+      rawKind === "command" || rawKind === "output" || rawKind === "claude" || rawKind === "blank" ? rawKind : "output"
+    return { ...record, kind, text: asString(record.text) ?? "" }
+  })
 }
 
 function normalizeScene(rawScene: unknown): Record<string, unknown> {
@@ -482,6 +533,24 @@ function normalizeScene(rawScene: unknown): Record<string, unknown> {
       type: "terminal",
       title,
       lines: normalizeTerminalLines(scene),
+      durationInSeconds: safeDuration,
+    }
+  }
+
+  if (type === "custom") {
+    const componentId = asString(scene.componentId)
+    if (!componentId) {
+      throw new Error(`Custom scene '${title}' must define a componentId.`)
+    }
+    if (!isRegisteredCustomComponent(componentId)) {
+      throw new Error(
+        `Custom scene '${title}' references unknown componentId '${componentId}'. Use list_scene_catalog first.`,
+      )
+    }
+    return {
+      ...scene,
+      type: "custom",
+      componentId,
       durationInSeconds: safeDuration,
     }
   }
@@ -564,9 +633,8 @@ export function createClaquetaTools(ctx: ClaquetaToolContext) {
       promptSnippet: "List the available scene catalog before choosing Remotion scene types.",
       parameters: Type.Object({}),
       async execute() {
-        const catalogPath = join(PROJECT_ROOT, "src/shared/scene-catalog.json")
-        const catalog = readJsonFile(catalogPath)
-        return textResult("Scene catalog loaded.", { catalog })
+        const catalog = loadSceneCatalog()
+        return textResult("Scene catalog loaded.", { catalog, summary: summarizeSceneCatalog(catalog) })
       },
     }),
 

@@ -307,7 +307,7 @@ export default function App() {
           plan={videoStream.planState}
           isLoading={videoStream.isLoading}
           hasError={videoStream.error != null}
-          events={pipeline.state.events}
+          events={videoStream.pipelineEvents ?? pipeline.state.events}
           threads={storedThreads}
           currentThreadId={threadId ?? undefined}
           onSelectThread={handleSelectThread}

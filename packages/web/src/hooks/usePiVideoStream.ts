@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Message } from "@langchain/langgraph-sdk"
 import type { SubagentStreamInterface } from "@langchain/langgraph-sdk/react"
 import { fetchPiThread, getPiEventsUrl, resumePiCheckpoint, sendPiChat } from "../api"
-import type { CheckpointType, Enrichment } from "../types"
+import type { CheckpointType, Enrichment, PipelineEvent } from "../types"
 import type { ActiveVideoTarget } from "../types"
 import { extractPlanStateFromPipelinePlan, type PipelinePlan, type PlanState } from "../lib/planState"
 
@@ -46,6 +46,7 @@ export interface PiVideoStreamReturn {
   checkpointData: Record<string, unknown> | null
   isInterrupted: boolean
   enrichments: Enrichment[]
+  pipelineEvents?: PipelineEvent[]
   planState: PlanState | null
   submit: (message: string) => void
   resume: (decision: Record<string, unknown>) => void
@@ -84,6 +85,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const [checkpointType, setCheckpointType] = useState<CheckpointType | null>(null)
   const [checkpointData, setCheckpointData] = useState<Record<string, unknown> | null>(null)
   const [enrichments, setEnrichments] = useState<Enrichment[]>([])
+  const [pipelineEvents, setPipelineEvents] = useState<PipelineEvent[]>([])
   const [planState, setPlanState] = useState<PlanState | null>(null)
   const lastSeqRef = useRef(0)
   const activeAssistantIdRef = useRef<string | null>(null)
@@ -115,6 +117,10 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
 
   const clearEnrichments = useCallback(() => setEnrichments([]), [])
 
+  const appendPipelineEvent = useCallback((event: Omit<PipelineEvent, "id" | "timestamp">) => {
+    setPipelineEvents((prev) => [...prev, { id: crypto.randomUUID(), timestamp: new Date(), ...event }])
+  }, [])
+
   const handleEvent = useCallback(
     (event: PiEvent) => {
       if (event.seq && event.seq <= lastSeqRef.current) return
@@ -132,9 +138,29 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           appendAssistantDelta(delta)
           return
         }
+        case "tool_start": {
+          const toolName = typeof event.payload.name === "string" ? event.payload.name : "tool"
+          appendPipelineEvent({ stage: "orchestrator", message: `tool ${toolName} started`, type: "info" })
+          return
+        }
+        case "tool_end": {
+          const toolName = typeof event.payload.name === "string" ? event.payload.name : "tool"
+          const isError = event.payload.isError === true
+          appendPipelineEvent({
+            stage: isError ? "error" : "orchestrator",
+            message: `tool ${toolName} ${isError ? "failed" : "done"}`,
+            type: isError ? "error" : "success",
+          })
+          return
+        }
         case "checkpoint": {
           const checkpoint = event.payload as { type?: string; payload?: Record<string, unknown> }
           const rawType = typeof checkpoint.type === "string" ? checkpoint.type : undefined
+          appendPipelineEvent({
+            stage: rawType === "direction_checkpoint" ? "director" : "copywriter",
+            message: `checkpoint ${rawType ?? "generic"}`,
+            type: "checkpoint",
+          })
           setCheckpointType(rawType ? (CHECKPOINT_TYPE_MAP[rawType] ?? "generic") : "generic")
           setCheckpointData(checkpoint.payload ?? event.payload)
           setIsLoading(false)
@@ -142,6 +168,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "artifact_updated": {
+          const kind = typeof event.payload.kind === "string" ? event.payload.kind : "artifact"
+          appendPipelineEvent({ stage: "orchestrator", message: `artifact updated: ${kind}`, type: "info" })
           if (event.payload.kind === "checkpoint_decision") {
             const checkpoint = event.payload.checkpoint as
               | { type?: string; payload?: Record<string, unknown> }
@@ -178,6 +206,14 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
                 ? event.payload.id
                 : undefined
           const status = typeof event.payload.status === "string" ? event.payload.status : undefined
+          const progress = typeof event.payload.progress === "number" ? event.payload.progress : undefined
+          appendPipelineEvent({
+            stage: "rendering",
+            message: jobId
+              ? `render ${status ?? "unknown"}${progress != null ? ` (${progress}%)` : ""}`
+              : `render ${status ?? "unknown"}`,
+            type: status === "done" ? "success" : status === "error" ? "error" : "info",
+          })
           if (jobId && status === "done") {
             addEnrichment({
               id: crypto.randomUUID(),
@@ -190,20 +226,28 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
         }
         case "error": {
           const nextError = event.payload.message ?? "Error en Agent Pi"
+          appendPipelineEvent({ stage: "error", message: String(nextError), type: "error" })
           setError(nextError)
           setIsLoading(false)
           onError?.(nextError)
           return
         }
-        case "agent_end":
+        case "agent_end": {
+          const willRetry = event.payload.willRetry === true
+          appendPipelineEvent({
+            stage: willRetry ? "orchestrator" : "done",
+            message: willRetry ? "agent finished, retry scheduled" : "agent finished",
+            type: willRetry ? "info" : "success",
+          })
           setIsLoading(false)
           activeAssistantIdRef.current = null
           return
+        }
         default:
           return
       }
     },
-    [addEnrichment, appendAssistantDelta, checkpointData, checkpointType, onError],
+    [addEnrichment, appendAssistantDelta, appendPipelineEvent, checkpointData, checkpointType, onError],
   )
 
   useEffect(() => {
@@ -303,6 +347,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     setCheckpointType(null)
     setCheckpointData(null)
     setEnrichments([])
+    setPipelineEvents([])
     setPlanState(null)
     setError(null)
     setIsLoading(false)
@@ -319,6 +364,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     checkpointData,
     isInterrupted: checkpointType != null,
     enrichments,
+    pipelineEvents,
     planState,
     submit,
     resume,

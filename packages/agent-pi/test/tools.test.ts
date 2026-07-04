@@ -197,7 +197,15 @@ describe("Claqueta tools", () => {
         title: "Compact demo",
         transition: "cut",
         scenes: [
-          { type: "terminal", title: "Demo", command: "/compact", expectedOutput: "ok", durationInSeconds: 5 },
+          {
+            type: "terminal",
+            title: "Demo",
+            lines: [
+              { kind: "command", text: "/compact" },
+              { kind: "output", text: "ok" },
+            ],
+            durationInSeconds: 5,
+          },
           { type: "callout", title: "Cuándo usarlo", items: ["antes", "después"], durationInSeconds: 4 },
           { type: "outro", title: "Resumen", summary: "No empiezas de cero", durationInSeconds: 3 },
         ],
@@ -211,6 +219,54 @@ describe("Claqueta tools", () => {
     assert.equal(config.scenes[1].text, "antes · después")
     assert.deepEqual(config.scenes[2].bullets, ["No empiezas de cero"])
     assert.equal(config.transition.type, "none")
+  })
+
+  it("preserves registered custom scenes when generating config", async () => {
+    const result = await executeTool("generate_remotion_config", {
+      config: {
+        title: "Custom scene demo",
+        scenes: [
+          {
+            type: "custom",
+            componentId: "block-diagram",
+            props: { title: "Pipeline", blocks: [{ id: "a", label: "A" }] },
+            durationInSeconds: 8,
+          },
+        ],
+      },
+    })
+
+    const config = result.details.config as { scenes: Array<Record<string, unknown>> }
+    assert.deepEqual(config.scenes[0], {
+      type: "custom",
+      componentId: "block-diagram",
+      props: { title: "Pipeline", blocks: [{ id: "a", label: "A" }] },
+      durationInSeconds: 8,
+    })
+  })
+
+  it("fails terminal scenes without lines instead of inventing fallback content", async () => {
+    await assert.rejects(
+      executeTool("generate_remotion_config", {
+        config: {
+          title: "Broken terminal demo",
+          scenes: [{ type: "terminal", title: "Demo", durationInSeconds: 5 }],
+        },
+      }),
+      /must define non-empty lines/i,
+    )
+  })
+
+  it("fails unknown custom componentIds with an actionable error", async () => {
+    await assert.rejects(
+      executeTool("generate_remotion_config", {
+        config: {
+          title: "Unknown custom demo",
+          scenes: [{ type: "custom", componentId: "not-registered", durationInSeconds: 5 }],
+        },
+      }),
+      /unknown componentId/i,
+    )
   })
 
   it("publishes approved artifacts to content/tutorials", async () => {
@@ -260,7 +316,7 @@ describe("Claqueta tools", () => {
     assert.equal(validation.details.valid, true)
 
     await executeTool("generate_remotion_config", {
-      config: { title: "Latest config", scenes: [{ type: "terminal", durationInSeconds: 4 }] },
+      config: { title: "Latest config", scenes: [{ type: "intro", title: "Hola", durationInSeconds: 4 }] },
     })
     const latestValidation = await executeTool("validate_video_config", {})
     assert.equal(latestValidation.details.valid, true)
