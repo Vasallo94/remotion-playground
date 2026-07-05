@@ -1,0 +1,89 @@
+{
+  "id": "optimizacion-no-es-probarlo-todo",
+  "title": "Optimización: no es probarlo todo",
+  "description": "Optimización: no es probarlo todo",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "composition": "ClaudeCodeTutorial",
+  "theme": "Betelgeuse",
+  "slug": "optimizacion-no-es-probarlo-todo",
+  "audio": {
+    "voice": "none",
+    "music": "none"
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Hook: optimizar no es probar todo",
+      "durationInSeconds": 9,
+      "props": {
+        "headline": "Optimizar no es probar todo",
+        "subheadline": "Es buscar mejor, más rápido."
+      }
+    },
+    {
+      "id": "s2",
+      "type": "callout",
+      "title": "Qué es un problema de optimización",
+      "durationInSeconds": 11,
+      "props": {
+        "headline": "Variables + objetivo + restricciones"
+      },
+      "text": "Qué es un problema de optimización",
+      "position": "bottom",
+      "background": "overlay"
+    },
+    {
+      "id": "s3",
+      "type": "benefits",
+      "title": "Exhaustiva vs heurísticas",
+      "durationInSeconds": 11,
+      "props": {
+        "headline": "Exactitud ↔ Tiempo"
+      },
+      "items": [
+        {
+          "text": "Exhaustiva vs heurísticas"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "type": "callout",
+      "title": "Ejemplo: elegir la mejor ruta",
+      "durationInSeconds": 11,
+      "props": {
+        "headline": "Mejor ruta bajo restricciones"
+      },
+      "text": "Ejemplo: elegir la mejor ruta",
+      "position": "bottom",
+      "background": "overlay"
+    },
+    {
+      "id": "s5",
+      "type": "benefits",
+      "title": "Trade-off real",
+      "durationInSeconds": 11,
+      "props": {
+        "headline": "Calidad / Tiempo / Coste"
+      },
+      "items": [
+        {
+          "text": "Trade-off real"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "type": "outro",
+      "title": "Checklist final",
+      "durationInSeconds": 13,
+      "props": {
+        "headline": "Greedy • Local • DP • Evolutivos"
+      }
+    }
+  ],
+  "notes": "Sin voz ni música por ahora. Tema visual Betelgeuse. Usar escenas builtin registradas y texto breve."
+}

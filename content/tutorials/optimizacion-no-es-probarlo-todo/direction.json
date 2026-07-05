@@ -1,0 +1,93 @@
+{
+  "title": "Optimización: no es probarlo todo — dirección técnica",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Hook",
+      "visualType": "builtin",
+      "componentId": null,
+      "layout": "vertical-9:16",
+      "visual": "Split visual: espacio de búsqueda exhaustiva vs camino guiado.",
+      "motion": "Entrada rápida con contraste alto, zoom sutil y resaltado del camino ganador.",
+      "text": "Optimizar no es probar todo.",
+      "onScreenText": "No es probar todo",
+      "notes": "Mantener 1 idea por plano. Sin voz ni música."
+    },
+    {
+      "id": "s2",
+      "type": "callout",
+      "title": "Definición del problema",
+      "visualType": "builtin",
+      "layout": "vertical-9:16",
+      "visual": "Diagrama de 3 bloques: variables -> función objetivo -> restricciones.",
+      "motion": "Resaltado secuencial de cada bloque.",
+      "text": "Variables + objetivo + restricciones",
+      "onScreenText": "Variables / Objetivo / Restricciones",
+      "notes": "Usar pocas palabras, tipografía grande."
+    },
+    {
+      "id": "s3",
+      "type": "benefits",
+      "title": "Exhaustiva vs heurísticas",
+      "visualType": "builtin",
+      "layout": "vertical-9:16",
+      "visual": "Comparativa en dos columnas con barras de tiempo y calidad.",
+      "motion": "Aparece primero fuerza bruta, luego heurística, con énfasis en coste temporal.",
+      "text": "Exacta pero cara vs buena y rápida",
+      "onScreenText": "Exactitud ↔ Tiempo",
+      "notes": "Evitar términos demasiado densos."
+    },
+    {
+      "id": "s4",
+      "type": "callout",
+      "title": "Ejemplo de ruta",
+      "visualType": "builtin",
+      "layout": "vertical-9:16",
+      "visual": "Grafo o ruta con varias opciones y una ruta destacada como mejor trade-off.",
+      "motion": "Barrido sobre rutas alternativas y foco en la elegida.",
+      "text": "Elegir mejor ruta bajo restricciones",
+      "onScreenText": "Mejor ruta",
+      "notes": "Que el ejemplo sea visualmente obvio y simple."
+    },
+    {
+      "id": "s5",
+      "type": "benefits",
+      "title": "Trade-off",
+      "visualType": "builtin",
+      "layout": "vertical-9:16",
+      "visual": "Triángulo/balanza: exactitud, tiempo, coste computacional.",
+      "motion": "Cada vértice pulsa al mencionarse.",
+      "text": "No optimizas solo calidad",
+      "onScreenText": "Calidad / Tiempo / Coste",
+      "notes": "Transmitir que siempre hay compromiso."
+    },
+    {
+      "id": "s6",
+      "type": "outro",
+      "title": "Checklist",
+      "visualType": "builtin",
+      "layout": "vertical-9:16",
+      "visual": "Checklist final con 4 enfoques: greedy, búsqueda local, DP, evolutivos.",
+      "motion": "Cada ítem entra con tick y microejemplo.",
+      "text": "Elige según estructura del problema",
+      "onScreenText": "Greedy • Local • DP • Evolutivos",
+      "notes": "Cerrar con resumen accionable y limpio."
+    }
+  ],
+  "warnings": [
+    "Sin voz y sin música: asegurar ritmo visual suficiente.",
+    "Mantener texto corto para Shorts/LinkedIn.",
+    "No inventar componentes; usar visuales builtin del catálogo.",
+    "Tema Betelgeuse: paleta cálida/astronómica con contraste alto."
+  ],
+  "audio": {
+    "voice": "none",
+    "music": "none",
+    "sfx": "none"
+  },
+  "risks": [
+    "Si el catálogo no ofrece grafo/mapa explícito, representar el ejemplo con nodos y flechas genéricas.",
+    "Evitar saturación tipográfica en pantallas verticales."
+  ]
+}

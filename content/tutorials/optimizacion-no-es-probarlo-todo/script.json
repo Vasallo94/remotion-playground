@@ -1,0 +1,70 @@
+{
+  "title": "Optimización: no es probarlo todo",
+  "objective": "Explicar qué es un algoritmo de optimización, por qué importa y cómo elegir una estrategia básica.",
+  "audience": "Gente técnica junior-mid que programa y tiene base matemática, pero no domina optimización.",
+  "tone": "Claro, visual, práctico, sin humo.",
+  "estimatedDurationSeconds": 66,
+  "notes": "Formato vertical 9:16. Tema visual Betelgeuse. Sin voz ni música por ahora.",
+  "scenes": [
+    {
+      "id": "s1",
+      "type": "intro",
+      "title": "Hook: optimizar no es probar todo",
+      "voiceover": "Optimizar no es probar todo. Es buscar mejor, más rápido.",
+      "visualNotes": "Arranque con una comparación visual: una búsqueda exhaustiva llena de combinaciones vs una ruta seleccionada con criterio. Estilo Betelgeuse, alto contraste, motion limpio.",
+      "narrativeRole": "captar atención y definir la idea central",
+      "visualType": "builtin",
+      "durationInSeconds": 9
+    },
+    {
+      "id": "s2",
+      "type": "callout",
+      "title": "Qué es un problema de optimización",
+      "voiceover": "Tienes variables que puedes mover, una función objetivo que quieres maximizar o minimizar, y restricciones que no puedes romper.",
+      "visualNotes": "Diagrama simple con tres bloques: variables, objetivo y restricciones. Resaltar cómo cambian los valores y cómo afecta el resultado.",
+      "narrativeRole": "introducir el marco mental básico",
+      "visualType": "builtin",
+      "durationInSeconds": 11
+    },
+    {
+      "id": "s3",
+      "type": "benefits",
+      "title": "Exhaustiva vs heurísticas",
+      "voiceover": "Probar todo garantiza la mejor respuesta, pero suele ser inviable. Las heurísticas no prometen perfección, pero llegan antes a soluciones buenas.",
+      "visualNotes": "Comparativa en dos columnas: fuerza bruta vs heurística. Mostrar coste temporal y calidad de solución con barras o indicadores.",
+      "narrativeRole": "comparar estrategias de búsqueda",
+      "visualType": "builtin",
+      "durationInSeconds": 11
+    },
+    {
+      "id": "s4",
+      "type": "callout",
+      "title": "Ejemplo: elegir la mejor ruta",
+      "voiceover": "Piensa en una ruta, un coste o una combinación de decisiones. El problema cambia, pero la idea es la misma: buscar el mejor equilibrio bajo restricciones.",
+      "visualNotes": "Ejemplo visual de ruta en grafo o mapa sencillo con varias opciones y una destacada como mejor trade-off.",
+      "narrativeRole": "hacer tangible el concepto",
+      "visualType": "builtin",
+      "durationInSeconds": 11
+    },
+    {
+      "id": "s5",
+      "type": "benefits",
+      "title": "Trade-off real",
+      "voiceover": "La decisión casi nunca es exactitud pura. También importan tiempo y coste computacional.",
+      "visualNotes": "Triángulo o balanza con exactitud, tiempo y coste. Mostrar que subir uno suele empeorar otro.",
+      "narrativeRole": "explicar el criterio de elección",
+      "visualType": "builtin",
+      "durationInSeconds": 11
+    },
+    {
+      "id": "s6",
+      "type": "outro",
+      "title": "Checklist final",
+      "voiceover": "Usa greedy si puedes decidir localmente. Búsqueda local si quieres mejorar iterativamente. Programación dinámica si hay subproblemas solapados. Evolutivos si el espacio es enorme o irregular.",
+      "visualNotes": "Checklist visual final con cuatro opciones y un mini caso de uso por cada una. Cierre limpio con resumen accionable.",
+      "narrativeRole": "cerrar con guía práctica",
+      "visualType": "builtin",
+      "durationInSeconds": 13
+    }
+  ]
+}
