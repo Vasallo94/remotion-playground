@@ -22,32 +22,37 @@ services:
       retries: 5
       start_period: 30s
 
-  agent:
+  agent-pi:
     build:
       context: .
-      dockerfile: packages/agent/Dockerfile
+      dockerfile: packages/agent-pi/Dockerfile
     ports:
-      - "2024:2024"
+      - "3200:3200"
     volumes:
       - ./src:/app/src
       - ./content:/app/content
       - ./public/audio:/app/public/audio
       - ./public/voiceover:/app/public/voiceover
       - ./.generated:/app/.generated
-      - ./gemini_flash_tts_testing_sa.json:/app/gemini_flash_tts_testing_sa.json:ro
+      - ${HOME}/.pi/agent/auth.json:/root/.pi/agent/auth.json:ro
     env_file: .env
     environment:
       - PROJECT_ROOT=/app
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gemini_flash_tts_testing_sa.json
-      - RENDER_SERVICE_URL=http://render-service:3100
-      - BG_JOB_ISOLATED_LOOPS=true
-      - SELF_IMPROVE_THRESHOLD=${SELF_IMPROVE_THRESHOLD:-5}
-      - GITHUB_REPO=${GITHUB_REPO:-Vasallo94/Claqueta}
+      - RENDER_URL=http://render-service:3100
+      - AGENT_PI_DB=/app/.generated/claqueta-pi/agent-pi.db
+      - CLAQUETA_PI_MODEL=${CLAQUETA_PI_MODEL:-openai-codex/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_RESEARCH=${CLAQUETA_PI_MODEL_RESEARCH:-openai-codex/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_NARRATIVE=${CLAQUETA_PI_MODEL_NARRATIVE:-openai-codex/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_DIRECTION=${CLAQUETA_PI_MODEL_DIRECTION:-openai-codex/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_AUDIO_PLAN=${CLAQUETA_PI_MODEL_AUDIO_PLAN:-openai-codex/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_SCENE_QA=${CLAQUETA_PI_MODEL_SCENE_QA:-openai-codex/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_SCENE_CREATION=${CLAQUETA_PI_MODEL_SCENE_CREATION:-openai-codex/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_VALIDATION=${CLAQUETA_PI_MODEL_VALIDATION:-openai-codex/gpt-5.6-luna:low}
     depends_on:
       render-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:2024/ok"]
+      test: ["CMD", "curl", "-f", "http://localhost:3200/api/pi/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,10 +66,11 @@ services:
       - "5173:5173"
     env_file: .env
     environment:
-      - VITE_LANGGRAPH_URL=http://localhost:2024
+      - VITE_AGENT_RUNTIME=pi
+      - VITE_AGENT_PI_URL=http://localhost:3200
       - VITE_RENDER_URL=http://localhost:3100
     depends_on:
-      agent:
+      agent-pi:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5173"]

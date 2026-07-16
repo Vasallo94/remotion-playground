@@ -16,6 +16,7 @@ import type {
   VariantPlanData,
 } from "../types"
 import { stripTargetMetadata } from "../lib/targetMetadata"
+import { CandidatePromotionCard } from "./CandidatePromotionCard"
 import { CheckpointCard } from "./CheckpointCard"
 import { DirectionCard } from "./DirectionCard"
 import { GenericCheckpointCard } from "./GenericCheckpointCard"
@@ -163,6 +164,8 @@ function renderCheckpointCard(
       return null // handled via enrichments
     case "generic":
       return <GenericCheckpointCard data={data} {...cardProps} />
+    case "candidate_promotion":
+      return <CandidatePromotionCard data={data} {...cardProps} />
     default:
       return null
   }

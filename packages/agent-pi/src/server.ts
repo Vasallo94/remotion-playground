@@ -1,9 +1,11 @@
+import { basename, join } from "node:path"
 import express from "express"
 import cors from "cors"
 import { pathToFileURL } from "node:url"
 import { AgentPiStore } from "./store.js"
 import { ThreadEventBus, encodeSseEvent } from "./events.js"
 import { AgentRuntimeManager } from "./session.js"
+import { isPipelineMode } from "./coordinator.js"
 
 export function createApp(runtime = createDefaultRuntime()) {
   const app = express()
@@ -20,6 +22,22 @@ export function createApp(runtime = createDefaultRuntime()) {
 
   app.get("/api/pi/threads", (_req, res) => {
     res.json({ threads: runtime.store.listThreads() })
+  })
+
+  app.get("/api/pi/candidate-preview/:candidateId/:fileName", (req, res) => {
+    const { candidateId, fileName } = req.params
+    if (!/^candidate\.[a-z0-9.-]{3,100}$/.test(candidateId) || !/^scene-\d+\.png$/.test(fileName)) {
+      res.status(400).json({ error: "Invalid candidate preview path" })
+      return
+    }
+    const directory = join(runtime.cwd, ".generated/claqueta-pi/candidates", candidateId)
+    if (basename(fileName) !== fileName) {
+      res.status(400).json({ error: "Invalid candidate preview file" })
+      return
+    }
+    res.sendFile(fileName, { root: directory }, (error) => {
+      if (error && !res.headersSent) res.status(404).json({ error: "Candidate preview not found" })
+    })
   })
 
   app.get("/api/pi/thread/:threadId", (req, res) => {
@@ -39,17 +57,39 @@ export function createApp(runtime = createDefaultRuntime()) {
   app.post("/api/pi/chat", async (req, res) => {
     const message = typeof req.body?.message === "string" ? req.body.message.trim() : ""
     const requestedThreadId = typeof req.body?.threadId === "string" ? req.body.threadId : null
+    const requestedMode = req.body?.mode
     if (!message) {
       res.status(400).json({ error: "message is required" })
       return
     }
 
     try {
+      if (!requestedThreadId && !isPipelineMode(requestedMode)) {
+        res.status(400).json({ error: "A new thread requires an explicit valid mode" })
+        return
+      }
       const threadId = await runtime.getOrCreateThread(requestedThreadId, message)
-      void runtime.sendMessage(threadId, message).catch(() => {})
+      void runtime
+        .sendMessage(threadId, message, { mode: isPipelineMode(requestedMode) ? requestedMode : undefined })
+        .catch(() => {})
       res.json({ threadId })
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) })
+    }
+  })
+
+  app.post("/api/pi/retry", (req, res) => {
+    const threadId = typeof req.body?.threadId === "string" ? req.body.threadId : ""
+    if (!threadId) {
+      res.status(400).json({ error: "threadId is required" })
+      return
+    }
+
+    try {
+      void runtime.retryCurrentAction(threadId).catch(() => {})
+      res.json({ threadId, accepted: true })
+    } catch (error) {
+      res.status(409).json({ error: error instanceof Error ? error.message : String(error) })
     }
   })
 

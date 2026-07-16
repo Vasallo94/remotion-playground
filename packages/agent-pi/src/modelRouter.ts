@@ -6,8 +6,13 @@ type ThinkingLevel = NonNullable<ModelRoute["thinkingLevel"]>
 
 const TASK_ENV: Record<ModelTask, string> = {
   main: "CLAQUETA_PI_MODEL",
+  intake: "CLAQUETA_PI_MODEL_INTAKE",
+  research: "CLAQUETA_PI_MODEL_RESEARCH",
   narrative: "CLAQUETA_PI_MODEL_NARRATIVE",
   direction: "CLAQUETA_PI_MODEL_DIRECTION",
+  audio_plan: "CLAQUETA_PI_MODEL_AUDIO_PLAN",
+  scene_qa: "CLAQUETA_PI_MODEL_SCENE_QA",
+  scene_creation: "CLAQUETA_PI_MODEL_SCENE_CREATION",
   config: "CLAQUETA_PI_MODEL_CONFIG",
   validation: "CLAQUETA_PI_MODEL_VALIDATION",
   tts: "CLAQUETA_PI_MODEL_TTS",
@@ -34,12 +39,19 @@ export class ModelRouter {
   findModel(task: ModelTask = "main"): Model<Api> | undefined {
     const route = this.route(task)
     if (route) return this.modelRegistry.find(route.provider, route.model)
-    return this.modelRegistry.getAvailable()[0] ?? this.modelRegistry.getAll()[0]
+    const available = this.modelRegistry.getAvailable()
+    // Codex Spark can appear as credential-available while remaining disabled
+    // for ChatGPT-backed Codex accounts, so it is not a safe server default.
+    return available.find(isSafeDefaultModel) ?? available[0] ?? this.modelRegistry.getAll()[0]
   }
 
   thinkingLevel(task: ModelTask = "main"): ThinkingLevel | undefined {
     return this.route(task)?.thinkingLevel
   }
+}
+
+export function isSafeDefaultModel(model: Pick<Model<Api>, "provider" | "id">): boolean {
+  return !(model.provider === "openai-codex" && model.id.endsWith("-spark"))
 }
 
 export function loadModelRoutingConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ModelRoutingConfig {

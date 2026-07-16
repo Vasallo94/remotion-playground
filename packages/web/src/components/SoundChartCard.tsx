@@ -25,6 +25,7 @@ export function SoundChartCard({ data, onApprove, onRequestChanges, disabled, co
   const effectiveSfx = sfxEntries.length > 0 ? sfxEntries : legacySfx
   const voiceover = asRecord((data as AudioChartData).voiceover)
   const voiceoverEntries = getVoiceoverEntries(voiceover)
+  const warnings = "warnings" in data && Array.isArray(data.warnings) ? data.warnings : []
   const hasActions = Boolean(onApprove && onRequestChanges)
 
   return (
@@ -173,6 +174,22 @@ export function SoundChartCard({ data, onApprove, onRequestChanges, disabled, co
           ))}
         </tbody>
       </table>
+
+      {warnings.length > 0 && (
+        <div
+          style={{
+            padding: "8px 10px",
+            marginBottom: 12,
+            border: `1px solid ${theme.colors.status.warning + "33"}`,
+            color: theme.colors.text.secondary,
+            fontSize: 12,
+          }}
+        >
+          {warnings.map((warning) => (
+            <div key={warning}>- {warning}</div>
+          ))}
+        </div>
+      )}
 
       {hasActions && (
         <div style={{ display: "flex", gap: 8 }}>

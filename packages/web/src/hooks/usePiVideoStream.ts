@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Message } from "@langchain/langgraph-sdk"
 import type { SubagentStreamInterface } from "@langchain/langgraph-sdk/react"
-import { fetchPiThread, getPiEventsUrl, resumePiCheckpoint, sendPiChat } from "../api"
-import type { CheckpointType, Enrichment, PipelineEvent } from "../types"
+import { fetchPiThread, getPiEventsUrl, resumePiCheckpoint, retryPiAction, sendPiChat } from "../api"
+import type { CheckpointType, Enrichment, PipelineEvent, PipelineStageId } from "../types"
 import type { ActiveVideoTarget } from "../types"
 import { extractPlanStateFromPipelinePlan, type PipelinePlan, type PlanState } from "../lib/planState"
 
@@ -17,15 +17,85 @@ interface PiEvent {
     | "artifact_updated"
     | "plan_updated"
     | "render_status"
+    | "subagent_start"
+    | "subagent_update"
+    | "subagent_end"
+    | "subagent_error"
     | "error"
     | "agent_end"
   payload: Record<string, unknown>
   createdAt?: string
 }
 
+type PiSubagentStatus = "pending" | "running" | "complete" | "error"
+
+interface PiSubagentRecord {
+  id: string
+  type: string
+  description: string
+  status: PiSubagentStatus
+  modelRoute?: string
+  parentMessageId: string
+  messages: Message[]
+  result: string | null
+  error: string | null
+  startedAt: Date | null
+  completedAt: Date | null
+}
+
+function pipelineStageForSubagent(type: string): PipelineStageId {
+  if (
+    type === "copywriter" ||
+    type === "director" ||
+    type === "researcher" ||
+    type === "scene_creator" ||
+    type === "audio_planner"
+  )
+    return type
+  if (type === "sound_engineer") return "sound_engineer"
+  return "orchestrator"
+}
+
+function toSubagentStream(record: PiSubagentRecord): SubagentStreamInterface {
+  return {
+    id: record.id,
+    toolCall: {
+      id: record.id,
+      name: `run_${record.type}_specialist`,
+      args: { subagent_type: record.type, description: record.description },
+    },
+    status: record.status,
+    values: { modelRoute: record.modelRoute },
+    error: record.error,
+    isLoading: record.status === "running" || record.status === "pending",
+    messages: record.messages,
+    toolCalls: [],
+    getToolCalls: () => [],
+    interrupt: undefined,
+    interrupts: [],
+    subagents: new Map(),
+    activeSubagents: [],
+    getSubagent: () => undefined,
+    getSubagentsByType: () => [],
+    getSubagentsByMessage: () => [],
+    switchThread: () => {},
+    result: record.result,
+    namespace: [`pi:${record.id}`],
+    parentId: null,
+    depth: 0,
+    startedAt: record.startedAt,
+    completedAt: record.completedAt,
+  } as SubagentStreamInterface
+}
+
 const CHECKPOINT_TYPE_MAP: Record<string, CheckpointType> = {
   script_checkpoint: "script",
   direction_checkpoint: "direction",
+  audio_chart_checkpoint: "audio_chart",
+  qa_report_checkpoint: "generic",
+  final_review_checkpoint: "generic",
+  capability_gap_checkpoint: "generic",
+  candidate_promotion_checkpoint: "candidate_promotion",
 }
 
 export interface UsePiVideoStreamOptions {
@@ -50,6 +120,7 @@ export interface PiVideoStreamReturn {
   planState: PlanState | null
   submit: (message: string) => void
   resume: (decision: Record<string, unknown>) => void
+  retry: () => void
   switchThread: (newThreadId: string | null) => void
   addEnrichment: (enrichment: Enrichment) => void
   clearEnrichments: () => void
@@ -87,6 +158,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const [enrichments, setEnrichments] = useState<Enrichment[]>([])
   const [pipelineEvents, setPipelineEvents] = useState<PipelineEvent[]>([])
   const [planState, setPlanState] = useState<PlanState | null>(null)
+  const [subagentRecords, setSubagentRecords] = useState<Map<string, PiSubagentRecord>>(new Map())
   const lastSeqRef = useRef(0)
   const videoResultJobIdsRef = useRef(new Set<string>())
   const activeAssistantIdRef = useRef<string | null>(null)
@@ -96,6 +168,15 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   useEffect(() => {
     setActiveThreadId(threadId ?? null)
   }, [threadId])
+
+  const ensureAssistantMessage = useCallback((): string => {
+    if (activeAssistantIdRef.current) return activeAssistantIdRef.current
+    const message = createMessage("ai", "")
+    const messageId = message.id ?? crypto.randomUUID()
+    activeAssistantIdRef.current = messageId
+    setMessages((current) => [...current, { ...message, id: messageId } as Message])
+    return messageId
+  }, [])
 
   const appendAssistantDelta = useCallback((delta: string) => {
     setMessages((current) => {
@@ -173,15 +254,35 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "checkpoint": {
-          const checkpoint = event.payload as { type?: string; payload?: Record<string, unknown> }
+          const checkpoint = event.payload as {
+            id?: string
+            type?: string
+            artifactId?: string | null
+            payload?: Record<string, unknown>
+          }
           const rawType = typeof checkpoint.type === "string" ? checkpoint.type : undefined
           appendPipelineEvent({
-            stage: rawType === "direction_checkpoint" ? "director" : "copywriter",
+            stage:
+              rawType === "direction_checkpoint"
+                ? "director"
+                : rawType === "audio_chart_checkpoint"
+                  ? "audio_planner"
+                  : rawType === "qa_report_checkpoint"
+                    ? "scene_qa"
+                    : rawType === "final_review_checkpoint"
+                      ? "reviewer"
+                      : rawType === "capability_gap_checkpoint"
+                        ? "scene_creator"
+                        : "copywriter",
             message: `checkpoint ${rawType ?? "generic"}`,
             type: "checkpoint",
           })
           setCheckpointType(rawType ? (CHECKPOINT_TYPE_MAP[rawType] ?? "generic") : "generic")
-          setCheckpointData(checkpoint.payload ?? event.payload)
+          setCheckpointData({
+            ...(checkpoint.payload ?? event.payload),
+            ...(checkpoint.id ? { checkpointId: checkpoint.id } : {}),
+            ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
+          })
           setIsLoading(false)
           activeAssistantIdRef.current = null
           return
@@ -215,6 +316,94 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
         case "plan_updated": {
           const plan = event.payload.plan as PipelinePlan | undefined
           setPlanState(extractPlanStateFromPipelinePlan(plan))
+          return
+        }
+        case "subagent_start": {
+          const runId = typeof event.payload.runId === "string" ? event.payload.runId : crypto.randomUUID()
+          const subagentType =
+            typeof event.payload.subagentType === "string" ? event.payload.subagentType : "specialist"
+          const description =
+            typeof event.payload.description === "string" ? event.payload.description : `Run ${subagentType} specialist`
+          const parentMessageId = ensureAssistantMessage()
+          setSubagentRecords((current) => {
+            const next = new Map(current)
+            next.set(runId, {
+              id: runId,
+              type: subagentType,
+              description,
+              status: "running",
+              modelRoute: typeof event.payload.modelRoute === "string" ? event.payload.modelRoute : undefined,
+              parentMessageId,
+              messages: [],
+              result: null,
+              error: null,
+              startedAt: event.payload.startedAt ? new Date(String(event.payload.startedAt)) : new Date(),
+              completedAt: null,
+            })
+            return next
+          })
+          appendPipelineEvent({
+            stage: pipelineStageForSubagent(subagentType),
+            message: `${subagentType} specialist started`,
+            type: "info",
+          })
+          return
+        }
+        case "subagent_update": {
+          const runId = typeof event.payload.runId === "string" ? event.payload.runId : undefined
+          if (!runId) return
+          const toolName = typeof event.payload.toolName === "string" ? event.payload.toolName : "tool"
+          const kind = event.payload.kind === "tool_end" ? "done" : "started"
+          const subagentType =
+            typeof event.payload.subagentType === "string" ? event.payload.subagentType : "specialist"
+          appendPipelineEvent({
+            stage: pipelineStageForSubagent(subagentType),
+            message: `${toolName} ${kind}`,
+            type: "info",
+          })
+          return
+        }
+        case "subagent_end": {
+          const runId = typeof event.payload.runId === "string" ? event.payload.runId : undefined
+          if (!runId) return
+          const result = typeof event.payload.result === "string" ? event.payload.result : "Specialist completed"
+          setSubagentRecords((current) => {
+            const existing = current.get(runId)
+            if (!existing) return current
+            const next = new Map(current)
+            next.set(runId, {
+              ...existing,
+              status: "complete",
+              result,
+              messages: [...existing.messages, createMessage("ai", result)],
+              completedAt: event.payload.completedAt ? new Date(String(event.payload.completedAt)) : new Date(),
+            })
+            return next
+          })
+          const subagentType =
+            typeof event.payload.subagentType === "string" ? event.payload.subagentType : "specialist"
+          appendPipelineEvent({ stage: pipelineStageForSubagent(subagentType), message: result, type: "success" })
+          return
+        }
+        case "subagent_error": {
+          const runId = typeof event.payload.runId === "string" ? event.payload.runId : undefined
+          const message = typeof event.payload.message === "string" ? event.payload.message : "Specialist failed"
+          if (runId) {
+            setSubagentRecords((current) => {
+              const existing = current.get(runId)
+              if (!existing) return current
+              const next = new Map(current)
+              next.set(runId, {
+                ...existing,
+                status: "error",
+                error: message,
+                messages: [...existing.messages, createMessage("ai", message)],
+                completedAt: event.payload.completedAt ? new Date(String(event.payload.completedAt)) : new Date(),
+              })
+              return next
+            })
+          }
+          appendPipelineEvent({ stage: "error", message, type: "error" })
           return
         }
         case "render_status": {
@@ -261,7 +450,16 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
       }
     },
-    [addEnrichment, addVideoResult, appendAssistantDelta, appendPipelineEvent, checkpointData, checkpointType, onError],
+    [
+      addEnrichment,
+      addVideoResult,
+      appendAssistantDelta,
+      appendPipelineEvent,
+      checkpointData,
+      checkpointType,
+      ensureAssistantMessage,
+      onError,
+    ],
   )
 
   useEffect(() => {
@@ -273,7 +471,11 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
         const checkpoint = snapshot.thread.checkpoint
         if (checkpoint) {
           setCheckpointType(CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic")
-          setCheckpointData(checkpoint.payload)
+          setCheckpointData({
+            ...checkpoint.payload,
+            checkpointId: checkpoint.id,
+            ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
+          })
         }
         setPlanState(extractPlanStateFromPipelinePlan(snapshot.plan as PipelinePlan | null))
         const latestCompletedRender = [...snapshot.events].reverse().find((event) => {
@@ -307,6 +509,10 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
       "artifact_updated",
       "plan_updated",
       "render_status",
+      "subagent_start",
+      "subagent_update",
+      "subagent_end",
+      "subagent_error",
       "error",
       "agent_end",
     ]
@@ -347,18 +553,35 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const resume = useCallback(
     (decision: Record<string, unknown>) => {
       if (!activeThreadId) return
+      const boundDecision = {
+        ...(typeof checkpointData?.checkpointId === "string" ? { checkpointId: checkpointData.checkpointId } : {}),
+        ...(typeof checkpointData?.artifactId === "string" ? { artifactId: checkpointData.artifactId } : {}),
+        ...(typeof checkpointData?.version === "number" ? { version: checkpointData.version } : {}),
+        ...decision,
+      }
       setError(null)
       setIsLoading(true)
       setCheckpointType(null)
       setCheckpointData(null)
-      resumePiCheckpoint(activeThreadId, decision).catch((err) => {
+      resumePiCheckpoint(activeThreadId, boundDecision).catch((err) => {
         setError(err)
         setIsLoading(false)
         onError?.(err)
       })
     },
-    [activeThreadId, onError],
+    [activeThreadId, checkpointData, onError],
   )
+
+  const retry = useCallback(() => {
+    if (!activeThreadId) return
+    setError(null)
+    setIsLoading(true)
+    retryPiAction(activeThreadId).catch((err) => {
+      setError(err)
+      setIsLoading(false)
+      onError?.(err)
+    })
+  }, [activeThreadId, onError])
 
   const switchThread = useCallback((newThreadId: string | null) => {
     lastSeqRef.current = 0
@@ -371,17 +594,35 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     setEnrichments([])
     setPipelineEvents([])
     setPlanState(null)
+    setSubagentRecords(new Map())
     setError(null)
     setIsLoading(false)
   }, [])
+
+  const subagents = useMemo(() => {
+    const result = new Map<string, SubagentStreamInterface>()
+    for (const [id, record] of subagentRecords) result.set(id, toSubagentStream(record))
+    return result
+  }, [subagentRecords])
+  const activeSubagents = useMemo(
+    () => [...subagents.values()].filter((subagent) => subagent.status === "running" || subagent.status === "pending"),
+    [subagents],
+  )
+  const getSubagentsByMessage = useCallback(
+    (messageId: string) =>
+      [...subagentRecords.values()]
+        .filter((record) => record.parentMessageId === messageId)
+        .map((record) => toSubagentStream(record)),
+    [subagentRecords],
+  )
 
   return {
     messages,
     isLoading,
     error,
-    subagents: useMemo(() => new Map<string, SubagentStreamInterface>(), []),
-    activeSubagents: useMemo(() => [], []),
-    getSubagentsByMessage: useCallback(() => [], []),
+    subagents,
+    activeSubagents,
+    getSubagentsByMessage,
     checkpointType,
     checkpointData,
     isInterrupted: checkpointType != null,
@@ -390,6 +631,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     planState,
     submit,
     resume,
+    retry,
     switchThread,
     addEnrichment,
     clearEnrichments,

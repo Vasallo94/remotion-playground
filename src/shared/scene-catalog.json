@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-14T13:30:20.952Z",
+  "generatedAt": "2026-07-12T09:25:14.539Z",
   "scenes": {
     "tutorial": {
       "builtin": [
@@ -83,7 +83,8 @@
           "durationRange": [4, 12],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Show a real UI screenshot and annotate only the decisive details."
+          "exampleUse": "Show a real UI screenshot and annotate only the decisive details.",
+          "propContract": "interface Annotation {\n  x: number\n  y: number\n  text: string\n  position?: \"top\" | \"bottom\" | \"left\" | \"right\"\n}\n\ninterface AnnotatedImageProps {\n  imageSrc?: string\n  imageAlt?: string\n  annotations: Annotation[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "api-request",
@@ -99,7 +100,8 @@
           "durationRange": [6, 16],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Connect one request field to one visible response result."
+          "exampleUse": "Connect one request field to one visible response result.",
+          "propContract": "interface ApiRequestProps {\n  title?: string\n  method: \"GET\" | \"POST\" | \"PUT\" | \"DELETE\" | \"PATCH\"\n  endpoint: string\n  requestBody?: string\n  responseStatus: number\n  responseBody: string\n  language?: \"json\" | \"curl\"\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "bar-chart",
@@ -115,7 +117,8 @@
           "durationRange": [4, 10],
           "recommendedBeats": 2,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Reveal the one bar that proves the main claim."
+          "exampleUse": "Reveal the one bar that proves the main claim.",
+          "propContract": "interface BarChartItem {\n  label: string\n  value: number\n  color?: string\n}\n\ninterface BarChartProps {\n  title?: string\n  items: BarChartItem[]\n  highlightIndex?: number\n  showValues?: boolean\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "before-after",
@@ -131,7 +134,8 @@
           "durationRange": [4, 10],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Make the before state painful and the after state obviously simpler."
+          "exampleUse": "Make the before state painful and the after state obviously simpler.",
+          "propContract": "interface BeforeAfterProps {\n  title?: string\n  leftLabel?: string\n  leftItems: string[]\n  rightLabel?: string\n  rightItems: string[]\n  leftAccent?: string\n  rightAccent?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "big-number",
@@ -147,7 +151,8 @@
           "durationRange": [2, 6],
           "recommendedBeats": 1,
           "placement": ["first", "middle", "near-end"],
-          "exampleUse": "Pair the number with a human-readable consequence."
+          "exampleUse": "Pair the number with a human-readable consequence.",
+          "propContract": "interface Metric {\n  value: string\n  label: string\n  prefix?: string\n  suffix?: string\n}\n\ninterface BigNumberProps {\n  title?: string\n  metrics: Metric[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "block-diagram",
@@ -163,7 +168,8 @@
           "durationRange": [5, 14],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Reveal blocks in the same order the narration explains them."
+          "exampleUse": "Reveal blocks in the same order the narration explains them.",
+          "propContract": "interface BlockDiagramBlock {\n  label: string\n  detail: string\n}\n\ninterface BlockDiagramProps {\n  title?: string\n  blocks: BlockDiagramBlock[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "browser-mockup",
@@ -179,7 +185,8 @@
           "durationRange": [4, 12],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Show the end result in a realistic browser frame."
+          "exampleUse": "Show the end result in a realistic browser frame.",
+          "propContract": "interface ContentBlock {\n  type: \"header\" | \"card-row\" | \"text\" | \"placeholder\" | \"button\"\n  text?: string\n}\n\ninterface BrowserMockupProps {\n  url: string\n  title?: string\n  variant?: \"light\" | \"dark\"\n  content: ContentBlock[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "bullet-slide",
@@ -195,7 +202,8 @@
           "durationRange": [3, 8],
           "recommendedBeats": 3,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use bullets as labels for narration, not as full sentences."
+          "exampleUse": "Use bullets as labels for narration, not as full sentences.",
+          "propContract": "type IconKey =\n  | \"terminal\"\n  | \"cloud\"\n  | \"code\"\n  | \"folder\"\n  | \"shield\"\n  | \"gear\"\n  | \"user\"\n  | \"book\"\n  | \"lightbulb\"\n  | \"layers\"\n  | \"link\"\n  | \"check\"\n  | \"file\"\n  | \"arrow\"\n\ninterface BulletItem {\n  icon?: IconKey\n  text: string\n}\n\ninterface BulletSlideProps {\n  title: string\n  subtitle?: string\n  items?: BulletItem[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "chapter-card",
@@ -211,7 +219,25 @@
           "durationRange": [1, 3],
           "recommendedBeats": 1,
           "placement": ["middle"],
-          "exampleUse": "Use a short label before a new mode of explanation."
+          "exampleUse": "Use a short label before a new mode of explanation.",
+          "propContract": "interface ChapterCardProps {\n  number?: string\n  title: string\n  subtitle?: string\n  description?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
+        },
+        {
+          "componentId": "clapperboard",
+          "composition": "ClaudeCodeTutorial",
+          "description": "Custom scene: clapperboard",
+          "narrativeRoles": ["custom"],
+          "bestFor": ["specialized visual explanation"],
+          "avoidWhen": ["an existing registered scene already expresses the idea"],
+          "textLimits": {
+            "maxVisibleWords": 28,
+            "maxWordsPerSecond": 4
+          },
+          "durationRange": [3, 10],
+          "recommendedBeats": 2,
+          "placement": ["middle"],
+          "exampleUse": "Use only when the narrative needs a visual pattern not covered by built-in scenes.",
+          "propContract": "interface ClapperboardProps {\n  mode?: \"action\" | \"cut\"\n  title?: string\n  subtitle?: string\n  configLines?: string[]\n}"
         },
         {
           "componentId": "code-block",
@@ -227,7 +253,8 @@
           "durationRange": [5, 14],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Highlight only the line that changes the behavior."
+          "exampleUse": "Highlight only the line that changes the behavior.",
+          "propContract": "interface CodeBlockProps {\n  code: string\n  language: string\n  title?: string\n  highlightLines?: number[]\n  timing?: Timing\n  beats?: Beat[]\n}\n\ntype TokenType = \"key\" | \"value\" | \"comment\" | \"string\" | \"punctuation\" | \"heading\" | \"default\"\n\ninterface Token {\n  text: string\n  type: TokenType\n}"
         },
         {
           "componentId": "code-diff",
@@ -243,7 +270,8 @@
           "durationRange": [5, 14],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Make the removed problem and added fix visually obvious."
+          "exampleUse": "Make the removed problem and added fix visually obvious.",
+          "propContract": "interface CodeDiffProps {\n  fileName: string\n  additions: string[]\n  deletions: string[]\n  context?: { before?: string[]; after?: string[] }\n  title?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "comparison-table",
@@ -259,7 +287,32 @@
           "durationRange": [5, 12],
           "recommendedBeats": 3,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use rows as decision criteria, not as marketing copy."
+          "exampleUse": "Use rows as decision criteria, not as marketing copy.",
+          "propContract": "interface ColumnData {\n  header: string\n  items: string[]\n}\n\ninterface ComparisonTableProps {\n  title: string\n  leftColumn: ColumnData\n  rightColumn: ColumnData\n  leftColor?: string\n  rightColor?: string\n  leftIcon?: \"check\" | \"cross\"\n  rightIcon?: \"check\" | \"cross\"\n  timing?: Timing\n  beats?: Beat[]\n}"
+        },
+        {
+          "componentId": "composed-scene",
+          "composition": "ClaudeCodeTutorial",
+          "description": "Bounded declarative composition of semantic text, groups, cards, metrics, lists, progress, dividers, and spacing.",
+          "narrativeRoles": ["explanation", "comparison", "summary", "data", "mental-model"],
+          "bestFor": [
+            "novel layouts assembled from standard primitives",
+            "mixed metrics and explanatory cards",
+            "topic-neutral structured visuals"
+          ],
+          "avoidWhen": [
+            "a registered purpose-built scene already fits",
+            "the visual requires executable behavior, arbitrary CSS, network data, or unsupported media"
+          ],
+          "textLimits": {
+            "maxVisibleWords": 220,
+            "maxWordsPerSecond": 4
+          },
+          "durationRange": [3, 18],
+          "recommendedBeats": 3,
+          "placement": ["first", "middle", "near-end", "last"],
+          "exampleUse": "Compose a two-column metric-and-explanation layout without creating a new React component.",
+          "propContract": "{\"version\":1,\"sceneKeys\":[\"version\",\"title?\",\"subtitle?\",\"backgroundTone?\",\"root\"],\"backgroundTones\":[\"default\",\"subtle\",\"contrast\"],\"commonNodeKeys\":[\"tone?\",\"revealAtMs?\",\"entrance?\",\"span?\"],\"tones\":[\"default\",\"accent\",\"muted\",\"success\",\"warning\",\"danger\"],\"entrances\":[\"none\",\"fade\",\"slide-up\",\"scale\"],\"nodes\":{\"group\":{\"required\":[\"type=group\",\"direction\",\"children\"],\"optional\":[\"columns\",\"gap\",\"align\"]},\"text\":{\"required\":[\"type=text\",\"text\"],\"optional\":[\"variant\",\"align\"]},\"card\":{\"required\":[\"type=card\",\"at least one of title/body/children\"],\"optional\":[\"title\",\"body\",\"children\"]},\"metric\":{\"required\":[\"type=metric\",\"value\",\"label\"],\"optional\":[\"unit\"]},\"list\":{\"required\":[\"type=list\",\"items\"],\"optional\":[\"style\"]},\"progress\":{\"required\":[\"type=progress\",\"label\",\"value 0-100\"],\"optional\":[]},\"divider\":{\"required\":[\"type=divider\"],\"optional\":[]},\"spacer\":{\"required\":[\"type=spacer\",\"size\"],\"optional\":[]}},\"limits\":{\"depth\":5,\"nodes\":40,\"childrenPerContainer\":12,\"words\":220,\"listItems\":10,\"revealAtMs\":[0,30000]}}"
         },
         {
           "componentId": "countdown",
@@ -275,7 +328,42 @@
           "durationRange": [2, 6],
           "recommendedBeats": 3,
           "placement": ["first", "middle"],
-          "exampleUse": "Use sparingly to create anticipation before a reveal."
+          "exampleUse": "Use sparingly to create anticipation before a reveal.",
+          "propContract": "interface CountdownProps {\n  title?: string\n  targetLabel?: string\n  days?: number\n  hours?: number\n  minutes?: number\n  seconds?: number\n  timing?: Timing\n  beats?: Beat[]\n}"
+        },
+        {
+          "componentId": "crew-credits",
+          "composition": "ClaudeCodeTutorial",
+          "description": "Custom scene: crew-credits",
+          "narrativeRoles": ["custom"],
+          "bestFor": ["specialized visual explanation"],
+          "avoidWhen": ["an existing registered scene already expresses the idea"],
+          "textLimits": {
+            "maxVisibleWords": 28,
+            "maxWordsPerSecond": 4
+          },
+          "durationRange": [3, 10],
+          "recommendedBeats": 2,
+          "placement": ["middle"],
+          "exampleUse": "Use only when the narrative needs a visual pattern not covered by built-in scenes.",
+          "propContract": "interface CreditEntry {\n  role: string\n  name: string\n}\n\ninterface CrewCreditsProps {\n  title?: string\n  credits?: CreditEntry[]\n  producedBy?: string\n  footer?: string\n}"
+        },
+        {
+          "componentId": "etalon",
+          "composition": "ClaudeCodeTutorial",
+          "description": "Custom scene: etalon",
+          "narrativeRoles": ["custom"],
+          "bestFor": ["specialized visual explanation"],
+          "avoidWhen": ["an existing registered scene already expresses the idea"],
+          "textLimits": {
+            "maxVisibleWords": 28,
+            "maxWordsPerSecond": 4
+          },
+          "durationRange": [3, 10],
+          "recommendedBeats": 2,
+          "placement": ["middle"],
+          "exampleUse": "Use only when the narrative needs a visual pattern not covered by built-in scenes.",
+          "propContract": "interface EtalonProps {\n  title?: string\n  captions?: string[]\n  timing?: Timing\n  beats?: Beat[]\n}\n\ninterface Geometry {\n  d: string\n  totalLength: number\n  entryLength: number\n  firstHit: [number, number]\n  exits: Array<{ point: [number, number]; length: number }>\n}"
         },
         {
           "componentId": "file-explorer",
@@ -291,7 +379,8 @@
           "durationRange": [5, 14],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Reveal only the files the viewer needs to understand."
+          "exampleUse": "Reveal only the files the viewer needs to understand.",
+          "propContract": "interface FileEntry {\n  name: string\n  type: \"file\" | \"folder\"\n  indent?: number\n  isNew?: boolean\n}\n\ninterface FileExplorerProps {\n  rootPath: string\n  files: FileEntry[]\n  expandFile: string\n  fileContent: string\n  calloutText?: string\n  timing?: Timing\n}"
         },
         {
           "componentId": "flow-diagram",
@@ -307,7 +396,8 @@
           "durationRange": [5, 14],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Animate each node as the narration reaches it."
+          "exampleUse": "Animate each node as the narration reaches it.",
+          "propContract": "interface FlowNode {\n  id: string\n  title: string\n  description?: string\n  color?: string\n  icon?: string\n}\n\ninterface FlowEdge {\n  from: string\n  to: string\n  label?: string\n  style?: \"solid\" | \"dashed\"\n}\n\ninterface FlowDiagramProps {\n  title: string\n  description?: string\n  nodes?: FlowNode[]\n  edges?: FlowEdge[]\n  layout?: \"horizontal\" | \"vertical\"\n  introText?: string\n  outroText?: string\n  showParticle?: boolean\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "icon-grid",
@@ -323,7 +413,8 @@
           "durationRange": [3, 8],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Group features into scannable categories."
+          "exampleUse": "Group features into scannable categories.",
+          "propContract": "type IconKey =\n  | \"terminal\"\n  | \"cloud\"\n  | \"code\"\n  | \"folder\"\n  | \"shield\"\n  | \"gear\"\n  | \"user\"\n  | \"book\"\n  | \"lightbulb\"\n  | \"layers\"\n  | \"link\"\n  | \"check\"\n  | \"file\"\n\ninterface GridItem {\n  icon: IconKey\n  title: string\n  description: string\n  accent?: string\n}\n\ninterface IconGridProps {\n  title?: string\n  items?: GridItem[]\n  columns?: 2 | 3 | 4\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "problem-solution",
@@ -339,7 +430,8 @@
           "durationRange": [4, 10],
           "recommendedBeats": 2,
           "placement": ["first", "middle"],
-          "exampleUse": "Name the friction on the left and the unlocked outcome on the right."
+          "exampleUse": "Name the friction on the left and the unlocked outcome on the right.",
+          "propContract": "interface ProblemSolutionProps {\n  problem: string\n  solution: string\n  problemLabel?: string\n  solutionLabel?: string\n  problemColor?: string\n  solutionColor?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "progress-bars",
@@ -355,7 +447,8 @@
           "durationRange": [3, 8],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Show progress toward a goal, not arbitrary decoration."
+          "exampleUse": "Show progress toward a goal, not arbitrary decoration.",
+          "propContract": "interface ProgressBarItem {\n  label: string\n  value: number\n  color?: string\n}\n\ninterface ProgressBarsProps {\n  title?: string\n  items: ProgressBarItem[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "quote",
@@ -371,7 +464,25 @@
           "durationRange": [3, 8],
           "recommendedBeats": 1,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use a quote to shift from proof to interpretation."
+          "exampleUse": "Use a quote to shift from proof to interpretation.",
+          "propContract": "interface QuoteProps {\n  text: string\n  author?: string\n  role?: string\n  avatarUrl?: string\n  accentColor?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
+        },
+        {
+          "componentId": "spectrum",
+          "composition": "ClaudeCodeTutorial",
+          "description": "Custom scene: spectrum",
+          "narrativeRoles": ["custom"],
+          "bestFor": ["specialized visual explanation"],
+          "avoidWhen": ["an existing registered scene already expresses the idea"],
+          "textLimits": {
+            "maxVisibleWords": 28,
+            "maxWordsPerSecond": 4
+          },
+          "durationRange": [3, 10],
+          "recommendedBeats": 2,
+          "placement": ["middle"],
+          "exampleUse": "Use only when the narrative needs a visual pattern not covered by built-in scenes.",
+          "propContract": "interface SpectrumProps {\n  title?: string\n  value?: string\n  caption?: string\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "split-screen",
@@ -387,7 +498,8 @@
           "durationRange": [4, 12],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Keep each side symmetrical and reveal the contrast quickly."
+          "exampleUse": "Keep each side symmetrical and reveal the contrast quickly.",
+          "propContract": "interface PanelConfig {\n  label: string\n  icon?: \"check\" | \"cross\" | \"folder\" | \"user\" | \"code\"\n  items: string[]\n  accent?: string\n}\n\ninterface SplitScreenProps {\n  title?: string\n  left?: PanelConfig\n  right?: PanelConfig\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "stat-reveal",
@@ -403,7 +515,8 @@
           "durationRange": [2, 6],
           "recommendedBeats": 1,
           "placement": ["first", "middle", "near-end"],
-          "exampleUse": "Reveal the stat after setting the baseline."
+          "exampleUse": "Reveal the stat after setting the baseline.",
+          "propContract": "interface StatRevealProps {\n  value: number\n  suffix?: string\n  prefix?: string\n  label?: string\n  sublabel?: string\n  showBar?: boolean\n  barPercent?: number\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "timeline",
@@ -419,7 +532,8 @@
           "durationRange": [4, 12],
           "recommendedBeats": 3,
           "placement": ["middle"],
-          "exampleUse": "Use to show how a process evolves over time."
+          "exampleUse": "Use to show how a process evolves over time.",
+          "propContract": "interface TimelineItem {\n  date: string\n  text: string\n  status?: \"past\" | \"current\" | \"future\"\n}\n\ninterface TimelineProps {\n  title?: string\n  items: TimelineItem[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "media-card",
@@ -435,7 +549,8 @@
           "durationRange": [3, 8],
           "recommendedBeats": 2,
           "placement": ["middle"],
-          "exampleUse": "Use one concrete visual instead of explaining abstractly."
+          "exampleUse": "Use one concrete visual instead of explaining abstractly.",
+          "propContract": "interface MediaCardProps {\n  imageSrc?: string\n  imageAlt?: string\n  title: string\n  description?: string\n  cta?: string\n  layout?: \"image-left\" | \"image-right\" | \"image-top\"\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "logo-wall",
@@ -451,7 +566,8 @@
           "durationRange": [2, 6],
           "recommendedBeats": 1,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use to show ecosystem breadth, then immediately make a point."
+          "exampleUse": "Use to show ecosystem breadth, then immediately make a point.",
+          "propContract": "interface LogoItem {\n  src?: string\n  label?: string\n}\n\ninterface LogoWallProps {\n  title?: string\n  items: LogoItem[]\n  columns?: 3 | 4 | 6\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "two-column-text",
@@ -467,7 +583,8 @@
           "durationRange": [3, 8],
           "recommendedBeats": 2,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use columns for contrast, not as a way to fit more text."
+          "exampleUse": "Use columns for contrast, not as a way to fit more text.",
+          "propContract": "interface ColumnContent {\n  title: string\n  body: string\n}\n\ninterface TwoColumnTextProps {\n  title?: string\n  left: ColumnContent\n  right: ColumnContent\n  timing?: Timing\n  beats?: Beat[]\n}"
         },
         {
           "componentId": "step-list",
@@ -483,7 +600,8 @@
           "durationRange": [4, 10],
           "recommendedBeats": 3,
           "placement": ["middle", "near-end"],
-          "exampleUse": "Use verbs at the start of every step."
+          "exampleUse": "Use verbs at the start of every step.",
+          "propContract": "interface Step {\n  title: string\n  description?: string\n  status?: \"completed\" | \"current\" | \"pending\"\n}\n\ninterface StepListProps {\n  title?: string\n  steps: Step[]\n  timing?: Timing\n  beats?: Beat[]\n}"
         }
       ]
     },

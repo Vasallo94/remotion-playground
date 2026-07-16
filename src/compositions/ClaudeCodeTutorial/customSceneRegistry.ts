@@ -16,6 +16,7 @@ import { ClapperboardScene } from "./scenes/custom/ClapperboardScene"
 import { CodeBlockScene } from "./scenes/custom/CodeBlockScene"
 import { CodeDiffScene } from "./scenes/custom/CodeDiffScene"
 import { ComparisonTableScene } from "./scenes/custom/ComparisonTableScene"
+import { ComposedScene } from "./scenes/custom/ComposedScene"
 import { CountdownScene } from "./scenes/custom/CountdownScene"
 import { CrewCreditsScene } from "./scenes/custom/CrewCreditsScene"
 import { EtalonScene } from "./scenes/custom/EtalonScene"
@@ -33,6 +34,7 @@ import { StatRevealScene } from "./scenes/custom/StatRevealScene"
 import { StepListScene } from "./scenes/custom/StepListScene"
 import { TimelineScene } from "./scenes/custom/TimelineScene"
 import { TwoColumnTextScene } from "./scenes/custom/TwoColumnTextScene"
+import { VisualProgramScene } from "./scenes/custom/VisualProgramScene"
 
 export const customSceneRegistry: Record<string, FC<Record<string, unknown>>> = {
   "annotated-image": AnnotatedImageScene,
@@ -48,6 +50,7 @@ export const customSceneRegistry: Record<string, FC<Record<string, unknown>>> = 
   "code-block": CodeBlockScene,
   "code-diff": CodeDiffScene,
   "comparison-table": ComparisonTableScene,
+  "composed-scene": ComposedScene,
   countdown: CountdownScene,
   "crew-credits": CrewCreditsScene,
   etalon: EtalonScene,
@@ -65,4 +68,5 @@ export const customSceneRegistry: Record<string, FC<Record<string, unknown>>> = 
   "logo-wall": LogoWallScene,
   "two-column-text": TwoColumnTextScene,
   "step-list": StepListScene,
+  "visual-program": VisualProgramScene,
 }

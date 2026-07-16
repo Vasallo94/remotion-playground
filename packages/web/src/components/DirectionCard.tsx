@@ -22,6 +22,7 @@ function directionSceneTitle(scene: Record<string, unknown>): string {
     asString(scene.title) ||
     asString(visual?.textOverlay) ||
     asString(visual?.layout) ||
+    asString(scene.sceneId) ||
     asString(scene.id) ||
     "-"
   )
@@ -33,6 +34,8 @@ function visualSummary(scene: Record<string, unknown>): string {
     joinParts([
       asString(scene.type),
       asString(scene.componentId),
+      asString(scene.technicalIntent),
+      asString(scene.visualContract),
       asString(visual?.layout),
       asString(visual?.textOverlay),
       asString(visual?.motion),

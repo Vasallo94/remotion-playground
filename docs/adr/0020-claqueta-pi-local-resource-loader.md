@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted; legacy prompt-loading clause superseded by ADR 0022
 
 ## Context
 
@@ -36,12 +36,12 @@ Claqueta already owns a curated set of skills and prompt templates under `packag
 
 ## Decision
 
-Choose Option 2. `packages/agent-pi` now builds a curated local resource manifest and feeds it to `DefaultResourceLoader` with default discovery disabled (`noExtensions`, `noSkills`, `noPromptTemplates`, `noThemes`, `noContextFiles`). The loader only reads Claqueta-owned skills and prompt templates from this repository, and it reports missing expected resources as diagnostics.
+Choose Option 2. `packages/agent-pi` now builds a curated local resource manifest and feeds it to `DefaultResourceLoader` with default discovery disabled (`noExtensions`, `noSkills`, `noPromptTemplates`, `noThemes`, `noContextFiles`). The loader only reads explicitly curated Claqueta-owned resources from this repository, and it reports missing expected resources as diagnostics. ADR 0022 later removed wholesale discovery of `packages/agent/prompts`: Pi specialist prompts are now curated and loaded explicitly by each runner.
 
 ## Consequences
 
 - The agent runtime stays deterministic across machines.
 - Global `~/.pi` resources no longer influence Claqueta behavior.
 - Required skills (`scene-catalog`, `video-best-practices`, `scene-timing-guide`, `gemini-tts`, `sound-engineer`) and optional ones (`remotion-director`, `brand-guidelines`) are tracked explicitly.
-- Prompt templates remain available from `packages/agent/prompts` without enabling unrelated global prompts.
+- Legacy prompt templates are not exposed to Pi; specialist runners load topic-neutral role prompts explicitly (ADR 0022).
 - Any future resource additions must be added to the curated manifest and covered by tests.

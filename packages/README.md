@@ -35,6 +35,17 @@ CLAQUETA_PI_MODEL=anthropic/claude-sonnet-4-5 pnpm --filter @remotion-platform/a
 
 The Pi runtime listens on `http://127.0.0.1:3200` and exposes `/api/pi/chat`, `/api/pi/resume` and `/api/pi/events/:threadId`.
 
+Run the live isolated-specialist smoke tests with the currently configured Pi credentials/model routing:
+
+```bash
+CLAQUETA_PI_MODEL_AUDIO_PLAN=openai-codex/gpt-5.4-mini pnpm --filter @remotion-platform/agent-pi smoke:audio-planner
+CLAQUETA_PI_MODEL_RESEARCH=openai-codex/gpt-5.4 pnpm --filter @remotion-platform/agent-pi smoke:researcher
+CLAQUETA_PI_MODEL_NARRATIVE=openai-codex/gpt-5.4 pnpm --filter @remotion-platform/agent-pi smoke:copywriter
+CLAQUETA_PI_MODEL_DIRECTION=openai-codex/gpt-5.4 pnpm --filter @remotion-platform/agent-pi smoke:director
+```
+
+All smoke topics are intentionally unrelated to software so they also verify that role behavior remains topic-neutral.
+
 ### Terminal 3: Web frontend
 
 ```bash

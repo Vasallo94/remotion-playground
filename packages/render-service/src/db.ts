@@ -21,11 +21,21 @@ db.exec(`
     output_path TEXT,
     file_size INTEGER,
     thread_id TEXT,
+    idempotency_key TEXT,
+    request_hash TEXT,
     error TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     completed_at TEXT
   )
 `)
+const jobColumns = new Set(
+  (db.prepare("PRAGMA table_info(jobs)").all() as Array<{ name: string }>).map((row) => row.name),
+)
+if (!jobColumns.has("idempotency_key")) db.exec("ALTER TABLE jobs ADD COLUMN idempotency_key TEXT")
+if (!jobColumns.has("request_hash")) db.exec("ALTER TABLE jobs ADD COLUMN request_hash TEXT")
+db.exec(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_idempotency_key ON jobs(idempotency_key) WHERE idempotency_key IS NOT NULL",
+)
 
 export interface Job {
   id: string
@@ -37,14 +47,16 @@ export interface Job {
   output_path: string | null
   file_size: number | null
   thread_id: string | null
+  idempotency_key: string | null
+  request_hash: string | null
   error: string | null
   created_at: string
   completed_at: string | null
 }
 
 const insertStmt = db.prepare(`
-  INSERT INTO jobs (id, config_id, title, composition, status, thread_id)
-  VALUES (@id, @config_id, @title, @composition, @status, @thread_id)
+  INSERT INTO jobs (id, config_id, title, composition, status, thread_id, idempotency_key, request_hash)
+  VALUES (@id, @config_id, @title, @composition, @status, @thread_id, @idempotency_key, @request_hash)
 `)
 
 const updateStmt = db.prepare(`
@@ -58,6 +70,7 @@ const getStmt = db.prepare("SELECT * FROM jobs WHERE id = ?")
 const listStmt = db.prepare("SELECT * FROM jobs ORDER BY created_at DESC LIMIT ? OFFSET ?")
 const countStmt = db.prepare("SELECT COUNT(*) as total FROM jobs")
 const getByConfigIdStmt = db.prepare("SELECT * FROM jobs WHERE config_id = ? ORDER BY created_at DESC LIMIT 1")
+const getByIdempotencyKeyStmt = db.prepare("SELECT * FROM jobs WHERE idempotency_key = ?")
 
 export function insertJob(job: {
   id: string
@@ -66,6 +79,8 @@ export function insertJob(job: {
   composition?: string
   status?: string
   thread_id?: string
+  idempotency_key?: string
+  request_hash?: string
 }): void {
   insertStmt.run({
     id: job.id,
@@ -74,6 +89,8 @@ export function insertJob(job: {
     composition: job.composition ?? "ProductShort",
     status: job.status ?? "validating",
     thread_id: job.thread_id ?? null,
+    idempotency_key: job.idempotency_key ?? null,
+    request_hash: job.request_hash ?? null,
   })
 }
 
@@ -100,6 +117,10 @@ export function getJob(id: string): Job | undefined {
 
 export function getJobByConfigId(configId: string): Job | undefined {
   return getByConfigIdStmt.get(configId) as Job | undefined
+}
+
+export function getJobByIdempotencyKey(key: string): Job | undefined {
+  return getByIdempotencyKeyStmt.get(key) as Job | undefined
 }
 
 export function listJobs(limit = 20, offset = 0): { jobs: Job[]; total: number } {

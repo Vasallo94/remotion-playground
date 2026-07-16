@@ -26,6 +26,7 @@ const CHECKPOINT_TYPE_MAP: Record<string, CheckpointType> = {
   target_selection_checkpoint: "target_selection",
   revision_plan_checkpoint: "revision_plan",
   variant_plan_checkpoint: "variant_plan",
+  candidate_promotion_checkpoint: "candidate_promotion",
 }
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,8 @@ export interface VideoStreamReturn {
   submit: (message: string) => void
   /** Resume from an interrupt with a decision payload. */
   resume: (decision: Record<string, unknown>) => void
+  /** Explicitly retry the current failed parent-owned action when supported. */
+  retry: () => void
   /** Switch to a different thread (or null to start fresh). */
   switchThread: (newThreadId: string | null) => void
   /** Add an enrichment (video result, system notice). */
@@ -193,6 +196,8 @@ export function useVideoStream(options: UseVideoStreamOptions = {}): VideoStream
     [stream, checkpointType, interruptValue, addEnrichment],
   )
 
+  const retry = useCallback(() => {}, [])
+
   // ----- Thread switching -----
   const switchThread = useCallback(
     (newThreadId: string | null) => {
@@ -221,6 +226,7 @@ export function useVideoStream(options: UseVideoStreamOptions = {}): VideoStream
     // Actions
     submit,
     resume,
+    retry,
     switchThread,
     addEnrichment,
     clearEnrichments,

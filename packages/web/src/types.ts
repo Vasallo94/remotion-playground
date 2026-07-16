@@ -11,6 +11,7 @@ export type CheckpointType =
   | "revision_plan"
   | "variant_plan"
   | "generic"
+  | "candidate_promotion"
   | "video_result"
 
 export interface ChatMessage {
@@ -183,8 +184,10 @@ export interface SoundChartData {
 
 export interface AudioChartData {
   type: "audio_chart_checkpoint"
-  voiceover?: Record<string, unknown>
+  voiceover?: Record<string, unknown> | null
   sound_design?: Record<string, unknown>
+  soundDesign?: Record<string, unknown>
+  warnings?: string[]
 }
 
 export interface ValidationReportData {
@@ -201,10 +204,13 @@ export type PipelineStageId =
   | "copywriter"
   | "escaleta_review"
   | "director"
+  | "scene_qa"
+  | "audio_planner"
   | "sound_engineer"
   | "sound_review"
   | "scene_creator"
   | "validator"
+  | "reviewer"
   | "rendering"
   | "done"
   | "error"

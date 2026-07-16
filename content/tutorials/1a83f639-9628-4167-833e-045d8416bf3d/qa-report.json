@@ -1,0 +1,25 @@
+{
+  "summary": "Single-scene callout matches the approved concept and stays focused, but the text contrast appears slightly muted for a 3-second read window. Overall close to approval with a minor readability refinement recommended.",
+  "scenes": [
+    {
+      "index": 0,
+      "verdict": "MINOR_FIX",
+      "score": 8.8,
+      "observations": [
+        "Exactly one callout scene is present, matching the approved one-scene structure.",
+        "The callout is centered on an atom-dark background with no visible watermark, subtitles, logo, mascot, or extra UI.",
+        "The visible sentence matches the approved takeaway and remains concise enough for the 3-second duration.",
+        "Layout is clean and uncluttered, with generous surrounding space and no clipping."
+      ],
+      "issues": [
+        {
+          "category": "legibility",
+          "severity": "minor",
+          "observation": "Text contrast looks somewhat muted against the dark card, which may slightly slow scanning in a short 3-second playback window.",
+          "evidence": "The callout body text appears medium gray on a dark gray panel rather than strongly high-contrast white or near-white.",
+          "suggestedChange": "Increase text brightness/weight or lighten the card-text contrast so the sentence reads more immediately at 1280x720."
+        }
+      ]
+    }
+  ]
+}

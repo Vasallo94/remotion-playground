@@ -13,6 +13,7 @@ const AGENT_ICONS: Record<string, string> = {
   researcher: "⊙",
   copywriter: "✦",
   director: "◎",
+  scene_qa: "◌",
   audio_planner: "♪",
   voice_generator: "◉",
   scene_creator: "⬡",

@@ -1,0 +1,47 @@
+{
+  "id": "1a83f639-9628-4167-833e-045d8416bf3d",
+  "title": "Idempotency: Same Visible Result",
+  "description": "Explain to software engineers that repeating the same operation produces the same externally visible result.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "composition": "ClaudeCodeTutorial",
+  "signature": null,
+  "watermark": false,
+  "theme": "atom-dark",
+  "scenes": [
+    {
+      "type": "callout",
+      "text": "Idempotent: repeat the operation, same externally visible result.",
+      "position": "center",
+      "background": "solid",
+      "durationInSeconds": 3,
+      "timing": {
+        "tailHoldMs": 3000,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "beat-01",
+          "startMs": 0,
+          "endMs": 3000,
+          "visual": "Single centered callout remains on screen for the full duration.",
+          "animation": "Static hold, or minimal built-in settle only if declaratively supported.",
+          "emphasis": "high"
+        }
+      ]
+    }
+  ],
+  "voiceover": null,
+  "soundDesign": {
+    "enabled": false,
+    "musicBed": null,
+    "sfx": []
+  },
+  "subtitles": {
+    "enabled": false
+  },
+  "transition": {
+    "type": "none"
+  }
+}

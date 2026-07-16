@@ -1,5 +1,6 @@
 packages:
   - packages/agent-pi
+  - packages/scene-contracts
   - packages/render-service
   - packages/web
 allowBuilds:

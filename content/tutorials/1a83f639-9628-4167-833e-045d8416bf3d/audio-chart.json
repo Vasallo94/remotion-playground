@@ -1,0 +1,13 @@
+{
+  "voiceover": null,
+  "soundDesign": {
+    "enabled": false,
+    "musicBed": null,
+    "sfx": []
+  },
+  "warnings": [
+    "Voiceover disabled per approved script and audio preferences.",
+    "Music bed and sound effects disabled per approved script and audio preferences.",
+    "If runtime defaults subtitles or watermark to enabled, they must be explicitly disabled in the final render config."
+  ]
+}

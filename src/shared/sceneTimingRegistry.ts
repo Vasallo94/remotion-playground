@@ -30,6 +30,7 @@ export const sceneTimingRegistry: Record<string, SceneTimingEntry> = {
   "code-block": { visualReadyMs: 150 },
   "code-diff": { visualReadyMs: 150 },
   "comparison-table": { visualReadyMs: 100 },
+  "composed-scene": { visualReadyMs: 120 },
   countdown: { visualReadyMs: 100 },
   "file-explorer": { visualReadyMs: 150 },
   "flow-diagram": { visualReadyMs: 150 },
@@ -44,6 +45,7 @@ export const sceneTimingRegistry: Record<string, SceneTimingEntry> = {
   "step-list": { visualReadyMs: 100 },
   timeline: { visualReadyMs: 100 },
   "two-column-text": { visualReadyMs: 100 },
+  "visual-program": { visualReadyMs: 100 },
 }
 
 export const DEFAULT_VISUAL_READY_MS = 200

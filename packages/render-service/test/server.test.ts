@@ -1,6 +1,7 @@
 import { describe, it, before, after } from "node:test"
 import assert from "node:assert"
 import { app } from "../src/server.js"
+import { insertJob } from "../src/db.js"
 import type { Server } from "http"
 
 let server: Server
@@ -49,10 +50,52 @@ describe("POST /api/validate", () => {
   })
 })
 
+describe("POST /api/render idempotency", () => {
+  it("reuses one existing job and rejects changed input", async () => {
+    const suffix = Date.now().toString()
+    const key = `render:test:${suffix}`
+    const hash = "a".repeat(64)
+    const id = `idempotent-render-${suffix}`
+    insertJob({ id, config_id: "idempotent", idempotency_key: key, request_hash: hash })
+    const reused = await fetch(`${BASE}/api/render`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Idempotency-Key": key, "X-Claqueta-Request-Hash": hash },
+      body: JSON.stringify({ id: "does-not-spawn" }),
+    })
+    assert.equal(reused.status, 200)
+    assert.deepEqual(await reused.json(), { jobId: id, reused: true, status: "validating" })
+
+    const conflict = await fetch(`${BASE}/api/render`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": key,
+        "X-Claqueta-Request-Hash": "b".repeat(64),
+      },
+      body: JSON.stringify({ id: "changed" }),
+    })
+    assert.equal(conflict.status, 409)
+  })
+})
+
 describe("GET /api/render/:id/status", () => {
   it("returns 404 for unknown job", async () => {
     const res = await fetch(`${BASE}/api/render/nonexistent/status`)
     assert.strictEqual(res.status, 404)
+  })
+})
+
+describe("GET /api/render/:id/review", () => {
+  it("rejects unknown jobs", async () => {
+    const res = await fetch(`${BASE}/api/render/unknown-review-job/review`)
+    assert.equal(res.status, 404)
+  })
+
+  it("rejects incomplete jobs", async () => {
+    const id = `incomplete-review-${Date.now()}`
+    insertJob({ id, config_id: "incomplete", title: "Incomplete", composition: "ClaudeCodeTutorial" })
+    const res = await fetch(`${BASE}/api/render/${id}/review`)
+    assert.equal(res.status, 409)
   })
 })
 

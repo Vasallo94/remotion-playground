@@ -2,11 +2,25 @@ import Database from "better-sqlite3"
 import { join } from "node:path"
 import { randomUUID } from "node:crypto"
 import { ensureDirectory, PROJECT_ROOT } from "./paths.js"
+import { ACTION_JOURNAL_SCHEMA_VERSION } from "./actionJournal.js"
 import type {
+  ActionAttemptError,
+  ActionAttemptMutationResult,
+  ActionAttemptRecord,
+  ActionAttemptStatus,
+  ActionKey,
+  ActionName,
   ArtifactKind,
   ArtifactRecord,
+  BeginActionAttemptInput,
+  BeginActionAttemptOptions,
+  BeginActionAttemptResult,
   CheckpointRecord,
+  CompleteActionAttemptInput,
+  FailActionAttemptInput,
+  InputSnapshotFingerprint,
   PiSseEvent,
+  PipelineMode,
   PipelinePlan,
   ThreadRecord,
   ThreadStatus,
@@ -49,6 +63,30 @@ interface PipelinePlanRow {
   updated_at: string
 }
 
+interface ActionAttemptRow {
+  schema_version: 1
+  action_key: string
+  thread_id: string
+  plan_id: string
+  mode: PipelineMode
+  action: string
+  input_fingerprint: string
+  status: ActionAttemptStatus
+  outcome_json: string | null
+  error_json: string | null
+  attempt_count: number
+  started_at: string
+  finished_at: string | null
+  updated_at: string
+  artifact_metadata_json: string | null
+  effect_metadata_json: string | null
+}
+
+export interface ListActionAttemptsOptions {
+  readonly limit?: number
+  readonly status?: ActionAttemptStatus
+}
+
 export interface CreateThreadInput {
   id?: string
   title?: string | null
@@ -65,14 +103,26 @@ export interface SaveArtifactInput<TData = unknown> {
   approved?: boolean
 }
 
+export interface ActionArtifactCommitResult {
+  readonly completion: ActionAttemptMutationResult
+  readonly artifacts: readonly ArtifactRecord[]
+  readonly checkpoint: CheckpointRecord | null
+}
+
 export class AgentPiStore {
   readonly db: Database.Database
 
   constructor(dbPath = join(PROJECT_ROOT, ".generated/claqueta-pi/agent-pi.db")) {
     if (dbPath !== ":memory:") ensureDirectory(join(dbPath, ".."))
     this.db = new Database(dbPath)
-    this.db.pragma("journal_mode = WAL")
-    this.migrate()
+    try {
+      this.db.pragma("foreign_keys = ON")
+      this.db.pragma("journal_mode = WAL")
+      this.migrate()
+    } catch (error) {
+      this.db.close()
+      throw error
+    }
   }
 
   close(): void {
@@ -169,6 +219,219 @@ export class AgentPiStore {
     return this.getPipelinePlan(plan.threadId) ?? plan
   }
 
+  /** Atomically claim an action key before a future parent-owned side effect runs. */
+  beginActionAttempt(
+    input: BeginActionAttemptInput,
+    options: BeginActionAttemptOptions = {},
+  ): BeginActionAttemptResult {
+    this.validateActionAttemptIdentity(input)
+    const transaction = this.db.transaction(() => {
+      const existing = this.readActionAttemptRow(input.threadId, input.actionKey)
+      if (!existing) {
+        this.db
+          .prepare(
+            `INSERT INTO action_attempts (
+               schema_version, action_key, thread_id, plan_id, mode, action, input_fingerprint, status,
+               outcome_json, error_json, attempt_count, started_at, finished_at, updated_at,
+               artifact_metadata_json, effect_metadata_json
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, 'started', NULL, NULL, 1,
+               strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), NULL,
+               strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), ?, ?)`,
+          )
+          .run(
+            ACTION_JOURNAL_SCHEMA_VERSION,
+            input.actionKey,
+            input.threadId,
+            input.planId,
+            input.mode,
+            input.action,
+            input.inputFingerprint,
+            this.serializeOptionalJson(input.artifactMetadata),
+            this.serializeOptionalJson(input.effectMetadata),
+          )
+        return {
+          status: "started" as const,
+          retried: false,
+          record: this.requireActionAttempt(input.threadId, input.actionKey),
+        }
+      }
+
+      const record = this.mapActionAttempt(existing)
+      if (record.inputFingerprint !== input.inputFingerprint) {
+        return { status: "conflict" as const, reason: "input_fingerprint_mismatch" as const, record }
+      }
+      if (record.planId !== input.planId || record.mode !== input.mode || record.action !== input.action) {
+        return { status: "conflict" as const, reason: "action_identity_mismatch" as const, record }
+      }
+      if (record.status === "succeeded") return { status: "succeeded" as const, duplicate: true as const, record }
+      if (record.status === "started") return { status: "in_progress" as const, record }
+      if (!options.retryFailed) return { status: "failed" as const, retryable: true as const, record }
+
+      this.db
+        .prepare(
+          `UPDATE action_attempts
+           SET status = 'started', outcome_json = NULL, error_json = NULL, finished_at = NULL,
+               attempt_count = attempt_count + 1,
+               started_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+               updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+           WHERE thread_id = ? AND action_key = ? AND status = 'failed'`,
+        )
+        .run(input.threadId, input.actionKey)
+      return {
+        status: "started" as const,
+        retried: true,
+        record: this.requireActionAttempt(input.threadId, input.actionKey),
+      }
+    })
+    return transaction.immediate()
+  }
+
+  /** Atomically records the outcome of a claimed action. It never invokes the outcome or its effects. */
+  succeedActionAttempt(input: CompleteActionAttemptInput): ActionAttemptMutationResult {
+    this.validateCompletionInput(input)
+    const transaction = this.db.transaction(() => {
+      const existing = this.readActionAttemptRow(input.threadId, input.actionKey)
+      if (!existing) return { status: "rejected" as const, reason: "not_found" as const }
+      const record = this.mapActionAttempt(existing)
+      if (record.inputFingerprint !== input.inputFingerprint) {
+        return { status: "rejected" as const, reason: "input_fingerprint_mismatch" as const, record }
+      }
+      if (record.attemptCount !== input.attemptCount) {
+        return { status: "rejected" as const, reason: "attempt_count_mismatch" as const, record }
+      }
+      if (record.status === "succeeded") return { status: "succeeded" as const, duplicate: true, record }
+      if (record.status !== "started") return { status: "rejected" as const, reason: "not_started" as const, record }
+
+      const outcomeJson = this.serializeOptionalJson(input.outcome)
+      const artifactMetadataJson = this.serializeOptionalJson(input.artifactMetadata)
+      const effectMetadataJson = this.serializeOptionalJson(input.effectMetadata)
+      this.db
+        .prepare(
+          `UPDATE action_attempts
+           SET status = 'succeeded', outcome_json = ?, error_json = NULL, finished_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+               updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+               artifact_metadata_json = COALESCE(?, artifact_metadata_json),
+               effect_metadata_json = COALESCE(?, effect_metadata_json)
+           WHERE thread_id = ? AND action_key = ? AND status = 'started'`,
+        )
+        .run(outcomeJson, artifactMetadataJson, effectMetadataJson, input.threadId, input.actionKey)
+      return {
+        status: "succeeded" as const,
+        duplicate: false,
+        record: this.requireActionAttempt(input.threadId, input.actionKey),
+      }
+    })
+    return transaction.immediate()
+  }
+
+  /** Atomically persists internal artifacts and the matching action success, eliminating orphan-artifact windows. */
+  succeedActionAttemptWithArtifacts(
+    input: CompleteActionAttemptInput,
+    artifacts: readonly SaveArtifactInput[],
+    checkpoint: CheckpointRecord | null = null,
+    plan: PipelinePlan | null = null,
+  ): ActionArtifactCommitResult {
+    this.validateCompletionInput(input)
+    if (artifacts.some((artifact) => artifact.threadId !== input.threadId)) {
+      throw new Error("Action artifacts must belong to the claimed thread")
+    }
+    const transaction = this.db.transaction(() => {
+      const saved = artifacts.map((artifact) => this.saveArtifact(artifact))
+      if (checkpoint) this.setCheckpoint(input.threadId, checkpoint)
+      if (plan) {
+        if (plan.threadId !== input.threadId) throw new Error("Action plan must belong to the claimed thread")
+        this.savePipelinePlan(plan)
+      }
+      const completion = this.succeedActionAttempt({
+        ...input,
+        artifactMetadata: {
+          artifactIds: saved.map((artifact) => artifact.id),
+          artifacts: saved.map((artifact) => ({
+            id: artifact.id,
+            kind: artifact.kind,
+            version: artifact.version,
+            approved: artifact.approved,
+          })),
+        },
+      })
+      if (completion.status !== "succeeded") {
+        const reason = completion.status === "rejected" ? completion.reason : "unexpected_failure_status"
+        throw new Error(`Atomic action artifact commit was rejected: ${reason}`)
+      }
+      return { completion, artifacts: saved, checkpoint }
+    })
+    return transaction.immediate()
+  }
+
+  /** Atomically records a typed failure. A later begin must opt into the explicit failed-retry policy. */
+  failActionAttempt(input: FailActionAttemptInput): ActionAttemptMutationResult {
+    this.validateFailureInput(input)
+    const transaction = this.db.transaction(() => {
+      const existing = this.readActionAttemptRow(input.threadId, input.actionKey)
+      if (!existing) return { status: "rejected" as const, reason: "not_found" as const }
+      const record = this.mapActionAttempt(existing)
+      if (record.inputFingerprint !== input.inputFingerprint) {
+        return { status: "rejected" as const, reason: "input_fingerprint_mismatch" as const, record }
+      }
+      if (record.attemptCount !== input.attemptCount) {
+        return { status: "rejected" as const, reason: "attempt_count_mismatch" as const, record }
+      }
+      if (record.status === "failed") return { status: "failed" as const, duplicate: true, record }
+      if (record.status === "succeeded")
+        return { status: "rejected" as const, reason: "already_succeeded" as const, record }
+
+      const errorJson = this.serializeOptionalJson(input.error)
+      const artifactMetadataJson = this.serializeOptionalJson(input.artifactMetadata)
+      const effectMetadataJson = this.serializeOptionalJson(input.effectMetadata)
+      this.db
+        .prepare(
+          `UPDATE action_attempts
+           SET status = 'failed', outcome_json = NULL, error_json = ?, finished_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+               updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+               artifact_metadata_json = COALESCE(?, artifact_metadata_json),
+               effect_metadata_json = COALESCE(?, effect_metadata_json)
+           WHERE thread_id = ? AND action_key = ? AND status = 'started'`,
+        )
+        .run(errorJson, artifactMetadataJson, effectMetadataJson, input.threadId, input.actionKey)
+      return {
+        status: "failed" as const,
+        duplicate: false,
+        record: this.requireActionAttempt(input.threadId, input.actionKey),
+      }
+    })
+    return transaction.immediate()
+  }
+
+  readActionAttempt(threadId: string, actionKey: ActionKey): ActionAttemptRecord | null {
+    const row = this.readActionAttemptRow(threadId, actionKey)
+    return row ? this.mapActionAttempt(row) : null
+  }
+
+  getActionAttempt(threadId: string, actionKey: ActionKey): ActionAttemptRecord | null {
+    return this.readActionAttempt(threadId, actionKey)
+  }
+
+  listActionAttempts(threadId: string, options: ListActionAttemptsOptions = {}): ActionAttemptRecord[] {
+    const limit = options.limit ?? 100
+    if (!Number.isInteger(limit) || limit < 1) throw new Error("Action attempt list limit must be a positive integer")
+    const rows = options.status
+      ? (this.db
+          .prepare(
+            `SELECT * FROM action_attempts
+             WHERE thread_id = ? AND status = ?
+             ORDER BY updated_at DESC, action_key ASC LIMIT ?`,
+          )
+          .all(threadId, options.status, limit) as ActionAttemptRow[])
+      : (this.db
+          .prepare(
+            `SELECT * FROM action_attempts
+             WHERE thread_id = ?
+             ORDER BY updated_at DESC, action_key ASC LIMIT ?`,
+          )
+          .all(threadId, limit) as ActionAttemptRow[])
+    return rows.map((row) => this.mapActionAttempt(row))
+  }
+
   saveArtifact<TData = unknown>(input: SaveArtifactInput<TData>): ArtifactRecord<TData> {
     const id = input.id ?? randomUUID()
     const nextVersion = this.nextArtifactVersion(input.threadId, input.kind)
@@ -223,6 +486,128 @@ export class AgentPiStore {
     return rows.map((row) => this.mapEvent(row))
   }
 
+  private readActionAttemptRow(threadId: string, actionKey: ActionKey): ActionAttemptRow | undefined {
+    return this.db
+      .prepare("SELECT * FROM action_attempts WHERE thread_id = ? AND action_key = ?")
+      .get(threadId, actionKey) as ActionAttemptRow | undefined
+  }
+
+  private requireActionAttempt(threadId: string, actionKey: ActionKey): ActionAttemptRecord {
+    const row = this.readActionAttemptRow(threadId, actionKey)
+    if (!row) throw new Error(`Action attempt disappeared: ${threadId}/${actionKey}`)
+    return this.mapActionAttempt(row)
+  }
+
+  private validateActionAttemptIdentity(input: BeginActionAttemptInput): void {
+    for (const [name, value] of [
+      ["action key", input.actionKey],
+      ["thread id", input.threadId],
+      ["plan id", input.planId],
+      ["action", input.action],
+      ["input snapshot fingerprint", input.inputFingerprint],
+    ] as const) {
+      if (typeof value !== "string" || value.trim().length === 0) throw new Error(`Action ${name} must not be empty`)
+    }
+    if (!/^[a-f0-9]{64}$/.test(input.inputFingerprint))
+      throw new Error("Input snapshot fingerprint must be a lowercase SHA-256 digest")
+  }
+
+  private validateCompletionInput(input: CompleteActionAttemptInput): void {
+    if (typeof input.threadId !== "string" || input.threadId.trim().length === 0)
+      throw new Error("Action thread id must not be empty")
+    if (typeof input.actionKey !== "string" || input.actionKey.trim().length === 0)
+      throw new Error("Action key must not be empty")
+    if (typeof input.inputFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(input.inputFingerprint))
+      throw new Error("Input snapshot fingerprint must be a lowercase SHA-256 digest")
+    if (!Number.isInteger(input.attemptCount) || input.attemptCount < 1)
+      throw new Error("Action attempt count must be a positive integer")
+  }
+
+  private validateFailureInput(input: FailActionAttemptInput): void {
+    this.validateCompletionInput(input)
+    if (
+      !input.error ||
+      typeof input.error.code !== "string" ||
+      input.error.code.trim().length === 0 ||
+      typeof input.error.message !== "string" ||
+      input.error.message.trim().length === 0
+    ) {
+      throw new Error("Action failure error requires a code and message")
+    }
+  }
+
+  private serializeOptionalJson(value: unknown): string | null {
+    if (value === undefined) return null
+    return JSON.stringify(value, (_key, item: unknown) => {
+      if (typeof item === "number" && !Number.isFinite(item))
+        throw new Error("Action journal JSON must not contain non-finite numbers")
+      if (["undefined", "function", "symbol", "bigint"].includes(typeof item))
+        throw new Error("Action journal values must be JSON-serializable without data loss")
+      return item
+    })
+  }
+
+  private parseActionJson(value: string, column: string, row: ActionAttemptRow): unknown {
+    try {
+      return JSON.parse(value) as unknown
+    } catch (error) {
+      throw new Error(`Corrupt action journal JSON in ${column} for ${row.thread_id}/${row.action_key}`, {
+        cause: error,
+      })
+    }
+  }
+
+  private mapActionAttempt(row: ActionAttemptRow): ActionAttemptRecord {
+    if (row.schema_version !== ACTION_JOURNAL_SCHEMA_VERSION)
+      throw new Error(`Unsupported action journal row schema version: ${String(row.schema_version)}`)
+    if (!Number.isInteger(row.attempt_count) || row.attempt_count < 1)
+      throw new Error(`Corrupt action journal attempt count for ${row.thread_id}/${row.action_key}`)
+    if (!["started", "succeeded", "failed"].includes(row.status))
+      throw new Error(`Corrupt action journal status for ${row.thread_id}/${row.action_key}`)
+    if (
+      (row.status === "started" &&
+        (row.outcome_json !== null || row.error_json !== null || row.finished_at !== null)) ||
+      (row.status === "succeeded" && (row.error_json !== null || row.finished_at === null)) ||
+      (row.status === "failed" && (row.outcome_json !== null || row.error_json === null || row.finished_at === null))
+    ) {
+      throw new Error(`Inconsistent action journal lifecycle for ${row.thread_id}/${row.action_key}`)
+    }
+    const parsedError = row.error_json === null ? null : this.parseActionJson(row.error_json, "error_json", row)
+    if (
+      parsedError !== null &&
+      (typeof parsedError !== "object" ||
+        Array.isArray(parsedError) ||
+        typeof (parsedError as Record<string, unknown>).code !== "string" ||
+        typeof (parsedError as Record<string, unknown>).message !== "string")
+    ) {
+      throw new Error(`Corrupt action journal error for ${row.thread_id}/${row.action_key}`)
+    }
+    return {
+      schemaVersion: row.schema_version,
+      actionKey: row.action_key as ActionKey,
+      threadId: row.thread_id,
+      planId: row.plan_id,
+      mode: row.mode,
+      action: row.action as ActionName,
+      inputFingerprint: row.input_fingerprint as InputSnapshotFingerprint,
+      status: row.status,
+      outcome: row.outcome_json === null ? null : this.parseActionJson(row.outcome_json, "outcome_json", row),
+      error: parsedError as ActionAttemptError | null,
+      attemptCount: row.attempt_count,
+      startedAt: row.started_at,
+      finishedAt: row.finished_at,
+      updatedAt: row.updated_at,
+      artifactMetadata:
+        row.artifact_metadata_json === null
+          ? null
+          : this.parseActionJson(row.artifact_metadata_json, "artifact_metadata_json", row),
+      effectMetadata:
+        row.effect_metadata_json === null
+          ? null
+          : this.parseActionJson(row.effect_metadata_json, "effect_metadata_json", row),
+    }
+  }
+
   private nextArtifactVersion(threadId: string, kind: ArtifactKind): number {
     const row = this.db
       .prepare("SELECT COALESCE(MAX(version), 0) + 1 as version FROM artifacts WHERE thread_id = ? AND kind = ?")
@@ -271,59 +656,152 @@ export class AgentPiStore {
   }
 
   private migrate(): void {
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS threads (
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        status TEXT NOT NULL DEFAULT 'idle',
-        pi_session_id TEXT,
-        pi_session_file TEXT,
-        checkpoint_json TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
+    const migrate = this.db.transaction(() => {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS threads (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          status TEXT NOT NULL DEFAULT 'idle',
+          pi_session_id TEXT,
+          pi_session_file TEXT,
+          checkpoint_json TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
-      CREATE TABLE IF NOT EXISTS artifacts (
-        id TEXT PRIMARY KEY,
-        thread_id TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        version INTEGER NOT NULL,
-        path TEXT,
-        data_json TEXT NOT NULL,
-        approved INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
-      );
+        CREATE TABLE IF NOT EXISTS artifacts (
+          id TEXT PRIMARY KEY,
+          thread_id TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          path TEXT,
+          data_json TEXT NOT NULL,
+          approved INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+        );
 
-      CREATE INDEX IF NOT EXISTS idx_artifacts_thread_kind ON artifacts(thread_id, kind, version);
+        CREATE INDEX IF NOT EXISTS idx_artifacts_thread_kind ON artifacts(thread_id, kind, version);
 
-      CREATE TABLE IF NOT EXISTS events (
-        seq INTEGER PRIMARY KEY AUTOINCREMENT,
-        thread_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        payload_json TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
-      );
+        CREATE TABLE IF NOT EXISTS events (
+          seq INTEGER PRIMARY KEY AUTOINCREMENT,
+          thread_id TEXT NOT NULL,
+          type TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+        );
 
-      CREATE INDEX IF NOT EXISTS idx_events_thread_seq ON events(thread_id, seq);
+        CREATE INDEX IF NOT EXISTS idx_events_thread_seq ON events(thread_id, seq);
 
-      CREATE TABLE IF NOT EXISTS pipeline_plans (
-        thread_id TEXT PRIMARY KEY,
-        plan_json TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
-      );
+        CREATE TABLE IF NOT EXISTS pipeline_plans (
+          thread_id TEXT PRIMARY KEY,
+          plan_json TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+        );
 
-      CREATE TABLE IF NOT EXISTS pi_sessions (
-        thread_id TEXT PRIMARY KEY,
-        pi_session_id TEXT NOT NULL,
-        pi_session_file TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-        FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
-      );
-    `)
+        CREATE TABLE IF NOT EXISTS pi_sessions (
+          thread_id TEXT PRIMARY KEY,
+          pi_session_id TEXT NOT NULL,
+          pi_session_file TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS schema_migrations (
+          version INTEGER PRIMARY KEY,
+          applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        );
+      `)
+
+      const currentVersion = this.db
+        .prepare("SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations")
+        .get() as { version: number }
+      if (currentVersion.version > ACTION_JOURNAL_SCHEMA_VERSION) {
+        throw new Error(
+          `Database schema version ${currentVersion.version} is newer than supported version ${ACTION_JOURNAL_SCHEMA_VERSION}`,
+        )
+      }
+      if (currentVersion.version < ACTION_JOURNAL_SCHEMA_VERSION) {
+        this.db.exec(`
+          CREATE TABLE IF NOT EXISTS action_attempts (
+            schema_version INTEGER NOT NULL DEFAULT ${ACTION_JOURNAL_SCHEMA_VERSION} CHECK(schema_version = ${ACTION_JOURNAL_SCHEMA_VERSION}),
+            action_key TEXT NOT NULL CHECK(length(trim(action_key)) > 0),
+            thread_id TEXT NOT NULL,
+            plan_id TEXT NOT NULL CHECK(length(trim(plan_id)) > 0),
+            mode TEXT NOT NULL CHECK(mode IN (
+              'new_video', 'revise_existing', 'render_only', 'recover_failed_render',
+              'audit_only', 'variant', 'asset_regeneration', 'question'
+            )),
+            action TEXT NOT NULL CHECK(length(trim(action)) > 0),
+            input_fingerprint TEXT NOT NULL CHECK(length(trim(input_fingerprint)) > 0),
+            status TEXT NOT NULL CHECK(status IN ('started', 'succeeded', 'failed')),
+            outcome_json TEXT,
+            error_json TEXT,
+            attempt_count INTEGER NOT NULL DEFAULT 1 CHECK(attempt_count > 0),
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            updated_at TEXT NOT NULL,
+            artifact_metadata_json TEXT,
+            effect_metadata_json TEXT,
+            PRIMARY KEY(thread_id, action_key),
+            FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_action_attempts_thread_updated
+            ON action_attempts(thread_id, updated_at DESC);
+          CREATE INDEX IF NOT EXISTS idx_action_attempts_thread_status
+            ON action_attempts(thread_id, status, updated_at DESC);
+        `)
+        this.validateActionJournalSchema()
+        this.db.prepare("INSERT INTO schema_migrations (version) VALUES (?)").run(ACTION_JOURNAL_SCHEMA_VERSION)
+      } else {
+        this.validateActionJournalSchema()
+      }
+    })
+    migrate.immediate()
+  }
+
+  private validateActionJournalSchema(): void {
+    const columns = this.db.prepare("PRAGMA table_info(action_attempts)").all() as Array<{
+      name: string
+      notnull: 0 | 1
+      pk: number
+    }>
+    const requiredColumns = [
+      "schema_version",
+      "action_key",
+      "thread_id",
+      "plan_id",
+      "mode",
+      "action",
+      "input_fingerprint",
+      "status",
+      "outcome_json",
+      "error_json",
+      "attempt_count",
+      "started_at",
+      "finished_at",
+      "updated_at",
+      "artifact_metadata_json",
+      "effect_metadata_json",
+    ]
+    if (columns.length === 0 || requiredColumns.some((name) => !columns.some((column) => column.name === name))) {
+      throw new Error("Action journal migration is marked applied but action_attempts has an incompatible schema")
+    }
+    const primaryKey = columns
+      .filter((column) => column.pk > 0)
+      .sort((left, right) => left.pk - right.pk)
+      .map((column) => column.name)
+    if (primaryKey.join(",") !== "thread_id,action_key") {
+      throw new Error("Action journal requires a (thread_id, action_key) primary key")
+    }
+    const invalidVersion = this.db
+      .prepare("SELECT 1 FROM action_attempts WHERE schema_version <> ? LIMIT 1")
+      .get(ACTION_JOURNAL_SCHEMA_VERSION)
+    if (invalidVersion) throw new Error("Action journal contains rows with an unsupported schema version")
   }
 }

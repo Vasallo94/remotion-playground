@@ -5,6 +5,8 @@
 
 import fs from "fs"
 import path from "path"
+import ts from "typescript"
+import { COMPOSED_SCENE_CONTRACT_SUMMARY } from "@claqueta/scene-contracts"
 
 // Import the registry
 import { customSceneRegistry } from "../src/compositions/ClaudeCodeTutorial/customSceneRegistry"
@@ -24,6 +26,7 @@ interface SceneCatalogEntry {
   recommendedBeats: number
   placement: string[]
   exampleUse: string
+  propContract?: string
 }
 
 interface BuiltinSceneCatalogEntry {
@@ -306,6 +309,25 @@ const customSceneMetadata: Record<string, Omit<SceneCatalogEntry, "componentId" 
     recommendedBeats: 3,
     placement: ["middle", "near-end"],
     exampleUse: "Use rows as decision criteria, not as marketing copy.",
+  },
+  "composed-scene": {
+    description:
+      "Bounded declarative composition of semantic text, groups, cards, metrics, lists, progress, dividers, and spacing.",
+    narrativeRoles: ["explanation", "comparison", "summary", "data", "mental-model"],
+    bestFor: [
+      "novel layouts assembled from standard primitives",
+      "mixed metrics and explanatory cards",
+      "topic-neutral structured visuals",
+    ],
+    avoidWhen: [
+      "a registered purpose-built scene already fits",
+      "the visual requires executable behavior, arbitrary CSS, network data, or unsupported media",
+    ],
+    textLimits: { maxVisibleWords: 220, maxWordsPerSecond: 4 },
+    durationRange: [3, 18],
+    recommendedBeats: 3,
+    placement: ["first", "middle", "near-end", "last"],
+    exampleUse: "Compose a two-column metric-and-explanation layout without creating a new React component.",
   },
   countdown: {
     description: "Countdown animation.",
@@ -684,6 +706,41 @@ const templates: VideoTemplate[] = [
   },
 ]
 
+function componentClassName(componentId: string): string {
+  return `${componentId
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("")}Scene`
+}
+
+function extractPropContract(componentId: string): string | undefined {
+  if (componentId === "composed-scene") return JSON.stringify(COMPOSED_SCENE_CONTRACT_SUMMARY)
+  const className = componentClassName(componentId)
+  const sourcePath = path.resolve(
+    __dirname,
+    "..",
+    "src",
+    "compositions",
+    "ClaudeCodeTutorial",
+    "scenes",
+    "custom",
+    `${className}.tsx`,
+  )
+  if (!fs.existsSync(sourcePath)) return undefined
+  const sourceText = fs.readFileSync(sourcePath, "utf-8")
+  const source = ts.createSourceFile(sourcePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const preferredName = `${className.replace(/Scene$/, "")}Props`
+  const declarations = source.statements.filter(
+    (statement): statement is ts.InterfaceDeclaration | ts.TypeAliasDeclaration =>
+      ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement),
+  )
+  const contract =
+    declarations.find((declaration) => declaration.name.text === preferredName) ??
+    declarations.find((declaration) => declaration.name.text.endsWith("Props"))
+  if (!contract) return undefined
+  return declarations.map((declaration) => declaration.getText(source)).join("\n\n")
+}
+
 const catalog = {
   generatedAt: new Date().toISOString(),
   scenes: {
@@ -699,11 +756,15 @@ const catalog = {
 }
 
 for (const componentId of Object.keys(customSceneRegistry)) {
+  // Slice 4 will publish an exact parent-projected recipe contract. Until then this
+  // trusted renderer must not be offered as ordinary model-authored catalog reuse.
+  if (componentId === "visual-program") continue
   const metadata = customSceneMetadata[componentId] ?? fallbackCustomMetadata(componentId)
   catalog.scenes.tutorial.custom.push({
     componentId,
     composition: "ClaudeCodeTutorial",
     ...metadata,
+    propContract: extractPropContract(componentId),
   })
 }
 

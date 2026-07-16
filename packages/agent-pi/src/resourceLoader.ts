@@ -4,10 +4,8 @@ import { DefaultResourceLoader, type ResourceDiagnostic, type ResourceLoader } f
 import { PROJECT_ROOT } from "./paths.js"
 import { CLAQUETA_PI_SYSTEM_PROMPT } from "./prompt.js"
 
-type ClaquetaResourceKind = "skill" | "prompt"
-
 interface ClaquetaResourceSpec {
-  kind: ClaquetaResourceKind
+  kind: "skill"
   name: string
   path: string
   required: boolean
@@ -22,8 +20,6 @@ const CLAQUETA_SKILL_SPECS: ClaquetaResourceSpec[] = [
   { kind: "skill", name: "gemini-tts", path: "packages/agent/skills/gemini-tts", required: true },
   { kind: "skill", name: "sound-engineer", path: "packages/agent/skills/sound-engineer", required: true },
 ]
-
-const CLAQUETA_PROMPT_DIR = "packages/agent/prompts"
 
 export interface ClaquetaResourceDiscovery {
   skillPaths: string[]
@@ -53,26 +49,17 @@ export function discoverClaquetaResources(root: string = PROJECT_ROOT): Claqueta
     }
   }
 
-  const promptPaths: string[] = []
-  const promptDiagnostics: ResourceDiagnostic[] = []
-  const promptPath = resolve(root, CLAQUETA_PROMPT_DIR)
-  if (existsSync(promptPath)) {
-    promptPaths.push(promptPath)
-  } else {
-    promptDiagnostics.push({
-      type: "error",
-      message: "Missing Claqueta prompt templates directory",
-      path: promptPath,
-    })
-  }
-
-  return { skillPaths, promptPaths, skillDiagnostics, promptDiagnostics }
+  // Legacy DeepAgents prompts mix role contracts with topic/brand assumptions
+  // and unavailable Python tools. Pi specialists load curated role prompts
+  // explicitly instead of exposing that directory as prompt templates.
+  return { skillPaths, promptPaths: [], skillDiagnostics, promptDiagnostics: [] }
 }
 
 /**
  * Deterministic local-only loader: no global extensions, themes, or context
- * files. We only load Claqueta-owned skills/prompts from this repository so the
- * agent-pi runtime does not inherit whatever happens to live in ~/.pi.
+ * files. We load curated Claqueta-owned skills from this repository; specialist
+ * prompts are loaded explicitly by their runners instead of exposing legacy
+ * DeepAgents prompts or inheriting resources from ~/.pi.
  */
 export function createClaquetaResourceLoader(): ResourceLoader {
   const discovery = discoverClaquetaResources()
@@ -86,7 +73,6 @@ export function createClaquetaResourceLoader(): ResourceLoader {
     noThemes: true,
     noContextFiles: true,
     additionalSkillPaths: discovery.skillPaths,
-    additionalPromptTemplatePaths: discovery.promptPaths,
     systemPrompt: CLAQUETA_PI_SYSTEM_PROMPT,
     skillsOverride: (base) => ({
       skills: base.skills,

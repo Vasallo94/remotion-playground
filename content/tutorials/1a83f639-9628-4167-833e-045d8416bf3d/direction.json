@@ -1,0 +1,41 @@
+{
+  "title": "Idempotency: Same Visible Result",
+  "scenes": [
+    {
+      "sceneId": "scene-01-callout",
+      "sceneType": "callout",
+      "title": "Core definition",
+      "technicalIntent": "Use exactly one registered built-in callout scene to deliver the entire concept in 3 seconds. Keep rendering deterministic at 30 fps, theme atom-dark, no voiceover, no subtitles, no music, no SFX, no branding, no mascot, no signature, and no watermark. Prefer static hold; allow only a subtle declarative text settle if the built-in scene supports it without custom animation logic.",
+      "visualContract": "Full-screen built-in callout on atom-dark with centered large high-contrast text: “Idempotent: repeat the operation, same externally visible result.” Solid background, generous padding, immediate readability at 1280x720, 16:9 web playback. No additional visual elements.",
+      "timing": {
+        "tailHoldMs": 3000,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "beat-01",
+          "startMs": 0,
+          "endMs": 3000,
+          "visual": "Single centered callout remains on screen for the full duration.",
+          "animation": "Static hold, or minimal built-in settle only if declaratively supported.",
+          "emphasis": "high"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Text must remain large and centered enough to read comfortably within a 3-second window.",
+        "Do not introduce any extra scene, subtitle track, watermark, logo, mascot, signature, music, or sound effects.",
+        "Avoid dense wording or secondary copy that would reduce legibility or violate the one-takeaway goal."
+      ]
+    }
+  ],
+  "warnings": [
+    "The approved script requires exactly one built-in callout scene; adding any other scene type would violate the brief.",
+    "Keep the visible text to the approved single sentence to preserve scan speed and reviewability.",
+    "If the runtime defaults watermark or subtitles to enabled, they must be explicitly disabled in the final render config."
+  ],
+  "risks": [
+    "A built-in callout implementation with overly aggressive default motion could reduce readability; prefer static presentation.",
+    "Any default branding or publication-side overlay would fail the no-branding/no-watermark requirement."
+  ]
+}

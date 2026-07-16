@@ -7,22 +7,29 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "smoke:audio-planner": "tsx scripts/smoke-audio-planner.ts",
+    "smoke:researcher": "tsx scripts/smoke-researcher.ts",
+    "smoke:scene-composer": "tsx scripts/smoke-scene-composer.ts",
+    "smoke:copywriter": "tsx scripts/smoke-copywriter.ts",
+    "smoke:director": "tsx scripts/smoke-director.ts"
   },
   "dependencies": {
+    "@claqueta/scene-contracts": "workspace:*",
     "@earendil-works/pi-ai": "^0.80.3",
     "@earendil-works/pi-coding-agent": "^0.80.3",
     "better-sqlite3": "^12.9.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "typebox": "^1.1.38"
+    "prettier": "3.8.1",
+    "typebox": "^1.1.38",
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
-    "tsx": "^4.21.0",
-    "typescript": "5.9.3"
+    "tsx": "^4.21.0"
   }
 }

@@ -3,13 +3,13 @@
 
 import { bundle } from "@remotion/bundler"
 import { renderMedia, selectComposition } from "@remotion/renderer"
-import { enableTailwind } from "@remotion/tailwind-v4"
 import { createHash } from "crypto"
 import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, rmSync, statSync } from "fs"
 import { execFileSync } from "child_process"
 import path from "path"
 import type { Beat, Timing } from "../src/utils/direction"
 import { hasExplicitDirection } from "../src/utils/direction"
+import { enableTailwindAndWorkspaceTypeScript } from "./remotion-webpack-override"
 
 const configPath = process.argv[2]
 if (!configPath) {
@@ -61,7 +61,7 @@ async function getCachedOrBundle(): Promise<string> {
   console.log("📦 Bundling composition...")
   const bundleLocation = await bundle({
     entryPoint: path.resolve("./src/index.ts"),
-    webpackOverride: enableTailwind,
+    webpackOverride: enableTailwindAndWorkspaceTypeScript,
   })
 
   mkdirSync(CACHE_DIR, { recursive: true })

@@ -3,10 +3,10 @@
 
 import { bundle } from "@remotion/bundler"
 import { renderStill, selectComposition } from "@remotion/renderer"
-import { enableTailwind } from "@remotion/tailwind-v4"
 import { createHash } from "crypto"
 import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, statSync } from "fs"
 import path from "path"
+import { enableTailwindAndWorkspaceTypeScript } from "./remotion-webpack-override"
 
 const configPath = process.argv[2]
 const outputDir = process.argv[3]
@@ -44,7 +44,7 @@ async function getCachedOrBundle(): Promise<string> {
 
   const bundleLocation = await bundle({
     entryPoint: path.resolve("./src/index.ts"),
-    webpackOverride: enableTailwind,
+    webpackOverride: enableTailwindAndWorkspaceTypeScript,
   })
 
   mkdirSync(CACHE_DIR, { recursive: true })

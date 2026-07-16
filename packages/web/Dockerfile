@@ -11,8 +11,9 @@ WORKDIR /app
 # Copy workspace root manifests + web package
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/web/package.json packages/web/
-# Render-service workspace must exist for pnpm to resolve all workspaces
 COPY packages/render-service/package.json packages/render-service/
+COPY packages/agent-pi/package.json packages/agent-pi/
+COPY packages/scene-contracts/package.json packages/scene-contracts/
 
 RUN pnpm install --frozen-lockfile
 

@@ -64,7 +64,7 @@ export const ClaudeCodeTutorial: React.FC<TutorialConfig> = (config) => {
   const subtitlesEnabled = config.subtitles?.enabled !== false && Boolean(config.voiceover?.enabled)
   const sceneTimestamps = useTimestamps(config.id, config.scenes.length, subtitlesEnabled)
   const signature = config.signature ?? null
-  const showLogoWatermark = !theme.mascot.show && !signature
+  const showLogoWatermark = config.watermark !== false && !theme.mascot.show && !signature
 
   return (
     <CompositionShell

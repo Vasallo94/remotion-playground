@@ -33,6 +33,7 @@ Video autoreferencial que documente el proceso de crear este mismo repositorio d
 
 ### Infraestructura
 
+- **Pi RPC isolation pilot** — evaluate replacing in-process specialist `AgentSession`s with one-shot `pi --mode rpc --no-session` subprocesses behind the existing runner interfaces. Start with the director, use repository-owned narrow output extensions, compare structured-output parity, multimodal support, cancellation, crash containment, cold-start latency, event fidelity, and auth/model routing before deciding on broader migration. Priority high pending Enrique's confirmation. (2026-07-13)
 - **Catálogo web** — página estática (Astro o similar) que liste todos los vídeos generados con preview y metadatos del config.
 - **CI/CD render** — GitHub Action que renderice automáticamente cuando se pushea un config.json nuevo.
 - **Modo revisión sobre vídeo existente para DeepAgent** — evitar que una nueva sesión trate una petición de mejora como vídeo nuevo. El orquestador debería resolver primero el artifact objetivo (`content/**/config.json` o job renderizado), cargarlo en `/pipeline/config.json`, declarar modo `modify`, y limitar el grafo a agentes de parche (`director`, `audio_planner`, `sound_engineer`, `validator`, `render`) según el tipo de cambio. Prioridad por confirmar. (2026-05-11)

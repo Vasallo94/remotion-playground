@@ -1,0 +1,31 @@
+{
+  "jobId": "91112efe-81fb-4972-af39-76afd8bcfab9",
+  "configId": "1a83f639-9628-4167-833e-045d8416bf3d",
+  "reviewedAt": "2026-07-13T09:52:35.112Z",
+  "passed": true,
+  "fileSizeBytes": 144669,
+  "duration": {
+    "actualSeconds": 3.050667,
+    "expectedSeconds": 3,
+    "deltaSeconds": 0.050666999999999796,
+    "toleranceSeconds": 0.5,
+    "matches": true
+  },
+  "video": {
+    "present": true,
+    "codec": "h264",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "dimensionsMatch": true,
+    "fpsMatches": true
+  },
+  "audio": {
+    "expected": false,
+    "present": true,
+    "codec": "aac",
+    "matchesExpectation": true
+  },
+  "failures": [],
+  "warnings": ["Audio stream is present although the approved config does not require audio"]
+}

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "test": "tsx --test test/server.test.ts"
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "better-sqlite3": "^12.9.0",

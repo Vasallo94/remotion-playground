@@ -16,6 +16,7 @@ const defaultTutorialProps = {
   fps: 30 as const,
   width: 1280 as const,
   height: 720 as const,
+  watermark: true,
   theme: "betelgeuse" as const,
   scenes: [
     {
@@ -87,6 +88,7 @@ export const RemotionRoot: React.FC = () => {
           fps: 30 as const,
           width: 1080 as const,
           height: 1920 as const,
+          watermark: true,
           theme: "h-alpha" as const,
           scenes: [
             {

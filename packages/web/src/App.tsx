@@ -23,7 +23,7 @@ import {
   type StoredThread,
 } from "./lib/threadStorage"
 
-const AGENT_RUNTIME = import.meta.env.VITE_AGENT_RUNTIME ?? "langgraph"
+const AGENT_RUNTIME = import.meta.env.VITE_AGENT_RUNTIME ?? "pi"
 const useSelectedVideoStream = AGENT_RUNTIME === "pi" ? usePiVideoStream : useVideoStream
 
 // ---------------------------------------------------------------------------
@@ -290,6 +290,7 @@ export default function App() {
       revision_plan: createCheckpointHandlers(),
       variant_plan: createCheckpointHandlers(),
       generic: createCheckpointHandlers(),
+      candidate_promotion: createCheckpointHandlers(),
     }),
     [createCheckpointHandlers],
   )
@@ -329,7 +330,7 @@ export default function App() {
             isLoading={videoStream.isLoading}
             loadingLabel={loadingLabel}
             error={videoStream.error}
-            onRetry={() => {}}
+            onRetry={videoStream.retry}
             isRendering={rendering}
           />
           <InputBar

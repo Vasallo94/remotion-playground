@@ -10,7 +10,17 @@ import {
   projectRelativePath,
   slugify,
 } from "./paths.js"
-import type { ArtifactKind, ArtifactRecord, DirectionDraft, ScriptDraft } from "./types.js"
+import type {
+  ArtifactKind,
+  ArtifactRecord,
+  AudioChart,
+  DirectionDraft,
+  ProductionBriefArtifact,
+  RenderReviewReport,
+  SceneCompositionResult,
+  SceneQaReport,
+  ScriptDraft,
+} from "./types.js"
 
 export function writeJsonArtifact<TData>(
   store: AgentPiStore,
@@ -32,6 +42,22 @@ export function writeJsonArtifact<TData>(
     data,
     approved,
   })
+}
+
+export function writeProductionBriefArtifact(
+  store: AgentPiStore,
+  threadId: string,
+  artifact: ProductionBriefArtifact,
+  approved = false,
+): ArtifactRecord<ProductionBriefArtifact> {
+  return writeJsonArtifact(
+    store,
+    threadId,
+    "production_brief",
+    nextDraftFileName(store, threadId, "production_brief"),
+    artifact,
+    approved,
+  )
 }
 
 export function writeTextArtifact(
@@ -118,8 +144,32 @@ export function createCheckpointPayload(
   artifact: ArtifactRecord<DirectionDraft>,
 ): Record<string, unknown>
 export function createCheckpointPayload(
-  type: "script_checkpoint" | "direction_checkpoint",
-  artifact: ArtifactRecord<ScriptDraft | DirectionDraft>,
+  type: "capability_gap_checkpoint",
+  artifact: ArtifactRecord<SceneCompositionResult>,
+): Record<string, unknown>
+export function createCheckpointPayload(
+  type: "final_review_checkpoint",
+  artifact: ArtifactRecord<RenderReviewReport>,
+): Record<string, unknown>
+export function createCheckpointPayload(
+  type: "qa_report_checkpoint",
+  artifact: ArtifactRecord<SceneQaReport>,
+): Record<string, unknown>
+export function createCheckpointPayload(
+  type: "audio_chart_checkpoint",
+  artifact: ArtifactRecord<AudioChart>,
+): Record<string, unknown>
+export function createCheckpointPayload(
+  type:
+    | "script_checkpoint"
+    | "direction_checkpoint"
+    | "audio_chart_checkpoint"
+    | "qa_report_checkpoint"
+    | "final_review_checkpoint"
+    | "capability_gap_checkpoint",
+  artifact: ArtifactRecord<
+    ScriptDraft | DirectionDraft | AudioChart | SceneQaReport | RenderReviewReport | SceneCompositionResult
+  >,
 ): Record<string, unknown> {
   const data = artifact.data
   return {

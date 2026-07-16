@@ -40,13 +40,27 @@ export function getDownloadUrl(jobId: string): string {
   return `${RENDER_URL}/api/render/${jobId}/download`
 }
 
-export async function sendPiChat(message: string, threadId?: string | null): Promise<{ threadId: string }> {
+export async function sendPiChat(
+  message: string,
+  threadId?: string | null,
+  mode: "new_video" = "new_video",
+): Promise<{ threadId: string }> {
   const res = await fetch(`${AGENT_PI_URL}/api/pi/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, threadId }),
+    body: JSON.stringify({ message, threadId, mode }),
   })
   if (!res.ok) throw new Error(`Pi chat failed: ${await res.text()}`)
+  return res.json()
+}
+
+export async function retryPiAction(threadId: string): Promise<{ threadId: string; accepted: boolean }> {
+  const res = await fetch(`${AGENT_PI_URL}/api/pi/retry`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ threadId }),
+  })
+  if (!res.ok) throw new Error(`Pi retry failed: ${await res.text()}`)
   return res.json()
 }
 

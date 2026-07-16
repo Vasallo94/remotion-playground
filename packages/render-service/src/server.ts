@@ -5,7 +5,16 @@ import { spawn } from "child_process"
 import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, readFileSync } from "fs"
 import { pathToFileURL } from "url"
 import path from "path"
-import { insertJob, updateJob, getJob, getJobByConfigId, listJobs, recoverOrphanedJobs } from "./db"
+import {
+  insertJob,
+  updateJob,
+  getJob,
+  getJobByConfigId,
+  getJobByIdempotencyKey,
+  listJobs,
+  recoverOrphanedJobs,
+} from "./db"
+import { reviewRenderFiles } from "./renderReview"
 
 const app = express()
 app.use(cors())
@@ -112,7 +121,11 @@ app.post("/api/validate", (req, res) => {
 app.post("/api/render-stills", (req, res) => {
   const configJson = typeof req.body === "string" ? req.body : JSON.stringify(req.body)
   const config = typeof req.body === "string" ? JSON.parse(req.body) : req.body
-  const configId = (config.id as string | undefined) ?? `stills-${randomUUID()}`
+  const requestedConfigId = config.id
+  const configId =
+    typeof requestedConfigId === "string" && /^[a-z0-9][a-z0-9-]{0,99}$/.test(requestedConfigId)
+      ? requestedConfigId
+      : `stills-${randomUUID()}`
 
   const stillsDir = path.join(JOBS_DIR, `stills-${configId}-${Date.now()}`)
   mkdirSync(stillsDir, { recursive: true })
@@ -120,10 +133,11 @@ app.post("/api/render-stills", (req, res) => {
   const configPath = path.join(stillsDir, "config.json")
   writeFileSync(configPath, configJson)
 
-  const child = spawn("npx", ["tsx", "scripts/render-scene-stills.ts", configPath, stillsDir], {
-    cwd: ROOT_DIR,
-    shell: true,
-  })
+  const child = spawn(
+    process.execPath,
+    [path.join(ROOT_DIR, "node_modules/tsx/dist/cli.mjs"), "scripts/render-scene-stills.ts", configPath, stillsDir],
+    { cwd: ROOT_DIR, shell: false },
+  )
 
   let stdout = ""
   let stderr = ""
@@ -147,6 +161,23 @@ app.post("/api/render-stills", (req, res) => {
 
 // POST /api/render — submit render job
 app.post("/api/render", (req, res) => {
+  const idempotencyKey = req.header("Idempotency-Key")
+  const requestHash = req.header("X-Claqueta-Request-Hash")
+  if (idempotencyKey) {
+    if (!/^[A-Za-z0-9:._-]{8,300}$/.test(idempotencyKey) || !/^[a-f0-9]{64}$/.test(requestHash ?? "")) {
+      res.status(400).json({ error: "Invalid render idempotency key or request hash" })
+      return
+    }
+    const existing = getJobByIdempotencyKey(idempotencyKey)
+    if (existing) {
+      if (existing.request_hash !== requestHash) {
+        res.status(409).json({ error: "Render idempotency key was reused with different input" })
+        return
+      }
+      res.json({ jobId: existing.id, reused: true, status: existing.status })
+      return
+    }
+  }
   const jobId = randomUUID()
   const jobDir = path.join(JOBS_DIR, jobId)
   mkdirSync(jobDir, { recursive: true })
@@ -160,6 +191,8 @@ app.post("/api/render", (req, res) => {
     title: req.body.title || req.body.headline || req.body.product,
     composition: req.body.composition || "ClaudeCodeTutorial",
     thread_id: req.body._threadId,
+    idempotency_key: idempotencyKey,
+    request_hash: requestHash,
   })
 
   // First validate
@@ -315,6 +348,26 @@ app.get("/api/render/:id/status", (req, res) => {
 function resolveOutputPath(jobId: string): string {
   return path.join(JOBS_DIR, jobId, "output.mp4")
 }
+
+// GET /api/render/:id/review — deterministic metadata review for a completed known job
+app.get("/api/render/:id/review", async (req, res) => {
+  const job = getJob(req.params.id)
+  if (!job) {
+    res.status(404).json({ error: "Job not found" })
+    return
+  }
+  if (job.status !== "done") {
+    res.status(409).json({ error: `Render is not complete (${job.status})` })
+    return
+  }
+  const jobDir = path.join(JOBS_DIR, req.params.id)
+  try {
+    const report = await reviewRenderFiles(path.join(jobDir, "config.json"), path.join(jobDir, "output.mp4"))
+    res.json({ jobId: job.id, configId: job.config_id, reviewedAt: new Date().toISOString(), ...report })
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) })
+  }
+})
 
 // GET /api/render/:id/stream — serve video for in-browser playback (supports Range)
 app.get("/api/render/:id/stream", (req, res) => {

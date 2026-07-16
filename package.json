@@ -7,6 +7,7 @@
   "private": true,
   "packageManager": "pnpm@11.1.1",
   "dependencies": {
+    "@claqueta/scene-contracts": "workspace:*",
     "@google/genai": "^1.52.0",
     "@remotion/cli": "4.0.457",
     "@remotion/google-fonts": "4.0.457",
@@ -47,6 +48,7 @@
     "lint": "eslint src && tsc",
     "prepare": "husky",
     "generate:catalog": "tsx scripts/generate-scene-catalog.ts",
+    "integrity:manifest": "tsx scripts/integrity-manifest.ts",
     "agent:dev": "cd packages/agent && uv run langgraph dev --config langgraph.json --port 2024 --allow-blocking",
     "test:visual": "vitest run src/__tests__/visual.test.ts",
     "test:visual:update": "cross-env UPDATE_SNAPSHOTS=1 vitest run src/__tests__/visual.test.ts"

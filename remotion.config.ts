@@ -6,8 +6,8 @@
  */
 
 import { Config } from "@remotion/cli/config"
-import { enableTailwind } from "@remotion/tailwind-v4"
+import { enableTailwindAndWorkspaceTypeScript } from "./scripts/remotion-webpack-override"
 
 Config.setVideoImageFormat("jpeg")
 Config.setOverwriteOutput(true)
-Config.overrideWebpackConfig(enableTailwind)
+Config.overrideWebpackConfig(enableTailwindAndWorkspaceTypeScript)
