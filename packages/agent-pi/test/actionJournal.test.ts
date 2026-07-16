@@ -69,6 +69,7 @@ describe("durable parent-owned action journal", () => {
     store = new AgentPiStore(":memory:")
     store.createThread({ id: "thread-1" })
     const attempt = input()
+    assert.equal(store.getThread("thread-1")?.revision, 0)
 
     assert.deepEqual(store.beginActionAttempt(attempt), {
       status: "started",
@@ -77,9 +78,11 @@ describe("durable parent-owned action journal", () => {
     })
     assert.equal(store.beginActionAttempt(attempt).status, "in_progress")
     store.succeedActionAttempt(completion(attempt, { value: 42 }))
+    const revisionAfterSuccess = store.getThread("thread-1")?.revision
     const duplicate = store.beginActionAttempt(attempt)
     assert.equal(duplicate.status, "succeeded")
     if (duplicate.status === "succeeded") assert.deepEqual(duplicate.record.outcome, { value: 42 })
+    assert.equal(store.getThread("thread-1")?.revision, revisionAfterSuccess)
   })
 
   it("rejects a conflicting fingerprint for one thread and action key", () => {

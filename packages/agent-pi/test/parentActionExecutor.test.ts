@@ -70,6 +70,7 @@ test("commits internal artifacts and action success in one SQLite transaction", 
     idempotencyKey: actionIdempotencyKey(snapshot, "run_copywriter"),
   }
   store.createThread({ id: snapshot.plan!.threadId })
+  const revisionBefore = store.getThread(snapshot.plan!.threadId)?.revision ?? -1
   try {
     const result = await new ParentActionExecutor(adapter(store)).execute({
       snapshot,
@@ -90,6 +91,7 @@ test("commits internal artifacts and action success in one SQLite transaction", 
     assert.equal(result.committedArtifacts.length, 1)
     assert.equal(store.listArtifacts(snapshot.plan!.threadId).length, 1)
     assert.equal(store.listActionAttempts(snapshot.plan!.threadId)[0]?.status, "succeeded")
+    assert.equal(store.getThread(snapshot.plan!.threadId)?.revision, revisionBefore + 2)
   } finally {
     store.close()
     cleanupTestDirectory(root)

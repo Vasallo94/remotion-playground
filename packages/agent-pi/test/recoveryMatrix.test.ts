@@ -326,7 +326,7 @@ describe("SSE replay and interrupted action boundaries", () => {
       store.listEvents(thread.id, second.seq).map((event) => event.seq),
       [],
     )
-    assert.equal(encodeSseEvent(second).startsWith(`id: ${second.seq}\nevent: checkpoint`), true)
+    assert.equal(encodeSseEvent(second).startsWith(`id: t2:${second.seq}\nevent: checkpoint`), true)
 
     const received: number[] = []
     const unsubscribe = eventBus.subscribe(thread.id, (event) => received.push(event.seq!))

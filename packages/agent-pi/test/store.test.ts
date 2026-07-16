@@ -16,6 +16,8 @@ describe("AgentPiStore", () => {
     const found = store.getThread(thread.id)
     assert.equal(found?.title, "Tutorial /compact")
     assert.equal(found?.status, "idle")
+    assert.equal(found?.revision, 0)
+    assert.equal(found?.lastEventSeq, 0)
   })
 
   it("versions artifacts per kind", () => {
@@ -30,6 +32,50 @@ describe("AgentPiStore", () => {
     assert.equal(config.version, 1)
     assert.equal(second.approved, true)
     assert.equal(store.listArtifacts(thread.id).length, 3)
+  })
+
+  it("commits artifacts, checkpoint, plan, and action success in one revision", () => {
+    store = new AgentPiStore(":memory:")
+    const thread = store.createThread({ id: "composite-revision-thread" })
+    const input = {
+      actionKey: "composite-action" as never,
+      threadId: thread.id,
+      inputFingerprint: "a".repeat(64) as never,
+      attemptCount: 1,
+    }
+    const begun = store.beginActionAttempt({
+      ...input,
+      planId: "plan-1" as never,
+      mode: "new_video",
+      action: "run_copywriter" as never,
+    })
+    assert.equal(begun.status, "started")
+    const revisionBefore = store.getThread(thread.id)?.revision
+    const plan = {
+      schemaVersion: 1,
+      id: "plan-1",
+      threadId: thread.id,
+      mode: "new_video" as const,
+      goal: "Commit one composite mutation",
+      status: "active" as const,
+      steps: [],
+      decisions: [],
+      currentStepId: null,
+      progress: { completed: 0, total: 0 },
+      createdAt: "2026-07-02T00:00:00.000Z",
+      updatedAt: "2026-07-02T00:00:00.000Z",
+    }
+    const committed = store.succeedActionAttemptWithArtifacts(
+      input,
+      [{ threadId: thread.id, kind: "script", data: { title: "Atomic" } }],
+      { id: "checkpoint-1", type: "script_checkpoint", artifactId: null, payload: { approved: true } },
+      plan,
+    )
+    assert.equal(committed.completion.status, "succeeded")
+    assert.equal(store.listArtifacts(thread.id).length, 1)
+    assert.equal(store.getThread(thread.id)?.checkpoint?.id, "checkpoint-1")
+    assert.equal(store.getPipelinePlan(thread.id)?.id, "plan-1")
+    assert.equal(store.getThread(thread.id)?.revision, (revisionBefore ?? -1) + 1)
   })
 
   it("stores checkpoints on the thread", () => {
@@ -93,6 +139,9 @@ describe("AgentPiStore", () => {
 
     assert.equal(first.seq, 1)
     assert.equal(second.seq, 2)
+    assert.equal(first.revision, 1)
+    assert.equal(second.revision, 2)
+    assert.equal(store.getThread(thread.id)?.lastEventSeq, 2)
     assert.deepEqual(
       store.listEvents(thread.id, 1).map((event) => event.type),
       ["agent_end"],

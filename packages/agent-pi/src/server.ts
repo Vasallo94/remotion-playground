@@ -3,9 +3,10 @@ import express from "express"
 import cors from "cors"
 import { pathToFileURL } from "node:url"
 import { AgentPiStore } from "./store.js"
-import { ThreadEventBus, encodeSseEvent } from "./events.js"
+import { ThreadEventBus, encodeSseEvent, parseEventCursor } from "./events.js"
 import { AgentRuntimeManager } from "./session.js"
 import { isPipelineMode } from "./coordinator.js"
+import type { PiSseEvent } from "./types.js"
 
 export function createApp(runtime = createDefaultRuntime()) {
   const app = express()
@@ -117,6 +118,20 @@ export function createApp(runtime = createDefaultRuntime()) {
       return
     }
 
+    let replayAfter = 0
+    try {
+      if (req.query.since !== undefined && typeof req.query.since !== "string") {
+        throw new Error("Event cursor must be a single value")
+      }
+      const cursor = parseEventCursor(req.header("last-event-id") ?? req.query.since)
+      if (cursor.kind === "v2") replayAfter = cursor.seq
+      if (cursor.kind === "legacy") replayAfter = runtime.store.legacyEventIdToThreadSeq(threadId, cursor.eventId)
+      if (replayAfter > thread.lastEventSeq) throw new Error("Event cursor is in the future")
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) })
+      return
+    }
+
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
@@ -124,15 +139,33 @@ export function createApp(runtime = createDefaultRuntime()) {
       "X-Accel-Buffering": "no",
     })
 
-    const lastEventId = Number(req.header("last-event-id") ?? req.query.since ?? 0)
-    const replayAfter = Number.isFinite(lastEventId) ? lastEventId : 0
-    for (const event of runtime.store.listEvents(threadId, replayAfter)) {
-      res.write(encodeSseEvent(event))
-    }
-
+    const buffered: PiSseEvent[] = []
+    let replaying = true
     const unsubscribe = runtime.eventBus.subscribe(threadId, (event) => {
-      res.write(encodeSseEvent(event))
+      if (replaying) buffered.push(event)
+      else res.write(encodeSseEvent(event))
     })
+    const highWater = runtime.store.getThread(threadId)?.lastEventSeq ?? 0
+    const replayed = new Set<number>()
+    let after = replayAfter
+    while (after < highWater) {
+      const page = runtime.store.listEvents(threadId, after, 500).filter((event) => event.seq <= highWater)
+      if (page.length === 0) break
+      for (const event of page) {
+        if (!replayed.has(event.seq)) {
+          replayed.add(event.seq)
+          res.write(encodeSseEvent(event))
+        }
+      }
+      after = page[page.length - 1]!.seq
+    }
+    replaying = false
+    for (const event of buffered.sort((left, right) => left.seq - right.seq)) {
+      if (event.seq > replayAfter && !replayed.has(event.seq)) {
+        replayed.add(event.seq)
+        res.write(encodeSseEvent(event))
+      }
+    }
 
     const keepAlive = setInterval(() => {
       res.write(`: keep-alive ${Date.now()}\n\n`)

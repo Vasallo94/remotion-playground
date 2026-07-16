@@ -218,12 +218,16 @@ export type PiSseEventType =
   | "error"
   | "agent_end"
 
-export interface PiSseEvent<TPayload = unknown> {
-  seq?: number
+export interface PiSseEventDraft<TPayload = unknown> {
   threadId: string
   type: PiSseEventType
   payload: TPayload
-  createdAt?: string
+}
+
+export interface PiSseEvent<TPayload = unknown> extends PiSseEventDraft<TPayload> {
+  seq: number
+  revision: number
+  createdAt: string
 }
 
 export interface ThreadRecord {
@@ -233,6 +237,8 @@ export interface ThreadRecord {
   piSessionId: string | null
   piSessionFile: string | null
   checkpoint: CheckpointRecord | null
+  revision: number
+  lastEventSeq: number
   createdAt: string
   updatedAt: string
 }

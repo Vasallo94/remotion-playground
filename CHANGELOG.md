@@ -7,6 +7,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Thread revision and transactional event outbox kernel** — adds schema v2 migration/backfill, monotonic per-thread revisions, contiguous local event cursors, atomic outbox persistence, commit-only at-least-once delivery, restart draining, and paginated replay without changing `session.ts`.
+
 - **Visual Program v1 foundation** — adds strict bounded temporal/relational contracts, canonical Node-only compilation and SHA-256 lineage, deterministic timelines/layout/assertions, immutable renderer props, a trusted Remotion renderer, topic-neutral cascade fixtures, and real event-boundary still evidence while reserving the component from model-authored catalog reuse.
 - **Normal executable-scene path frozen** — approved CP4 capability gaps now block `scene_creation` and never derive candidate generation or source promotion; existing Tier 2 policy/quarantine/promotion remains isolated for legacy recovery.
 - **Visual Program harness architecture** — ADRs 0045–0047 and the readiness spec replace normal model-authored TSX with a bounded temporal/relational IR, trusted renderer, immutable target-scoped recipes, separate CP4/adoption authority, exact decision receipts, and revisioned frontend state.
