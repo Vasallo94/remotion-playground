@@ -75,6 +75,7 @@ async function main() {
   const scaleFactor = totalConfigFrames > 0 ? composition.durationInFrames / totalConfigFrames : 1
 
   const scenes: Array<{ index: number; path: string; frameNumber: number }> = []
+  const evidence: Array<{ index: number; evidenceIndex: number; atMs: number; path: string; frameNumber: number }> = []
   let cumulativeConfigFrames = 0
 
   for (let i = 0; i < configScenes.length; i++) {
@@ -98,10 +99,38 @@ async function main() {
     })
 
     scenes.push({ index: i, path: outputPath, frameNumber: clampedFrame })
+
+    const visualTimeline =
+      (scene as { componentId?: unknown }).componentId === "visual-program" &&
+      Array.isArray((scene as { props?: { compiled?: { timeline?: unknown } } }).props?.compiled?.timeline)
+        ? ((scene as { props: { compiled: { timeline: Array<{ atMs?: unknown }> } } }).props.compiled.timeline ?? [])
+        : []
+    for (let evidenceIndex = 0; evidenceIndex < visualTimeline.length; evidenceIndex += 1) {
+      const atMs = visualTimeline[evidenceIndex]?.atMs
+      if (typeof atMs !== "number" || !Number.isFinite(atMs) || atMs < 0) {
+        throw new Error(`Visual Program scene ${i} has invalid timeline evidence at index ${evidenceIndex}`)
+      }
+      const localFrame = Math.round((atMs / 1000) * fps)
+      const evidenceFrame = Math.min(
+        scaledStart + Math.floor(localFrame * scaleFactor),
+        scaledStart + Math.max(0, scaledDuration - 1),
+        composition.durationInFrames - 1,
+      )
+      const evidencePath = path.join(outputDir, `scene-${i}-evidence-${evidenceIndex}.png`)
+      await renderStill({
+        composition,
+        serveUrl: bundleLocation,
+        output: evidencePath,
+        inputProps: config,
+        frame: evidenceFrame,
+        imageFormat: "png",
+      })
+      evidence.push({ index: i, evidenceIndex, atMs, path: evidencePath, frameNumber: evidenceFrame })
+    }
     cumulativeConfigFrames += durationFrames
   }
 
-  const manifest = { scenes }
+  const manifest = { scenes, evidence }
   process.stdout.write(JSON.stringify(manifest))
 }
 

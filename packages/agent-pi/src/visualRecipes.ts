@@ -182,7 +182,7 @@ export function projectActiveVisualRecipes(
     scenes[entry.sceneIndex] = {
       type: "custom",
       componentId: "visual-program",
-      props: clone(recipe.compiled),
+      props: { compiled: clone(recipe.compiled) },
       durationInSeconds: recipe.compiled.durationMs / 1000,
     }
   }

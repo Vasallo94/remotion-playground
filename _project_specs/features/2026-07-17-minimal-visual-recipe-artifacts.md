@@ -28,7 +28,7 @@ The parent config action consumes only the latest approved active set with appro
 - [x] Evidence covers frame zero, every source event boundary, and the terminal duration.
 - [x] Active recipe sets are target-scoped, append-only through artifact versions, and deterministic.
 - [x] Re-activating the same recipe is idempotent; replacing one scene changes the set digest.
-- [x] Config projection replaces only the activated scene indexes with `visual-program` custom scenes and exact compiled props.
+- [x] Config projection replaces only the activated scene indexes with `visual-program` custom scenes and exact renderer props shaped as `{ compiled }`.
 - [x] Later activation cannot mutate a previously projected config.
 - [x] No source, registry, catalog, or TSX write occurs.
 - [x] Parent config generation rejects invalid, unapproved, stale, or cross-target active recipe data.
@@ -40,6 +40,8 @@ The parent config action consumes only the latest approved active set with appro
 - [x] Recipe rejection requires feedback, activates nothing, and derives a new proposal artifact version.
 - [x] Recipe approval verifies exact evidence and target scope before writing the active set.
 - [x] Adoption clears only the resolved script capability and returns to script approval.
+- [x] Concurrent duplicate approval after runtime restart creates one active set and one resolved script version.
+- [x] Scene QA receives every compiled Visual Program timeline boundary in exact order and rejects incomplete manifests.
 
 ## Tests
 

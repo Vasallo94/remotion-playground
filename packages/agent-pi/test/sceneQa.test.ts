@@ -39,10 +39,10 @@ describe("Scene QA", () => {
     mkdirSync(jobsRoot)
     const png = join(jobsRoot, "scene-0.png")
     writeFileSync(png, "png")
-    let returnedPath = png
+    let manifest: Record<string, unknown> = { scenes: [{ index: 0, path: png, frameNumber: 42 }] }
     const server = createServer((_request, response) => {
       response.setHeader("content-type", "application/json")
-      response.end(JSON.stringify({ scenes: [{ index: 0, path: returnedPath, frameNumber: 42 }] }))
+      response.end(JSON.stringify(manifest))
     })
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
     const address = server.address()
@@ -51,9 +51,57 @@ describe("Scene QA", () => {
     const stills = await client.render({ scenes: [{}] }, 1)
     assert.equal(stills[0]?.image.mimeType, "image/png")
 
+    const boundary0 = join(jobsRoot, "scene-0-evidence-0.png")
+    const boundary1 = join(jobsRoot, "scene-0-evidence-1.png")
+    writeFileSync(boundary0, "png")
+    writeFileSync(boundary1, "png")
+    manifest = {
+      scenes: [{ index: 0, path: png, frameNumber: 42 }],
+      evidence: [
+        { index: 0, evidenceIndex: 0, atMs: 0, path: boundary0, frameNumber: 0 },
+        { index: 0, evidenceIndex: 1, atMs: 1000, path: boundary1, frameNumber: 30 },
+      ],
+    }
+    const evidence = await client.render(
+      {
+        scenes: [
+          {
+            componentId: "visual-program",
+            props: { compiled: { timeline: [{ atMs: 0 }, { atMs: 1000 }] } },
+          },
+        ],
+      },
+      1,
+    )
+    assert.deepEqual(
+      evidence.map((still) => [still.evidenceIndex, still.atMs, still.frameNumber]),
+      [
+        [0, 0, 0],
+        [1, 1000, 30],
+      ],
+    )
+    manifest = {
+      scenes: [{ index: 0, path: png, frameNumber: 42 }],
+      evidence: [{ index: 0, evidenceIndex: 0, atMs: 0, path: boundary0, frameNumber: 0 }],
+    }
+    await assert.rejects(
+      client.render(
+        {
+          scenes: [
+            {
+              componentId: "visual-program",
+              props: { compiled: { timeline: [{ atMs: 0 }, { atMs: 1000 }] } },
+            },
+          ],
+        },
+        1,
+      ),
+      /every ordered Visual Program boundary/,
+    )
+
     const outside = join(project, "outside.png")
     writeFileSync(outside, "png")
-    returnedPath = outside
+    manifest = { scenes: [{ index: 0, path: outside, frameNumber: 42 }] }
     await assert.rejects(client.render({ scenes: [{}] }, 1), /escapes render jobs root/)
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())))
   })
@@ -103,11 +151,13 @@ describe("Scene QA", () => {
     const modelRouter = new ModelRouter({ routes: { scene_qa: { provider: "google", model: "qa-test" } } })
     let disposed = false
     let imageCount = 0
+    let promptText = ""
     const session: SceneQaSession = {
       subscribe() {
         return () => undefined
       },
-      async prompt(_text, options) {
+      async prompt(text, options) {
+        promptText = text
         imageCount += options?.images?.length ?? 0
       },
       async abort() {},
@@ -148,13 +198,24 @@ describe("Scene QA", () => {
         {
           index: 0,
           path: "/safe/scene-0.png",
-          frameNumber: 54,
+          frameNumber: 0,
+          evidenceIndex: 0,
+          atMs: 0,
+          image: { type: "image", data: "cG5n", mimeType: "image/png" },
+        },
+        {
+          index: 0,
+          path: "/safe/scene-0-evidence-1.png",
+          frameNumber: 30,
+          evidenceIndex: 1,
+          atMs: 1000,
           image: { type: "image", data: "cG5n", mimeType: "image/png" },
         },
       ],
     })
     assert.equal(result.modelRoute, "google/qa-test")
-    assert.equal(imageCount, 1)
+    assert.equal(imageCount, 2)
+    assert.match(promptText, /scene 0, ordered boundary 1, at 1000ms, frame 30/)
     assert.equal(disposed, true)
     store.close()
   })

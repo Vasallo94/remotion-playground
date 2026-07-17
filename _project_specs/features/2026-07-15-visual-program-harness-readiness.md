@@ -127,9 +127,9 @@ The recipe workflow reuses Scene Composer for one bounded post-CP4 proposal, com
 - [x] The specialist emits exactly one typed recipe proposal, with at most one schema-repair turn.
 - [x] CP4 and adoption approvals cannot substitute for one another.
 - [x] Rejection activates nothing and changes no production source.
-- [ ] Approval activates exactly once across duplicate requests and restart.
+- [x] Approval activates exactly once across duplicate requests and restart.
 - [x] Parent config projection injects exact compiled props that the configurator cannot rewrite.
-- [ ] Fresh QA evaluates ordered multi-frame evidence.
+- [x] Fresh QA evaluates ordered multi-frame evidence.
 - [x] Publication stages and hash-verifies an exact manifest containing visual capability lineage.
 - [x] Normal production performs no TSX or registry source write.
 

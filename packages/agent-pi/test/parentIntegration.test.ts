@@ -464,7 +464,7 @@ describe("parent-owned new_video intake and target integration", () => {
   it("binds scene composition to the selected target and atomically presents CP4", async () => {
     store = new AgentPiStore(":memory:")
     let selectedTargetId: string | undefined
-    runtime = new AgentRuntimeManager({
+    const runtimeOptions: ConstructorParameters<typeof AgentRuntimeManager>[0] = {
       store,
       createSceneComposerSpecialistRunner: () => ({
         async run(input) {
@@ -511,7 +511,8 @@ describe("parent-owned new_video intake and target integration", () => {
           }
         },
       }),
-    })
+    }
+    runtime = new AgentRuntimeManager(runtimeOptions)
     const threadId = store.createThread().id
     const composerPlan = plan(threadId)
     composerPlan.steps.find((step) => step.id === "research")!.status = "skipped"
@@ -569,6 +570,9 @@ describe("parent-owned new_video intake and target integration", () => {
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "visual_recipe_adoption_checkpoint")
     assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "visual_recipe").length, 2)
 
+    runtime.dispose()
+    runtime = new AgentRuntimeManager(runtimeOptions)
+    assert.equal(store.getThread(threadId)?.checkpoint?.type, "visual_recipe_adoption_checkpoint")
     const adoptionCheckpoint = store.getThread(threadId)!.checkpoint!
     const adoptionVersion = (adoptionCheckpoint.payload as { version: number }).version
     const adoptionDecision = {
@@ -577,7 +581,12 @@ describe("parent-owned new_video intake and target integration", () => {
       artifactId: adoptionCheckpoint.artifactId,
       version: adoptionVersion,
     }
-    await runtime.resumeCheckpoint(threadId, adoptionDecision)
+    const concurrent = await Promise.allSettled([
+      runtime.resumeCheckpoint(threadId, adoptionDecision),
+      runtime.resumeCheckpoint(threadId, adoptionDecision),
+    ])
+    assert.equal(concurrent.filter((result) => result.status === "fulfilled").length, 1)
+    assert.equal(concurrent.filter((result) => result.status === "rejected").length, 1)
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "script_checkpoint")
     const activeSets = store.listArtifacts(threadId).filter((artifact) => artifact.kind === "active_visual_recipe_set")
     assert.equal(activeSets.length, 1)

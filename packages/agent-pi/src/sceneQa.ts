@@ -43,9 +43,12 @@ const ReportSchema = Type.Object({
 })
 
 export interface SceneStill {
+  /** Source scene index. Multiple ordered evidence frames may share one scene index. */
   index: number
   path: string
   frameNumber: number
+  evidenceIndex?: number
+  atMs?: number
   image: ImageContent
 }
 
@@ -86,32 +89,71 @@ export class SceneStillClient {
     })
     if (!response.ok)
       throw new Error(`Scene still rendering failed (${response.status}): ${(await response.text()).slice(0, 500)}`)
-    const manifest = (await response.json()) as { scenes?: Array<{ index: number; path: string; frameNumber: number }> }
+    const manifest = (await response.json()) as {
+      scenes?: Array<{ index: number; path: string; frameNumber: number }>
+      evidence?: Array<{ index: number; evidenceIndex: number; atMs: number; path: string; frameNumber: number }>
+    }
     if (!Array.isArray(manifest.scenes) || manifest.scenes.length !== sceneCount) {
       throw new Error("Stills manifest must cover every scene")
     }
+    const representatives = [...manifest.scenes].sort((left, right) => left.index - right.index)
+    if (representatives.some((still, position) => still.index !== position)) {
+      throw new Error("Stills manifest indexes must be unique and ordered from zero")
+    }
+    const evidence = Array.isArray(manifest.evidence)
+      ? [...manifest.evidence].sort(
+          (left, right) => left.index - right.index || left.evidenceIndex - right.evidenceIndex,
+        )
+      : []
+    if (evidence.length > 64) throw new Error("Scene evidence frame limit exceeded")
+    const configScenes = Array.isArray(config.scenes) ? config.scenes : []
+    for (let index = 0; index < sceneCount; index += 1) {
+      const scene = configScenes[index] as
+        | { componentId?: unknown; props?: { compiled?: { timeline?: unknown } } }
+        | undefined
+      const expectedTimes =
+        scene?.componentId === "visual-program" && Array.isArray(scene.props?.compiled?.timeline)
+          ? scene.props.compiled.timeline.map((state) => (state as { atMs?: unknown }).atMs)
+          : []
+      const sceneEvidence = evidence.filter((still) => still.index === index)
+      if (
+        expectedTimes.length !== sceneEvidence.length ||
+        sceneEvidence.some(
+          (still, position) =>
+            still.evidenceIndex !== position ||
+            still.atMs !== expectedTimes[position] ||
+            !Number.isInteger(still.frameNumber) ||
+            still.frameNumber < 0,
+        )
+      ) {
+        throw new Error(`Scene ${index} evidence must cover every ordered Visual Program boundary`)
+      }
+    }
+    if (evidence.some((still) => still.index < 0 || still.index >= sceneCount)) {
+      throw new Error("Scene evidence references an unknown scene")
+    }
+    const selected = representatives.flatMap((representative) => {
+      const orderedEvidence = evidence.filter((still) => still.index === representative.index)
+      return orderedEvidence.length > 0 ? orderedEvidence : [representative]
+    })
     const root = realpathSync(this.jobsRoot)
     let totalBytes = 0
-    return manifest.scenes
-      .sort((a, b) => a.index - b.index)
-      .map((still, position) => {
-        if (still.index !== position) throw new Error("Stills manifest indexes must be unique and ordered from zero")
-        const candidate = realpathSync(isAbsolute(still.path) ? still.path : resolve(PROJECT_ROOT, still.path))
-        const rel = relative(root, candidate)
-        if (rel.startsWith("..") || isAbsolute(rel))
-          throw new Error(`Still path escapes render jobs root: ${still.path}`)
-        if (!candidate.toLowerCase().endsWith(".png")) throw new Error(`Still is not PNG: ${still.path}`)
-        const bytes = statSync(candidate).size
-        totalBytes += bytes
-        if (bytes <= 0 || bytes > 10 * 1024 * 1024 || totalBytes > 40 * 1024 * 1024) {
-          throw new Error("Scene still byte limit exceeded")
-        }
-        return {
-          ...still,
-          path: candidate,
-          image: { type: "image" as const, data: readFileSync(candidate).toString("base64"), mimeType: "image/png" },
-        }
-      })
+    return selected.map((still) => {
+      const candidate = realpathSync(isAbsolute(still.path) ? still.path : resolve(PROJECT_ROOT, still.path))
+      const rel = relative(root, candidate)
+      if (rel.startsWith("..") || isAbsolute(rel)) throw new Error(`Still path escapes render jobs root: ${still.path}`)
+      if (!candidate.toLowerCase().endsWith(".png")) throw new Error(`Still is not PNG: ${still.path}`)
+      const bytes = statSync(candidate).size
+      totalBytes += bytes
+      if (bytes <= 0 || bytes > 10 * 1024 * 1024 || totalBytes > 80 * 1024 * 1024) {
+        throw new Error("Scene still byte limit exceeded")
+      }
+      return {
+        ...still,
+        path: candidate,
+        image: { type: "image" as const, data: readFileSync(candidate).toString("base64"), mimeType: "image/png" },
+      }
+    })
   }
 }
 
@@ -176,7 +218,11 @@ export class SceneQaRunner {
         input.selectedTarget ? `## Selected target contract\n${JSON.stringify(input.selectedTarget, null, 2)}` : "",
         "## Image mapping",
         input.stills
-          .map((still) => `Image ${still.index}: scene ${still.index}, frame ${still.frameNumber}`)
+          .map((still, imageIndex) =>
+            still.evidenceIndex === undefined
+              ? `Image ${imageIndex}: scene ${still.index}, representative frame ${still.frameNumber}`
+              : `Image ${imageIndex}: scene ${still.index}, ordered boundary ${still.evidenceIndex}, at ${still.atMs}ms, frame ${still.frameNumber}`,
+          )
           .join("\n"),
       ].join("\n")
       await session.prompt(prompt, { images: input.stills.map((still) => still.image) })

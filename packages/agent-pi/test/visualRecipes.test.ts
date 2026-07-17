@@ -80,7 +80,7 @@ describe("minimal Visual Recipe artifacts", () => {
     assert.deepEqual((projected.scenes as Array<Record<string, unknown>>)[1], {
       type: "custom",
       componentId: "visual-program",
-      props: recipe.compiled,
+      props: { compiled: recipe.compiled },
       durationInSeconds: recipe.compiled.durationMs / 1000,
     })
   })

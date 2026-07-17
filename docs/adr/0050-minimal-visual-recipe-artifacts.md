@@ -53,8 +53,8 @@ The parent runtime places activation behind `visual_recipe_adoption_checkpoint`,
 
 - Active-set lookup is an artifact query rather than a relational join.
 - Deactivation requires writing a new active-set artifact.
-- Concurrent/restart browser evidence for adoption remains a follow-up gate.
+- Browser-operated lifecycle evidence remains a follow-up gate; mocked parent integration already proves one activation across restart and concurrent duplicate decisions.
 
 ## Validation
 
-Pure tests cover deterministic construction, tamper rejection, target scope, idempotent activation, replacement, projection isolation, and store reload. The mocked Pi-only lifecycle covers projected config, QA rejection/revision, validation, render, review, and publication with exact active-set lineage.
+Pure tests cover deterministic construction, tamper rejection, target scope, idempotent activation, replacement, projection isolation, and store reload. Parent integration covers CP4, rejection/reproposal, runtime restart, concurrent duplicate adoption, and return to CP1. The mocked Pi-only lifecycle covers projected config, QA rejection/revision, validation, render, review, and publication with exact active-set lineage. Scene QA renders and validates every compiled timeline boundary in order before multimodal review.
