@@ -103,7 +103,9 @@ export function createApp(runtime = createDefaultRuntime()) {
     }
 
     try {
-      void runtime.resumeCheckpoint(threadId, decision as Record<string, unknown>).catch(() => {})
+      void runtime
+        .resumeCheckpoint(threadId, decision as Record<string, unknown>)
+        .catch((error) => runtime.recordDetachedFailure(threadId, error))
       res.json({ threadId, accepted: true })
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) })

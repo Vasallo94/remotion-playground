@@ -1,0 +1,908 @@
+{
+  "id": "deten-el-efecto-domino",
+  "title": "Detén el efecto dominó",
+  "description": "Vídeo educativo silencioso en español para responsables de ingeniería que compara en paralelo dos rutas Source → Bridge → End y muestra cómo el aislamiento contiene un fallo en cascada.",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "composition": "ClaudeCodeTutorial",
+  "signature": null,
+  "watermark": false,
+  "theme": "betelgeuse",
+  "brief": {
+    "title": "Detén el efecto dominó",
+    "audience": "Responsables de ingeniería.",
+    "platform": "Web/LinkedIn.",
+    "goal": "Explicar a responsables de ingeniería cómo el aislamiento contiene un fallo en cascada.",
+    "promise": "Mostrar, mediante una comparación paralela de dos rutas Source → Bridge → End, que el aislamiento detiene la propagación y protege End.",
+    "tone": "Técnico, didáctico y sobrio.",
+    "cta": "Aísla antes de que se propague.",
+    "hookStrategy": "Abrir con el título del problema y resolverlo con una comparación visual sincronizada, silenciosa y de alto contraste."
+  },
+  "scenes": [
+    {
+      "type": "intro",
+      "title": "Detén el efecto dominó",
+      "subtitle": "Cómo el aislamiento contiene un fallo en cascada",
+      "pixelLogo": {
+        "enabled": false
+      },
+      "durationInSeconds": 4,
+      "timing": {
+        "tailHoldMs": 400,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "s01-b01",
+          "startMs": 0,
+          "endMs": 4000,
+          "visual": "Título “Detén el efecto dominó” y subtítulo “Cómo el aislamiento contiene un fallo en cascada” centrados, legibles y estables, sin branding adicional.",
+          "emphasis": "high"
+        }
+      ],
+      "theme": "betelgeuse",
+      "watermark": false
+    },
+    {
+      "type": "custom",
+      "componentId": "visual-program",
+      "props": {
+        "compiled": {
+          "version": 1,
+          "compilerVersion": "visual-program-compiler-1",
+          "rendererVersion": "visual-program-renderer-1",
+          "targetAdapter": "claqueta.remotion",
+          "durationMs": 16000,
+          "panels": [
+            {
+              "id": "panel_main",
+              "label": "Comparación central",
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "label": "Contenido · End",
+                  "text": "Queda protegido",
+                  "position": {
+                    "x": 0.58,
+                    "y": 0.34
+                  },
+                  "initialState": "idle"
+                },
+                {
+                  "id": "cont_mid",
+                  "label": "Contenido · Bridge",
+                  "text": "Punto de contención",
+                  "position": {
+                    "x": 0.36,
+                    "y": 0.34
+                  },
+                  "initialState": "idle"
+                },
+                {
+                  "id": "cont_source",
+                  "label": "Contenido · Source",
+                  "text": "Inicio común",
+                  "position": {
+                    "x": 0.16,
+                    "y": 0.34
+                  },
+                  "initialState": "idle"
+                },
+                {
+                  "id": "open_end",
+                  "label": "No contenido · End",
+                  "text": "Recibe la propagación",
+                  "position": {
+                    "x": 0.58,
+                    "y": 0.68
+                  },
+                  "initialState": "idle"
+                },
+                {
+                  "id": "open_mid",
+                  "label": "No contenido · Bridge",
+                  "text": "Sigue transmitiendo",
+                  "position": {
+                    "x": 0.36,
+                    "y": 0.68
+                  },
+                  "initialState": "idle"
+                },
+                {
+                  "id": "open_source",
+                  "label": "No contenido · Source",
+                  "text": "Inicio común",
+                  "position": {
+                    "x": 0.16,
+                    "y": 0.68
+                  },
+                  "initialState": "idle"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "from": "cont_source",
+                  "to": "cont_mid",
+                  "label": "ruta",
+                  "initialState": "idle"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "from": "cont_mid",
+                  "to": "cont_end",
+                  "label": "frontera",
+                  "initialState": "idle"
+                },
+                {
+                  "id": "edge_open_a",
+                  "from": "open_source",
+                  "to": "open_mid",
+                  "label": "ruta",
+                  "initialState": "idle"
+                },
+                {
+                  "id": "edge_open_b",
+                  "from": "open_mid",
+                  "to": "open_end",
+                  "label": "ruta",
+                  "initialState": "idle"
+                }
+              ]
+            }
+          ],
+          "timeline": [
+            {
+              "atMs": 0,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "idle"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_source",
+                  "state": "idle"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "idle"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "idle"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "idle"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "idle"
+                }
+              ],
+              "pulses": [],
+              "isolation": [],
+              "boundaries": []
+            },
+            {
+              "atMs": 4000,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "idle"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "active"
+                },
+                {
+                  "id": "open_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_source",
+                  "state": "active"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "active"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "idle"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "active"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "idle"
+                }
+              ],
+              "pulses": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_a",
+                  "untilMs": 4900
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_a",
+                  "untilMs": 4900
+                },
+                {
+                  "target": "node",
+                  "id": "cont_source",
+                  "untilMs": 4700
+                },
+                {
+                  "target": "node",
+                  "id": "open_source",
+                  "untilMs": 4700
+                }
+              ],
+              "isolation": [],
+              "boundaries": []
+            },
+            {
+              "atMs": 8000,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_end",
+                  "state": "idle"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "active"
+                },
+                {
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "active"
+                }
+              ],
+              "pulses": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_b",
+                  "untilMs": 8900
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_b",
+                  "untilMs": 8900
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "untilMs": 8900
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "untilMs": 8900
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ],
+              "boundaries": [
+                {
+                  "id": "boundary_contained",
+                  "panelId": "panel_main",
+                  "nodeIds": ["cont_mid"],
+                  "state": "closed",
+                  "label": "Aislamiento"
+                }
+              ]
+            },
+            {
+              "atMs": 12000,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_end",
+                  "state": "active"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "completed"
+                }
+              ],
+              "pulses": [
+                {
+                  "target": "node",
+                  "id": "cont_end",
+                  "untilMs": 12900
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "untilMs": 12900
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ],
+              "boundaries": [
+                {
+                  "id": "boundary_contained",
+                  "panelId": "panel_main",
+                  "nodeIds": ["cont_mid"],
+                  "state": "closed",
+                  "label": "Aislamiento"
+                }
+              ]
+            },
+            {
+              "atMs": 14000,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_end",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "completed"
+                }
+              ],
+              "pulses": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "untilMs": 14700
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "untilMs": 14700
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ],
+              "boundaries": [
+                {
+                  "id": "boundary_contained",
+                  "panelId": "panel_main",
+                  "nodeIds": ["cont_mid"],
+                  "state": "closed",
+                  "label": "Aislamiento"
+                }
+              ]
+            },
+            {
+              "atMs": 16000,
+              "nodes": [
+                {
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_end",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_mid",
+                  "state": "completed"
+                },
+                {
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "id": "edge_open_b",
+                  "state": "completed"
+                }
+              ],
+              "pulses": [],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ],
+              "boundaries": [
+                {
+                  "id": "boundary_contained",
+                  "panelId": "panel_main",
+                  "nodeIds": ["cont_mid"],
+                  "state": "closed",
+                  "label": "Aislamiento"
+                }
+              ]
+            }
+          ],
+          "bindings": [],
+          "assertions": [
+            {
+              "id": "assert_0",
+              "atMs": 0,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_a",
+                  "state": "idle"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_cont_b",
+                  "state": "idle"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_a",
+                  "state": "idle"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_b",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_end",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_source",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "open_source",
+                  "state": "idle"
+                }
+              ]
+            },
+            {
+              "id": "assert_4000",
+              "atMs": 4000,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_a",
+                  "state": "active"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_a",
+                  "state": "active"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_source",
+                  "state": "active"
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "state": "idle"
+                },
+                {
+                  "target": "node",
+                  "id": "open_source",
+                  "state": "active"
+                }
+              ]
+            },
+            {
+              "id": "assert_8000",
+              "atMs": 8000,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_b",
+                  "state": "active"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "state": "active"
+                },
+                {
+                  "target": "node",
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ]
+            },
+            {
+              "id": "assert_12000",
+              "atMs": 12000,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_open_b",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "state": "active"
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "state": "completed"
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ]
+            },
+            {
+              "id": "assert_14000",
+              "atMs": 14000,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "state": "completed"
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ]
+            },
+            {
+              "id": "assert_16000",
+              "atMs": 16000,
+              "checks": [
+                {
+                  "target": "edge",
+                  "id": "edge_cont_a",
+                  "state": "completed"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_cont_b",
+                  "state": "blocked"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_a",
+                  "state": "completed"
+                },
+                {
+                  "target": "edge",
+                  "id": "edge_open_b",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_end",
+                  "state": "blocked"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "state": "contained"
+                },
+                {
+                  "target": "node",
+                  "id": "cont_source",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "open_end",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "open_mid",
+                  "state": "completed"
+                },
+                {
+                  "target": "node",
+                  "id": "open_source",
+                  "state": "completed"
+                }
+              ],
+              "isolation": [
+                {
+                  "target": "node",
+                  "id": "cont_mid",
+                  "mode": "contained"
+                }
+              ]
+            }
+          ],
+          "inputDigest": "39c417797e8b1f563484e0fc9e221241a68bf2853fc91bd76be70c2fc18e4b7e",
+          "digest": "66cf7b0ad44406e0561128e3e0e6a6529040d5bcc0d2469be6dd38eb788878a1"
+        }
+      },
+      "durationInSeconds": 16
+    },
+    {
+      "type": "outro",
+      "title": "Aísla antes de que se propague",
+      "bullets": ["Contén el fallo en Bridge.", "Protege End antes del siguiente salto."],
+      "durationInSeconds": 4,
+      "timing": {
+        "tailHoldMs": 700,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "s03-b01",
+          "startMs": 0,
+          "endMs": 2200,
+          "visual": "Título final dominante: “Aísla antes de que se propague”.",
+          "emphasis": "high"
+        },
+        {
+          "id": "s03-b02",
+          "startMs": 2200,
+          "endMs": 4000,
+          "visual": "Aparecen dos bullets: “Contén el fallo en Bridge.” y “Protege End antes del siguiente salto.” Sin branding adicional.",
+          "emphasis": "medium"
+        }
+      ],
+      "theme": "betelgeuse",
+      "watermark": false
+    }
+  ],
+  "voiceover": null,
+  "soundDesign": {
+    "enabled": false,
+    "musicBed": null,
+    "sfx": []
+  },
+  "subtitles": {
+    "enabled": false,
+    "style": "chunks",
+    "fontSize": 32,
+    "position": "bottom"
+  },
+  "transition": {},
+  "activeVisualRecipeSetDigest": "6adfe99b6873e93de56237a2262d912922059b13752fe176462fdd43ecfaefee"
+}

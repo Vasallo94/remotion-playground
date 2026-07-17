@@ -52,7 +52,13 @@ const OrionConstellation: React.FC<{
   )
 }
 
-export const IntroScene: React.FC<IntroSceneProps> = ({ title, subtitle, pixelLogo, beats }) => {
+export const IntroScene: React.FC<IntroSceneProps & { showThemeLabel?: boolean }> = ({
+  title,
+  subtitle,
+  pixelLogo,
+  beats,
+  showThemeLabel = true,
+}) => {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
   const tokens = useThemeTokens()
@@ -112,7 +118,7 @@ export const IntroScene: React.FC<IntroSceneProps> = ({ title, subtitle, pixelLo
         </div>
       )}
 
-      {!tokens.mascot.show && (
+      {showThemeLabel && !tokens.mascot.show && (
         <div
           style={{
             fontFamily: tokens.fontFamily,

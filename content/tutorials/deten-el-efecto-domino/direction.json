@@ -1,0 +1,130 @@
+{
+  "title": "Detén el efecto dominó",
+  "scenes": [
+    {
+      "sceneId": "scene-01-intro",
+      "sceneType": "intro",
+      "title": "Detén el efecto dominó",
+      "technicalIntent": "Abrir en 4 s exactos con una tarjeta limpia y estable que nombre el problema para audiencia de ingeniería, sin ningún rastro de branding ni firma residual.",
+      "visualContract": "Usar intro builtin en tema betelgeuse, 16:9 horizontal, alto contraste, watermark=false y pixelLogo disabled. Deben verse solo el título y el subtítulo aprobados; ausencia total de footer, firma o texto production/script/direction.",
+      "timing": {
+        "tailHoldMs": 400,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "s01-b01",
+          "startMs": 0,
+          "endMs": 4000,
+          "visual": "Título “Detén el efecto dominó” y subtítulo “Cómo el aislamiento contiene un fallo en cascada” centrados, legibles y estables, sin branding adicional.",
+          "emphasis": "high"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Verificar en preview que watermark=false suprima cualquier firma runtime o footer residual.",
+        "Mantener el subtítulo dentro del límite de lectura del intro."
+      ]
+    },
+    {
+      "sceneId": "scene-02-central-comparison",
+      "sceneType": "custom",
+      "componentId": "composed-scene",
+      "title": "Comparación paralela: contenido vs no contenido",
+      "technicalIntent": "Mantener y aprobar explícitamente la Visual Recipe/visual-program ya adoptada como tratamiento central, conservando sus estados sincronizados y sus dos rutas paralelas, mientras se corrigen los problemas de firma residual y legibilidad detectados por QA.",
+      "visualContract": "La Visual Recipe/visual-program adoptada queda aprobada como contrato visual central. No llamarla composed-scene como tratamiento ni exigir la antigua jerarquía aprobada previamente como alternativa. Conservar exactamente las dos rutas simultáneas Source → Bridge → End y los estados en 0/4000/8000/12000/14000/16000 ms. Mantener flechas visibles en ambas rutas. Si etiquetas de aristas o de frontera no caben con claridad a 1280x720, reducirlas u ocultarlas antes de permitir solapamientos; la legibilidad dominante debe seguir en tarjetas y estados. La frontera de aislamiento debe permanecer detrás de las tarjetas como contexto, nunca cruzando texto principal. Mantener watermark=false y ausencia total de cualquier texto production/script/direction en todo el encuadre.",
+      "timing": {
+        "tailHoldMs": 800,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "s02-b01",
+          "startMs": 0,
+          "endMs": 4000,
+          "visual": "Estado base de la Visual Recipe adoptada: dos rutas normales, simétricas, con flujo direccional visible en ambas.",
+          "emphasis": "medium"
+        },
+        {
+          "id": "s02-b02",
+          "startMs": 4000,
+          "endMs": 8000,
+          "visual": "A los 4000 ms el fallo aparece en Source en ambas rutas; el cambio debe ser claro sin añadir densidad ni firmas residuales.",
+          "emphasis": "high"
+        },
+        {
+          "id": "s02-b03",
+          "startMs": 8000,
+          "endMs": 12000,
+          "visual": "A los 8000 ms Bridge diverge: contenido vs no contenido. La frontera permanece detrás de las tarjetas y cualquier etiqueta secundaria se reduce u oculta si compromete la lectura.",
+          "emphasis": "high"
+        },
+        {
+          "id": "s02-b04",
+          "startMs": 12000,
+          "endMs": 14000,
+          "visual": "A los 12000 ms End muestra el contraste final: bloqueado en la ruta contenida frente a propagación en la no contenida, con asociación inequívoca de cada estado a su tarjeta.",
+          "emphasis": "high"
+        },
+        {
+          "id": "s02-b05",
+          "startMs": 14000,
+          "endMs": 16000,
+          "visual": "Mantener el estado final de la Visual Recipe adoptada para comparación y hold, sin cambiar copy ni introducir síntesis visual nuevas fuera del tratamiento aprobado.",
+          "emphasis": "high"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "El principal riesgo sigue siendo de layout a 1280x720: etiquetas secundarias pueden volver a competir con tarjetas si no se reducen u ocultan cuando no quepan.",
+        "Si la frontera de aislamiento vuelve a subir de capa, reaparecerá el problema de legibilidad.",
+        "Cualquier texto residual production/script/direction invalidará la escena aunque watermark=false.",
+        "Las flechas deben seguir siendo visibles incluso cuando se minimicen otras etiquetas de arista."
+      ]
+    },
+    {
+      "sceneId": "scene-03-outro",
+      "sceneType": "outro",
+      "title": "Aísla antes de que se propague",
+      "technicalIntent": "Cerrar en 4 s exactos con takeaway accionable y sobrio, manteniendo el texto aprobado y eliminando cualquier footer o firma residual.",
+      "visualContract": "Usar outro builtin en tema betelgeuse con watermark=false. Mostrar solo el título final y los dos bullets aprobados, sin footer, firma ni texto production/script/direction.",
+      "timing": {
+        "tailHoldMs": 700,
+        "transitionMs": 0
+      },
+      "beats": [
+        {
+          "id": "s03-b01",
+          "startMs": 0,
+          "endMs": 2200,
+          "visual": "Título final dominante: “Aísla antes de que se propague”.",
+          "emphasis": "high"
+        },
+        {
+          "id": "s03-b02",
+          "startMs": 2200,
+          "endMs": 4000,
+          "visual": "Aparecen dos bullets: “Contén el fallo en Bridge.” y “Protege End antes del siguiente salto.” Sin branding adicional.",
+          "emphasis": "medium"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Verificar que watermark=false también elimine cualquier footer o firma residual en el outro.",
+        "Mantener lectura rápida y limpia en cierre silencioso."
+      ]
+    }
+  ],
+  "warnings": [
+    "El vídeo debe permanecer totalmente silencioso: sin voz, música ni SFX.",
+    "Mantener duración total exacta de 24 s a 30 fps con transiciones en 0 ms.",
+    "No cambiar el copy aprobado del script.",
+    "La publicación requiere aprobación humana; revisar todas las decisiones creativas en checkpoints del navegador antes de publicar.",
+    "Watermark=false implica ausencia total de footer, firma y cualquier texto production/script/direction en intro, escena central y outro."
+  ],
+  "risks": [
+    "La escena central concentra casi toda la explicación; si persisten solapamientos o firmas residuales, el vídeo seguirá bloqueado por QA.",
+    "La prioridad visual debe seguir en tarjetas, estados y flechas; cualquier etiqueta secundaria que no quepa debe ceder u ocultarse.",
+    "La frontera de aislamiento debe comunicar contexto desde el fondo sin competir con el contenido principal."
+  ]
+}

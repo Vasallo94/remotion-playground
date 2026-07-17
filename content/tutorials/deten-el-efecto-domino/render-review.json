@@ -1,0 +1,38 @@
+{
+  "jobId": "a327361e-2030-4919-badc-6f91e2e4d676",
+  "configId": "deten-el-efecto-domino",
+  "reviewedAt": "2026-07-17T21:23:21.706Z",
+  "passed": true,
+  "fileSizeBytes": 1201793,
+  "duration": {
+    "actualSeconds": 24.042667,
+    "expectedSeconds": 24,
+    "deltaSeconds": 0.042667000000001565,
+    "toleranceSeconds": 0.5,
+    "matches": true
+  },
+  "video": {
+    "present": true,
+    "codec": "h264",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "dimensionsMatch": true,
+    "fpsMatches": true
+  },
+  "audio": {
+    "expected": false,
+    "present": true,
+    "codec": "aac",
+    "matchesExpectation": true
+  },
+  "failures": [],
+  "warnings": ["Audio stream is present although the approved config does not require audio"],
+  "activeVisualRecipeSet": {
+    "artifactId": "b9a580a4-49c1-48b7-9b91-9ddf0aafe510",
+    "version": 1,
+    "contentHash": "a1309c8b82c4449f341ee9286b3d17b927e86f20e39fbe981184c560eef1095b",
+    "targetId": "target.video.001",
+    "digest": "6adfe99b6873e93de56237a2262d912922059b13752fe176462fdd43ecfaefee"
+  }
+}

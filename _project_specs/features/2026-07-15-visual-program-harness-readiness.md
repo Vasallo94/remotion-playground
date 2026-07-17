@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved architecture; implementation pending
+Completed, including the real browser-operated silent cascade E2E
 
 ## Goal
 
@@ -119,6 +119,8 @@ Minimal race gate implemented before the full ThreadView projection: snapshots c
 - [x] A hand-authored topic-neutral cascade fixture demonstrates propagation, bridge isolation, stopped propagation, and synchronized contained/uncontained comparison.
 - [x] Real rendered evidence frames cover initial state and meaningful event/intervention boundaries.
 - [x] Existing `ComposedScene` behavior and configs remain unchanged.
+- [x] Trusted renderer prevents node-card overlap for valid normalized positions, keeps boundaries behind node content, and exposes directional connectors between related nodes.
+- [x] Root `watermark: false` suppresses decorative theme labels in intro/outro as well as overlay watermarks, so a no-branding brief has one consistent renderer control.
 
 ### Slice 4 — recipe workflow
 
@@ -150,6 +152,8 @@ The recipe workflow reuses Scene Composer for one bounded post-CP4 proposal, com
 13. Prove pre-adoption config, QA, validation, render, and review artifacts are stale.
 14. Repository search and coordinator tests prove normal `new_video` cannot reach executable candidate modules.
 15. Browser-operated mocked lifecycle passes before the silent/no-API live E2E.
+16. Render a valid program whose adjacent nodes are 0.20 normalized units apart; cards do not overlap and connector direction remains visible.
+17. Render intro/outro with root `watermark: false`; neither overlay watermarks nor decorative theme labels are present.
 
 ## Readiness gate for the live E2E
 
@@ -161,7 +165,9 @@ The live novel-scene E2E remains blocked until:
 - no source-generation or source-promotion action is reachable from normal production;
 - silent/no-API mode makes no paid provider call.
 
-Gate 3 browser evidence now covers CP4 approval, recipe rejection/reproposal, browser reload, parent restart, recipe adoption, CP1, CP2, Scene QA rejection, direction revision, fresh final-config QA, CP3, final review, and publication. The final plan completed 13/13 steps with one active-set digest preserved through config, QA, validation, render, review, and publication.
+Gate 3 browser evidence covers CP4 approval, recipe rejection/reproposal, browser reload, parent restart, recipe adoption, CP1, CP2, Scene QA rejection, direction revision, fresh final-config QA, CP3, final review, and publication.
+
+The real browser-operated run is also complete. Real Pi specialists proposed the capability gap and exact recipe, the parent restarted after adoption, ordered event-boundary PNGs drove multimodal QA, two rejected QA passes produced revised CP2 direction and trusted-renderer fixes, and a fresh post-audio QA passed with only approved minor findings. The final plan completed 13/13 steps. One active-set digest remained exact through config, QA, validation, H.264 render, review, and SHA-256-verified publication. Normal production created no TSX, registry entry, or candidate-promotion row.
 
 ## Non-goals
 

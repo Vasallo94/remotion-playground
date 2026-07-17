@@ -638,6 +638,14 @@ export class AgentRuntimeManager {
     }
   }
 
+  recordDetachedFailure(threadId: string, error: unknown): void {
+    const thread = this.store.getThread(threadId)
+    if (!thread || thread.status === "error") return
+    const message = error instanceof Error ? error.message : String(error)
+    this.store.updateThreadStatus(threadId, "error")
+    this.eventBus.publish({ threadId, type: "error", payload: { recoverable: true, message } })
+  }
+
   retryCurrentAction(threadId: string): Promise<void> {
     if (this.retryingThreads.has(threadId)) throw new Error(`A retry is already running for thread '${threadId}'`)
     const thread = this.store.getThread(threadId)

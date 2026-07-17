@@ -1,0 +1,14 @@
+{
+  "voiceover": null,
+  "soundDesign": {
+    "enabled": false,
+    "musicBed": null,
+    "sfx": []
+  },
+  "warnings": [
+    "Vídeo totalmente silencioso: sin voz, música ni SFX.",
+    "Las preferencias aprobadas exigen voiceover='none' y soundDesign='none'.",
+    "Mantener ausencia total de branding o firmas residuales; no introducir audio por defecto en intro, escena central ni outro.",
+    "La publicación requiere aprobación humana y revisión en checkpoints del navegador antes de publicar."
+  ]
+}

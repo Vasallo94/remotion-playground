@@ -238,6 +238,37 @@ describe("DirectionSpecialistRunner", () => {
     assert.equal(store.listEvents(threadId).at(-1)?.type, "subagent_error")
   })
 
+  it("repairs one direction contract mismatch without changing the approved adapter", async () => {
+    const state = { disposed: false, aborted: false }
+    const modelRouter = new ModelRouter({ routes: {} })
+    let prompts = 0
+    const runner = new DirectionSpecialistRunner({
+      threadId,
+      eventBus,
+      modelRouter,
+      authStorage: modelRouter.authStorage,
+      modelRegistry: modelRouter.modelRegistry,
+      createSession: async ({ captureDirection }) =>
+        createFakeSession(() => {
+          prompts += 1
+          captureDirection(
+            prompts === 1
+              ? {
+                  ...direction,
+                  scenes: [{ ...(direction.scenes[0] as Record<string, unknown>), componentId: "visual-program" }],
+                }
+              : direction,
+          )
+        }, state),
+    })
+
+    const result = await runner.run(script)
+
+    assert.deepEqual(result.direction, direction)
+    assert.equal(prompts, 2)
+    assert.equal(state.disposed, true)
+  })
+
   it("propagates abort and disposes the child session", async () => {
     const state = { disposed: false, aborted: false }
     const controller = new AbortController()

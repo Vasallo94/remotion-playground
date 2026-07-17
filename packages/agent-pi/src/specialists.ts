@@ -470,7 +470,22 @@ export class DirectionSpecialistRunner {
       if (!capturedDirection) {
         throw new Error("Director specialist finished without calling submit_direction after one repair attempt")
       }
-      validateDirectionAgainstScript(capturedDirection, script)
+      try {
+        validateDirectionAgainstScript(capturedDirection, script)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        capturedDirection = undefined
+        await session.prompt(
+          [
+            `The parent rejected the direction draft: ${message}.`,
+            "Preserve every sceneId, sceneType, componentId, duration, and order exactly as written in the approved script, even when the human feedback describes a parent-projected renderer.",
+            "Call submit_direction exactly once with one corrected complete draft; do not answer with prose.",
+          ].join("\n"),
+        )
+        if (childError) throw new Error(childError)
+        if (!capturedDirection) throw new Error("Director specialist did not submit a corrected direction draft")
+        validateDirectionAgainstScript(capturedDirection, script)
+      }
 
       const completedAt = new Date().toISOString()
       this.options.eventBus.publish({

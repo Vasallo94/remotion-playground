@@ -1,0 +1,55 @@
+# Detén el efecto dominó
+
+**Objetivo:** Explicar a responsables de ingeniería cómo el aislamiento contiene un fallo en cascada mediante una comparación paralela, sincronizada y silenciosa de dos rutas Source → Bridge → End.
+**Audiencia:** Responsables de ingeniería
+**Tono:** Técnico, didáctico y sobrio
+
+## Escenas
+
+### 1. Detén el efecto dominó
+
+- **Tipo:** intro
+- **Función narrativa:** Abrir el vídeo, nombrar el problema y preparar la comparación central.
+- **Tipo visual:** builtin
+- **Rol visual:** Hook y orientación
+- **Plan de props:** `{"title":"Detén el efecto dominó","subtitle":"Cómo el aislamiento contiene un fallo en cascada","pixelLogo":{"enabled":false},"durationInSeconds":4,"theme":"betelgeuse","watermark":false}`
+- **Razón visual:** La escena introduce el concepto sin sobrecargar texto y reserva casi todo el tiempo para la demostración central.
+- **Duración:** 4s
+- **Notas visuales:** Tarjeta de apertura limpia en tema Betelgeuse, fondo oscuro de alto contraste, sin logo, sin watermark, márgenes seguros amplios. Subtítulo breve orientado a ingeniería.
+- **Notas de riesgo:**
+  - Mantener el subtítulo dentro del límite de lectura del intro.
+  - Verificar que no aparezca ningún branding por defecto.
+
+### 2. Comparación paralela: contenido vs no contenido
+
+- **Tipo:** custom
+- **Función narrativa:** Demostrar visualmente que el aislamiento detiene la propagación en una ruta y que su ausencia permite que el fallo alcance End en la otra.
+- **Tipo visual:** custom
+- **Componente:** composed-scene
+- **Rol visual:** Escena principal de explicación y prueba visual
+- **Plan de props:** `{"componentId":"composed-scene","durationInSeconds":16,"props":{"version":1,"title":"Mismo inicio. Resultado distinto.","subtitle":"Comparación sincronizada","backgroundTone":"contrast","root":{"type":"group","direction":"vertical","gap":"md","children":[{"type":"group","direction":"horizontal","columns":2,"gap":"lg","align":"stretch","children":[{"type":"card","title":"Contenido","tone":"success","children":[{"type":"group","direction":"horizontal","gap":"sm","children":[{"type":"card","title":"Source","body":"Normal","tone":"default","revealAtMs":0},{"type":"text","text":"→","variant":"headline","revealAtMs":0},{"type":"card","title":"Bridge","body":"Normal","tone":"default","revealAtMs":0},{"type":"text","text":"│ Frontera de aislamiento │","variant":"caption","tone":"accent","revealAtMs":0},{"type":"card","title":"End","body":"Normal","tone":"default","revealAtMs":0}]},{"type":"text","text":"t=4 s · Source: fallo","tone":"danger","revealAtMs":4000},{"type":"text","text":"t=8 s · Bridge: fallo contenido","tone":"warning","revealAtMs":8000},{"type":"text","text":"t=12 s · End: bloqueado","tone":"muted","revealAtMs":12000}]},{"type":"card","title":"No contenido","tone":"danger","children":[{"type":"group","direction":"horizontal","gap":"sm","children":[{"type":"card","title":"Source","body":"Normal","tone":"default","revealAtMs":0},{"type":"text","text":"→","variant":"headline","revealAtMs":0},{"type":"card","title":"Bridge","body":"Normal","tone":"default","revealAtMs":0},{"type":"text","text":"→","variant":"headline","revealAtMs":0},{"type":"card","title":"End","body":"Normal","tone":"default","revealAtMs":0}]},{"type":"text","text":"t=4 s · Source: fallo","tone":"danger","revealAtMs":4000},{"type":"text","text":"t=8 s · Bridge: fallo","tone":"danger","revealAtMs":8000},{"type":"text","text":"t=12 s · End: recibe el fallo","tone":"danger","revealAtMs":12000}]}]},{"type":"divider","revealAtMs":13500},{"type":"text","text":"El aislamiento corta la cadena en la frontera.","variant":"subheadline","align":"center","tone":"accent","revealAtMs":14000}]},"beats":[{"atMs":0,"label":"Estado inicial: ambas rutas normales"},{"atMs":4000,"label":"El fallo comienza en Source en ambas rutas"},{"atMs":8000,"label":"Diferencia clave en Bridge y su frontera"},{"atMs":12000,"label":"Resultado final en End: bloqueado vs alcanzado"},{"atMs":14000,"label":"Síntesis visual"}]}}`
+- **Razón visual:** Adopted Visual Recipe recipe.43de960e7a10fd8ef9463e70e7f8a6f69e049d014e03c1a3e99000ac9f2ab9c0
+- **Duración:** 16s
+- **Notas visuales:** Única escena visual central. Layout simétrico a dos columnas dentro de un mismo lienzo 16:9. Columna izquierda: “Contenido”. Columna derecha: “No contenido”. En cada columna, ruta horizontal Source → Bridge → End. Estados temporizados y sincronizados con cambios exactos visibles en los nodos y en la frontera entre Bridge y End. Paleta sobria Betelgeuse: neutro inicial, ámbar/rojo para fallo, cian para aislamiento, gris frío para bloqueo. Sin voz ni audio.
+- **Notas de riesgo:**
+  - El componente composed-scene no garantiza flechas o bordes animados complejos; la claridad depende de la jerarquía visual y del timing.
+  - Conviene validar en checkpoint de navegador que las tres tarjetas por columna sigan siendo legibles a 1280x720.
+  - Revisar que la palabra 'bloqueado' quede inequívocamente asociada a End en la ruta contenida.
+
+### 3. Aísla antes de que se propague
+
+- **Tipo:** outro
+- **Función narrativa:** Cerrar con la lección accionable y fijar el mensaje final requerido.
+- **Tipo visual:** builtin
+- **Rol visual:** Takeaway final
+- **Plan de props:** `{"title":"Aísla antes de que se propague","bullets":["Contén el fallo en Bridge.","Protege End antes del siguiente salto."],"durationInSeconds":4,"theme":"betelgeuse","watermark":false}`
+- **Razón visual:** El outro fija la conclusión sin añadir afirmaciones externas y cumple el cierre pedido literalmente.
+- **Duración:** 4s
+- **Notas visuales:** Cierre sobrio con frase final clara y dos bullets máximos. Mantener alto contraste, márgenes seguros y ausencia total de branding.
+- **Notas de riesgo:**
+  - Mantener el texto final breve para lectura silenciosa rápida.
+  - Evitar que los bullets resten protagonismo a la frase final.
+
+## Notas
+
+Formato previsto: MP4 horizontal 16:9, 1280x720, 30 fps, 24 s exactos, tema Betelgeuse, sin voz, música, SFX, marca, logo ni watermark. La única escena visual central es scene-02-central-comparison; intro y outro se resuelven con escenas registradas. Todas las decisiones creativas deben revisarse y aprobarse en checkpoints del navegador antes de publicación.

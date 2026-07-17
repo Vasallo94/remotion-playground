@@ -63,6 +63,51 @@ function isolationMode(state: VisualProgramState, target: "node" | "edge", id: s
 
 const panelStyle: CSSProperties = { position: "relative", minWidth: 0, minHeight: 0, overflow: "hidden" }
 
+function nodeWidthPercent(panel: VisualProgramPanel, nodeId: string): number {
+  const node = panel.nodes.find((candidate) => candidate.id === nodeId)
+  if (!node?.position) return 22
+  const nearestHorizontal = panel.nodes
+    .filter(
+      (candidate) =>
+        candidate.id !== node.id && candidate.position && Math.abs(candidate.position.y - node.position!.y) < 0.12,
+    )
+    .map((candidate) => Math.abs(candidate.position!.x - node.position!.x))
+    .reduce((nearest, distance) => Math.min(nearest, distance), Number.POSITIVE_INFINITY)
+  if (!Number.isFinite(nearestHorizontal)) return 22
+  return Math.round(Math.max(14, Math.min(22, nearestHorizontal * 80)) * 100) / 100
+}
+
+function trimmedEdge(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  fromWidthPercent: number,
+  toWidthPercent: number,
+): { x1: number; y1: number; x2: number; y2: number; arrow: string } | null {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const distance = Math.hypot(dx, dy)
+  if (distance <= 0.001) return null
+  const ux = dx / distance
+  const uy = dy / distance
+  const fromTrim = Math.min(distance * 0.35, fromWidthPercent / 200 + 0.008)
+  const toTrim = Math.min(distance * 0.35, toWidthPercent / 200 + 0.008)
+  const x1 = from.x + ux * fromTrim
+  const y1 = from.y + uy * fromTrim
+  const x2 = to.x - ux * toTrim
+  const y2 = to.y - uy * toTrim
+  const arrowLength = Math.min(0.018, distance * 0.08)
+  const arrowWidth = arrowLength * 0.7
+  const baseX = x2 - ux * arrowLength
+  const baseY = y2 - uy * arrowLength
+  return {
+    x1,
+    y1,
+    x2,
+    y2,
+    arrow: `${x2},${y2} ${baseX - uy * arrowWidth},${baseY + ux * arrowWidth} ${baseX + uy * arrowWidth},${baseY - ux * arrowWidth}`,
+  }
+}
+
 export const VisualPanel: React.FC<{
   panel: VisualProgramPanel
   state: VisualProgramState
@@ -113,33 +158,38 @@ export const VisualPanel: React.FC<{
               : mode === "isolated"
                 ? "0.008 0.014"
                 : stateDash(edgeState(state, edge.id))
-          const midX = (from.x + to.x) / 2
-          const midY = (from.y + to.y) / 2
+          const geometry = trimmedEdge(from, to, nodeWidthPercent(panel, edge.from), nodeWidthPercent(panel, edge.to))
+          if (!geometry) return null
+          const midX = (geometry.x1 + geometry.x2) / 2
+          const midY = (geometry.y1 + geometry.y2) / 2
           return (
             <g key={edge.id} opacity={opacity}>
               <line
-                x1={from.x}
-                y1={from.y}
-                x2={to.x}
-                y2={to.y}
+                x1={geometry.x1}
+                y1={geometry.y1}
+                x2={geometry.x2}
+                y2={geometry.y2}
                 stroke={color}
                 strokeWidth={pulse ? "0.018" : "0.008"}
                 strokeDasharray={dash}
               />
+              <polygon points={geometry.arrow} fill={color} />
               {pulse && (
                 <line
-                  x1={from.x}
-                  y1={from.y}
-                  x2={to.x}
-                  y2={to.y}
+                  x1={geometry.x1}
+                  y1={geometry.y1}
+                  x2={geometry.x2}
+                  y2={geometry.y2}
                   stroke={tokens.primary}
                   strokeWidth="0.028"
                   opacity="0.35"
                 />
               )}
-              <text x={midX} y={midY - 0.025} textAnchor="middle" fill={color} fontSize="0.028" fontWeight="700">
-                {edge.label}
-              </text>
+              {edge.label && Math.hypot(geometry.x2 - geometry.x1, geometry.y2 - geometry.y1) >= 0.1 && (
+                <text x={midX} y={midY - 0.018} textAnchor="middle" fill={color} fontSize="0.016" fontWeight="600">
+                  {edge.label}
+                </text>
+              )}
             </g>
           )
         })}
@@ -170,7 +220,7 @@ export const VisualPanel: React.FC<{
               left: `${(node.position ?? { x: 0.5, y: 0.5 }).x * 100}%`,
               top: `${(node.position ?? { x: 0.5, y: 0.5 }).y * 100}%`,
               transform: "translate(-50%, -50%)",
-              width: "25%",
+              width: `${nodeWidthPercent(panel, node.id)}%`,
               minHeight: 86,
               padding: "14px 10px",
               boxSizing: "border-box",
@@ -181,6 +231,7 @@ export const VisualPanel: React.FC<{
               opacity,
               textAlign: "center",
               fontFamily: tokens.fontFamily,
+              zIndex: 2,
               boxShadow:
                 mode === "contained"
                   ? `0 0 0 5px ${tokens.terminal.dots[1]}80`
@@ -199,10 +250,10 @@ export const VisualPanel: React.FC<{
           .map((id) => nodeById.get(id)?.position)
           .filter((position): position is { x: number; y: number } => Boolean(position))
         if (positions.length === 0) return null
-        const left = Math.max(0.01, Math.min(...positions.map((position) => position.x)) - 0.16)
-        const right = Math.min(0.99, Math.max(...positions.map((position) => position.x)) + 0.16)
-        const top = Math.max(0.08, Math.min(...positions.map((position) => position.y)) - 0.16)
-        const bottom = Math.min(0.98, Math.max(...positions.map((position) => position.y)) + 0.16)
+        const left = Math.max(0.01, Math.min(...positions.map((position) => position.x)) - 0.11)
+        const right = Math.min(0.99, Math.max(...positions.map((position) => position.x)) + 0.11)
+        const top = Math.max(0.08, Math.min(...positions.map((position) => position.y)) - 0.13)
+        const bottom = Math.min(0.98, Math.max(...positions.map((position) => position.y)) + 0.13)
         return (
           <div
             key={boundary.id}
@@ -216,7 +267,7 @@ export const VisualPanel: React.FC<{
               border: `2px ${boundary.state === "closed" ? "solid" : "dashed"} ${tokens.terminal.dots[1]}`,
               borderRadius: tokens.radius,
               pointerEvents: "none",
-              zIndex: 2,
+              zIndex: 1,
             }}
           >
             {boundary.label && (

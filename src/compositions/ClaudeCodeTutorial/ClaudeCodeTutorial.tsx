@@ -63,7 +63,7 @@ export const ClaudeCodeTutorial: React.FC<TutorialConfig> = (config) => {
   const theme = getTheme(config.theme ?? "betelgeuse")
   const subtitlesEnabled = config.subtitles?.enabled !== false && Boolean(config.voiceover?.enabled)
   const sceneTimestamps = useTimestamps(config.id, config.scenes.length, subtitlesEnabled)
-  const signature = config.signature ?? null
+  const signature = config.watermark === false ? null : (config.signature ?? null)
   const showLogoWatermark = config.watermark !== false && !theme.mascot.show && !signature
 
   return (
@@ -72,7 +72,7 @@ export const ClaudeCodeTutorial: React.FC<TutorialConfig> = (config) => {
       theme={config.theme ?? "betelgeuse"}
       renderScene={(scene) => {
         const Scene = SCENE_MAP[scene.type]
-        return Scene ? <Scene {...scene} /> : null
+        return Scene ? <Scene {...scene} showThemeLabel={config.watermark !== false} /> : null
       }}
       renderOverlay={(scene, info, i) => (
         <>

@@ -24,7 +24,7 @@ describe("VisualProgramScene pixels", () => {
     expect(Object.isFrozen(prepared.panels[0]!.nodes[0])).toBe(true)
   })
 
-  it("render semantic geometry without implementation state identifiers", () => {
+  it("renders semantic geometry without implementation state identifiers", () => {
     const panel: VisualProgramPanel = {
       id: "panel",
       label: "Comparison",
@@ -49,5 +49,34 @@ describe("VisualProgramScene pixels", () => {
     expect(markup).toMatch(/Comparison/)
     expect(markup).toMatch(/Flow/)
     expect(markup).not.toMatch(/Visual program|digest|idle|active|completed|blocked|contained|isolated|uncontained/)
+  })
+
+  it("keeps nearby cards separate and renders direction above boundaries", () => {
+    const panel: VisualProgramPanel = {
+      id: "tight-panel",
+      nodes: [
+        { id: "source", label: "Source", position: { x: 0.16, y: 0.5 }, initialState: "idle" },
+        { id: "bridge", label: "Bridge", position: { x: 0.36, y: 0.5 }, initialState: "idle" },
+        { id: "end", label: "End", position: { x: 0.58, y: 0.5 }, initialState: "idle" },
+      ],
+      edges: [
+        { id: "source-bridge", from: "source", to: "bridge", initialState: "idle" },
+        { id: "bridge-end", from: "bridge", to: "end", initialState: "idle" },
+      ],
+    }
+    const state: VisualProgramState = {
+      atMs: 1000,
+      nodes: panel.nodes.map((node) => ({ id: node.id, state: "idle" })),
+      edges: panel.edges.map((edge) => ({ id: edge.id, state: "active" })),
+      pulses: [],
+      isolation: [],
+      boundaries: [{ id: "boundary", panelId: panel.id, nodeIds: ["bridge"], state: "closed" }],
+    }
+
+    const markup = renderToStaticMarkup(<VisualPanel panel={panel} state={state} tokens={getTheme("betelgeuse")} />)
+    expect(markup).toContain("width:16%")
+    expect(markup).toContain("<polygon")
+    expect(markup).toContain("z-index:2")
+    expect(markup).toContain("z-index:1")
   })
 })

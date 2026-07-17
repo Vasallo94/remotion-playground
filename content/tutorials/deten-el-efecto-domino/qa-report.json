@@ -1,0 +1,56 @@
+{
+  "summary": "Overall strong delivery with clean silent execution, correct 24 s structure, no visible watermark/signature residue, and a clear side-by-side containment story. Intro and outro meet contract well. The central comparison is readable and synchronized, with the isolation boundary correctly kept behind the contained Bridge card. Only minor clarity issues remain in the central scene around how the contained End state reads at the 12–16 s boundaries, where the visual distinction for “blocked/protected” is subtler than the non-contained failure path.",
+  "scenes": [
+    {
+      "index": 0,
+      "verdict": "PASS",
+      "score": 9.6,
+      "observations": [
+        "Title and subtitle are centered, stable, and legible on a high-contrast dark background.",
+        "No visible branding, watermark, footer, or residual production text.",
+        "Visual treatment is sober and appropriate for the technical audience."
+      ],
+      "issues": []
+    },
+    {
+      "index": 1,
+      "verdict": "MINOR_FIX",
+      "score": 8.7,
+      "observations": [
+        "Two parallel Source → Bridge → End routes are clearly present and remain readable at 1280x720.",
+        "The 4000 ms activation on both Source nodes is immediately visible.",
+        "At 8000 ms the contained vs non-contained divergence is clear, and the isolation boundary stays behind the contained Bridge card rather than crossing main text.",
+        "Secondary edge labels are effectively minimized/hidden, which improves readability.",
+        "No visible watermark, footer, signature, or residual production/script/direction text appears in the scene."
+      ],
+      "issues": [
+        {
+          "category": "hierarchy",
+          "severity": "minor",
+          "observation": "The contained End state at 12000–16000 ms is visually subtler than the non-contained End failure state, so the final contrast reads slightly stronger on the bottom route than on the protected top route.",
+          "evidence": "In Images 4–6, the bottom-right End card uses a stronger red/active treatment, while the top-right End card relies mainly on a pale outline and blocked connector; the top result is still understandable but less emphatic.",
+          "suggestedChange": "Increase the visual emphasis of the contained End result slightly—e.g. stronger blocked/protected styling on the top End card or clearer contrast on the blocked edge—without changing approved copy."
+        },
+        {
+          "category": "coherence",
+          "severity": "minor",
+          "observation": "The top End card copy remains static while its state changes, which can make the blocked/protected outcome feel a bit indirect at a glance.",
+          "evidence": "Across Images 1–6, the top-right card text stays “Queda protegido”; the state change is encoded mostly through border/connector styling rather than a more explicit state cue.",
+          "suggestedChange": "Keep the approved copy, but make the state cue more explicit through styling alone, such as a clearer protected/blocked accent or stronger card-state differentiation."
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "verdict": "PASS",
+      "score": 9.5,
+      "observations": [
+        "Final title is dominant and legible.",
+        "Both approved bullets are present and readable.",
+        "No visible branding, watermark, footer, or residual production text.",
+        "The closing card is clean, brief, and aligned with the approved CTA."
+      ],
+      "issues": []
+    }
+  ]
+}

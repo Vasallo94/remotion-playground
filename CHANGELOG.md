@@ -7,6 +7,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Real browser-operated silent cascade evidence** — completes CP4, exact Visual Recipe adoption, parent restart, CP1/CP2, ordered multimodal QA with two human rejection cycles, silent audio approval, H.264 render review, and SHA-256-verified publication while preserving one target-scoped active-set digest and creating no candidate promotion or model-authored source.
+- **Published cascade tutorial** — adds the eight verified production artifacts for `content/tutorials/deten-el-efecto-domino/`, including config, script, direction, QA, audio, render review, and exact Visual Recipe lineage.
 - **Visual Recipe adoption, ordered QA, and production lineage** — reuses Scene Composer for one bounded post-CP4 proposal, requires separate target-scoped adoption, survives restart/concurrent duplicate decisions, projects exact `{ compiled }` renderer props, renders every timeline boundary for multimodal QA, and carries active-set lineage through config, validation, render, review, and publication without new tables or source writes.
 - **Thread revision and transactional event outbox kernel** — adds schema v2 migration/backfill, monotonic per-thread revisions, contiguous local event cursors, atomic outbox persistence, commit-only at-least-once delivery, restart draining, and paginated replay without changing `session.ts`.
 
@@ -149,6 +151,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Live strict-contract recovery** — Scene Composer now distinguishes exact composed specs from timed capability gaps, Visual Recipe tools expose the duration-bound closed schema instead of a summary, detached checkpoint failures become recoverable thread errors, and Director gets one bounded repair while preserving the approved adapter.
+- **Trusted Visual Program legibility and no-brand rendering** — nearby cards size without overlap, edges terminate at card boundaries with visible arrowheads, labels render only when they fit, isolation boundaries remain behind cards, and root `watermark: false` suppresses theme labels and signature overlays as well as logo watermarks.
 - **Pi checkpoint artifact hydration** — active and replayed checkpoint cards now merge exact artifact data before checkpoint identity metadata, preventing script/direction cards from crashing after SSE transitions, reload, or parent restart when checkpoint payloads contain only artifact references.
 - **Pi frontend authority races** — thread snapshots now apply only when their thread, generation, local action generation, and revision are current; authoritative null checkpoints clear stale cards, replay cannot resurrect snapshot-covered authority, delayed submit/resume/retry callbacks are fenced, and checkpoint bindings override component payloads.
 - **Cold Remotion CLI workspace bundling** — `remotion.config.ts` now uses the same NodeNext `.js`→TypeScript extension aliases as the repository-owned bundler and render scripts, so browser bundles resolve workspace contracts consistently.

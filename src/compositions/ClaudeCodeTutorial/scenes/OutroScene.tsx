@@ -46,7 +46,12 @@ const OutroBullet: React.FC<{
   )
 }
 
-export const OutroScene: React.FC<OutroSceneProps> = ({ title, bullets, beats }) => {
+export const OutroScene: React.FC<OutroSceneProps & { showThemeLabel?: boolean }> = ({
+  title,
+  bullets,
+  beats,
+  showThemeLabel = true,
+}) => {
   const tokens = useThemeTokens()
   const phase1 = usePhase1Entry({ durationMs: 100 })
 
@@ -84,19 +89,21 @@ export const OutroScene: React.FC<OutroSceneProps> = ({ title, bullets, beats })
         </div>
       )}
 
-      <div
-        style={{
-          marginTop: 16,
-          fontFamily: tokens.fontFamily,
-          fontSize: 13,
-          color: tokens.labelColor,
-          letterSpacing: 2,
-          textTransform: "uppercase",
-          opacity: phase1.opacity,
-        }}
-      >
-        {tokens.label}
-      </div>
+      {showThemeLabel && (
+        <div
+          style={{
+            marginTop: 16,
+            fontFamily: tokens.fontFamily,
+            fontSize: 13,
+            color: tokens.labelColor,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            opacity: phase1.opacity,
+          }}
+        >
+          {tokens.label}
+        </div>
+      )}
 
       <MascotWatermark animation="idle" />
     </AbsoluteFill>

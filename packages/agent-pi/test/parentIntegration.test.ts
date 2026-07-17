@@ -213,6 +213,19 @@ describe("parent-owned new_video intake and target integration", () => {
       /mode is immutable|not implemented/,
     )
   })
+  it("surfaces one detached continuation failure as recoverable thread authority", async () => {
+    const manager = createRuntime(intakeResult(candidate()))
+    const threadId = await manager.getOrCreateThread(null, "Detached failure")
+
+    manager.recordDetachedFailure(threadId, new Error("detached action failed"))
+    manager.recordDetachedFailure(threadId, new Error("duplicate callback"))
+
+    assert.equal(store!.getThread(threadId)?.status, "error")
+    const errors = store!.listEvents(threadId).filter((event) => event.type === "error")
+    assert.equal(errors.length, 1)
+    assert.deepEqual(errors[0]?.payload, { recoverable: true, message: "detached action failed" })
+  })
+
   it("atomically commits intake artifact, checkpoint, and durable action success", async () => {
     const manager = createRuntime(
       intakeResult(
