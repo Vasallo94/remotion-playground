@@ -710,7 +710,7 @@ describe("parent-owned new_video intake and target integration", () => {
     )
   })
 
-  it("plans target-bound audio from brief preferences and atomically presents CP3", async () => {
+  it("plans target-bound optional audio from brief preferences and atomically presents CP3", async () => {
     store = new AgentPiStore(":memory:")
     let audioTargetId: string | undefined
     let voicePreference: string | undefined
@@ -738,10 +738,10 @@ describe("parent-owned new_video intake and target integration", () => {
     store.savePipelinePlan(audioPlan)
     const audioCandidate = candidate({
       audioPreferences: provided({
-        voiceover: "none",
-        music: "none",
-        soundEffects: "none",
-        accessibilityNotes: ["No spoken track"],
+        voiceover: "optional",
+        music: "optional",
+        soundEffects: "optional",
+        accessibilityNotes: ["Keep speech optional"],
         notes: [],
       }),
     })
@@ -784,7 +784,7 @@ describe("parent-owned new_video intake and target integration", () => {
 
     await parent.executeAudioPlannerParentAction(threadId)
     assert.equal(audioTargetId, "target.video.001")
-    assert.equal(voicePreference, "none")
+    assert.equal(voicePreference, "optional")
     const chart = store.listArtifacts(threadId).find((artifact) => artifact.kind === "audio_chart")
     assert.equal(chart?.approved, false)
     await parent.executePresentationParentAction(threadId, "present_audio_chart")
@@ -1182,7 +1182,7 @@ describe("parent-owned new_video intake and target integration", () => {
     store.saveArtifact({
       threadId,
       kind: "audio_chart",
-      data: { voiceover: null, soundDesign: { enabled: false, musicBed: null, sfx: [] }, warnings: [] },
+      data: { voiceover: null, soundDesign: { enabled: true, musicBed: null, sfx: [] }, warnings: [] },
       approved: true,
     })
     await (runtime as unknown as ParentActionRuntime).executeConfigParentAction(threadId, "generate_final_config")

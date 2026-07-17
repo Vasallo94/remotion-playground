@@ -146,6 +146,10 @@ export function validateParentEffectOverride(
       effects.length === 1 &&
       effects[0]?.type === "complete_step" &&
       effects[0].stepId === "scene_creation") ||
+    (action === "run_audio_planner" &&
+      effects.length === 1 &&
+      effects[0]?.type === "complete_step" &&
+      effects[0].stepId === "audio_plan") ||
     (action === "validate_final" &&
       effects.length === 1 &&
       effects[0]?.type === "complete_step" &&
@@ -798,10 +802,19 @@ function stepCompleted(plan: PipelinePlan, stepId: string): boolean {
   return status === "completed" || status === "skipped"
 }
 
+function normalizedSoundDesign(value: unknown): unknown {
+  if (value === null || value === undefined) return null
+  if (typeof value !== "object" || Array.isArray(value)) return value
+  const sound = value as Record<string, unknown>
+  return sound.enabled === false && sound.musicBed === null && Array.isArray(sound.sfx) && sound.sfx.length === 0
+    ? null
+    : value
+}
+
 function configContainsApprovedAudio(config: Record<string, unknown>, chart: AudioChart): boolean {
   return (
-    JSON.stringify(config.voiceover ?? null) === JSON.stringify(chart.voiceover) &&
-    JSON.stringify(config.soundDesign ?? null) === JSON.stringify(chart.soundDesign)
+    contentHash(config.voiceover ?? null) === contentHash(chart.voiceover) &&
+    contentHash(normalizedSoundDesign(config.soundDesign)) === contentHash(normalizedSoundDesign(chart.soundDesign))
   )
 }
 

@@ -427,7 +427,6 @@ describe("new_video deterministic transitions", () => {
       id: "garden",
       scenes: [],
       voiceover: null,
-      soundDesign: { enabled: false, musicBed: null, sfx: [] },
     }
     const qaData = {
       summary: "pass",
@@ -446,11 +445,14 @@ describe("new_video deterministic transitions", () => {
         { voiceover: null, soundDesign: { enabled: false, musicBed: null, sfx: [] }, warnings: [] },
         true,
       ),
-      artifact("audio_assets", { assets: [] }),
       artifact("render_job", { id: "job", status: "done" }, true),
       artifact("render_review", { passed: true }, true),
     ]
-    assert.equal(deriveCoordinatorAction({ plan: current, checkpoint: null, artifacts }), "validate_final")
+    assert.equal(deriveCoordinatorAction({ plan: current, checkpoint: null, artifacts }), "produce_audio_assets")
+    artifacts.push(artifact("audio_assets", { assets: [] }))
+    const silentSnapshot = { plan: current, checkpoint: null, artifacts }
+    assert.equal(deriveCoordinatorAction(silentSnapshot), "validate_final")
+    assert.equal(deriveCoordinatorAction(JSON.parse(JSON.stringify(silentSnapshot))), "validate_final")
     current.steps.find((step) => step.id === "final_validation")!.status = "completed"
     assert.equal(deriveCoordinatorAction({ plan: current, checkpoint: null, artifacts }), "publish")
     current.steps.find((step) => step.id === "publication")!.status = "completed"

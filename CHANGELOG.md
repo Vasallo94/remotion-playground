@@ -7,6 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Ponytail video-production doctrine** — adds a persistent project skill and audited process spec that stop video work at the first approved rung, prefer existing artifacts and deterministic parent rules, invoke specialists only for unresolved judgment, render minimum relevant evidence, and preserve real trust/human/side-effect boundaries.
 - **Real browser-operated silent cascade evidence** — completes CP4, exact Visual Recipe adoption, parent restart, CP1/CP2, ordered multimodal QA with two human rejection cycles, silent audio approval, H.264 render review, and SHA-256-verified publication while preserving one target-scoped active-set digest and creating no candidate promotion or model-authored source.
 - **Published cascade tutorial** — adds the eight verified production artifacts for `content/tutorials/deten-el-efecto-domino/`, including config, script, direction, QA, audio, render review, and exact Visual Recipe lineage.
 - **Visual Recipe adoption, ordered QA, and production lineage** — reuses Scene Composer for one bounded post-CP4 proposal, requires separate target-scoped adoption, survives restart/concurrent duplicate decisions, projects exact `{ compiled }` renderer props, renders every timeline boundary for multimodal QA, and carries active-set lineage through config, validation, render, review, and publication without new tables or source writes.
@@ -134,6 +135,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Explicit silence now short-circuits audio ceremony** — approved `none/none/none` preferences produce one parent-owned approved silent chart without Audio Planner or CP3; disabled-empty sound design is equivalent to absent config audio, so the QA-approved draft config proceeds without redundant final-config generation, still rendering, multimodal QA, or human reapproval.
 - **Orchestrator prompt refactored from procedural to policy-based** — replaced 80-line rigid step-by-step `## Workflow` with compact `## Execution policy` (common dispatch cycle, validation gates table, checkpoint table, mode-specific policy paragraphs); removed 10 redundant per-agent dispatch templates now covered by subagent `## Shared plan discipline`; prompt reduced from 300 → 244 lines
 - **Checkpoints as plan decisions** — 5 checkpoint subagents (copywriter CP1, director CP2, audio_planner CP3, scene_qa CP-QA, scene_creator CP4) now have `record_pipeline_decision` tool and prompt instructions to record human verdicts in `plan.json`; orchestrator records CP5 (validator) and CP6 (reviewer) decisions plus its own checkpoints (revision/variant/target)
 - Subagent prompts now enforce shared plan discipline: every agent reads `/pipeline/plan.json`, marks its assigned step `in_progress`, records `completed`/`blocked`/`skipped`, and returns a concise handoff with artifact paths

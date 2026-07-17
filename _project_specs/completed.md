@@ -801,3 +801,103 @@ Corregir los problemas visuales del frontal durante una ejecución real del deep
 2. Dos outputs iguales de `validate_config` / `audit_content_quality` muestran un solo artefacto equivalente.
 3. Escaleta con escenas terminal/custom parciales no muestra rectángulo negro de preview.
 4. Prompt “vídeo educativo sobre Claude Code” hace que el agente reciba instrucción explícita de generar 90-180 segundos por defecto.
+
+---
+
+# Ponytail video-production flow
+
+## Status
+
+Completed — doctrine, deterministic silence cut, and regression evidence landed
+
+## Problem
+
+The real browser-operated cascade completed safely, but normal production performed work that added no creative or technical value. An explicitly silent brief still invoked Audio Planner, presented CP3, generated a second semantically equivalent config, rendered the same ordered stills again, called multimodal QA again, and required another human approval.
+
+The pipeline currently optimizes for completing every canonical stage. It should instead stop at the first production rung that satisfies approved intent while preserving trust boundaries, human criterion, and recoverable side effects.
+
+## Ponytail production ladder
+
+For every video, scene, asset, model call, checkpoint, render, and revision, stop at the first rung that holds:
+
+1. **Does this output need to exist?** Skip speculative or already-satisfied work.
+2. **Is there an approved artifact that already satisfies it?** Reuse exact content and lineage.
+3. **Does a registered scene, active recipe, local asset, or deterministic parent rule cover it?** Use that before a specialist.
+4. **Is creative judgment unresolved?** Invoke only the specialist that owns that uncertainty.
+5. **Is new evidence required?** Render the smallest evidence capable of detecting the relevant failure.
+6. **Did the human-approved quality bar pass?** Stop; do not optimize a passing video without a new request.
+7. **Only then:** evolve a renderer or capability through conventional engineering review.
+
+Validation, data-loss prevention, security, accessibility, exact external-effect reconciliation, and explicit human approvals at real authority boundaries are never simplified away.
+
+## Current-flow audit
+
+| Stage                                             | Classification                                                   | Current decision                                                                                                          |
+| ------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Intake and target resolution                      | Required trust boundary                                          | Keep; ask only unresolved fields.                                                                                         |
+| Research                                          | Conditional                                                      | Existing deterministic skip already follows Ponytail.                                                                     |
+| Copywriting / CP1                                 | Human criterion                                                  | Keep for now; bundling with direction needs separate UX evidence.                                                         |
+| Scene capability resolution                       | Conditional                                                      | Existing registered/composed/gap routing stays.                                                                           |
+| CP4 and recipe adoption                           | Conditional authority                                            | Keep separate when reusable capability adoption is requested. Evaluate direct one-video Visual Program later.             |
+| Direction / CP2                                   | Human criterion                                                  | Keep for now; do not merge without evidence that one approval is sufficient.                                              |
+| Draft config                                      | Deterministic projection                                         | Keep while Configurator remains; later replace model work only with measured compiler coverage.                           |
+| Scene QA                                          | Conditional evidence                                             | Keep for visual changes and novel temporal scenes. Reusing QA across visual-equivalent configs is a later generalization. |
+| Audio planning / CP3                              | **Deterministic when all explicit preferences are `none`**       | Implement now: no model and no duplicate approval.                                                                        |
+| Voice and sound assets                            | Conditional side effect                                          | Existing silent skip remains.                                                                                             |
+| Final config                                      | **Unnecessary when draft config is already semantically silent** | Implement now by normalizing disabled sound design to absent config audio.                                                |
+| Final validation and render                       | Required production evidence                                     | Keep.                                                                                                                     |
+| Technical review, human final review, publication | Required authority/side-effect boundary                          | Keep.                                                                                                                     |
+
+## First implementation slice
+
+When the approved `ProductionBrief` explicitly provides all three audio preferences as `none`:
+
+- do not create an Audio Planner session;
+- parent-create the existing valid canonical silent `AudioChart`;
+- persist it approved in the existing `audio_chart` artifact kind;
+- complete the existing `audio_plan` step in the same journaled action;
+- emit normal artifact/plan events, but no audio checkpoint;
+- consider config `voiceover: null|undefined` equivalent to chart `voiceover: null`;
+- consider config `soundDesign: null|undefined` equivalent to a chart whose sound design is disabled with no music or SFX;
+- reuse the current draft config, QA, and QA lineage rather than generating a final config and rerunning stills/QA;
+- continue through silent asset production, final validation, render, final review, and publication unchanged.
+
+All other audio combinations keep the existing specialist and CP3 flow.
+
+## Acceptance criteria
+
+- [x] Explicit all-silent preferences execute zero Audio Planner model sessions.
+- [x] The parent persists one valid approved silent `audio_chart` artifact and completes `audio_plan` atomically with `run_audio_planner` success.
+- [x] No `audio_chart_checkpoint` is presented for explicit silence.
+- [x] A draft config with absent/null audio is accepted as containing the approved disabled audio chart.
+- [x] The pipeline does not derive `generate_final_config` for that case.
+- [x] The same config and QA artifacts proceed to final validation; no second config or QA version is created.
+- [x] Silent asset production performs no paid/provider audio call.
+- [x] Optional or required voice/music/SFX still invoke Audio Planner and CP3 exactly as before.
+- [x] No new table, action, scheduler, worker, lease, dependency, or persisted view is added.
+- [x] Existing CP1, CP2, CP4/adoption, QA-rejection, final-review, and publication authority remains unchanged.
+
+## Test cases
+
+1. Run the parent integration path with all audio preferences explicitly `none`; assert the injected Audio Planner factory is never called.
+2. Assert one approved canonical silent chart, no checkpoint, completed `audio_plan`, and succeeded action attempt.
+3. Given a draft config with `voiceover: null` and `soundDesign: null`, derive `produce_audio_assets` rather than `generate_final_config` after the silent chart exists.
+4. In the mocked Pi-only E2E, assert deterministic audio creates no additional config or QA version beyond those already required by creative revisions.
+5. Run an optional-audio fixture and assert the existing unapproved chart plus CP3 presentation path remains unchanged.
+6. Restart after deterministic silence and derive the same next action without another artifact or model call.
+
+## Deferred audit findings
+
+- Bundle CP1 and CP2 into one editorial approval only after browser evidence proves no loss of useful human control.
+- Support direct one-video Visual Programs without reusable-recipe adoption when reuse is explicitly unnecessary.
+- Introduce a general visual-equivalence projection only after more than the silent-audio case demonstrates the same waste.
+- Replace Configurator model calls only when a deterministic target compiler covers observed production inputs.
+- Reduce full-scene multimodal QA to novel/changed scenes only after visual identity is explicit and tested.
+
+## Non-goals
+
+- Changing the canonical plan shape.
+- Removing any trust-boundary validation.
+- Relaxing recipe, checkpoint, render, review, or publication lineage.
+- Reworking non-silent audio generation or provider receipts.
+- Adding adaptive orchestration infrastructure.

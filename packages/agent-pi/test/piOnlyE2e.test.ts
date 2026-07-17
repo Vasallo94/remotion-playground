@@ -114,6 +114,7 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
   let renders = 0
   let qaRuns = 0
   let directionRevisionFeedback: string | undefined
+  let audioPlannerCalls = 0
   let publishedFileNames: string[] = []
   const runtime = new AgentRuntimeManager({
     store,
@@ -233,12 +234,8 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     }),
     createAudioPlannerSpecialistRunner: () => ({
       async run() {
-        return {
-          runId: "audio-e2e",
-          modelRoute: "test/audio",
-          chart: { voiceover: null, soundDesign: { enabled: false, musicBed: null, sfx: [] }, warnings: [] },
-          library: [],
-        }
+        audioPlannerCalls += 1
+        throw new Error("Explicit silence must not invoke Audio Planner")
       },
     }),
     createAudioAssetProducer: () => ({
@@ -357,14 +354,20 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     assert.match(directionRevisionFeedback ?? "", /make the remediation contract explicit/)
 
     await runtime.resumeCheckpoint(threadId, { approved: true })
-    assert.equal(store.getThread(threadId)?.checkpoint?.type, "audio_chart_checkpoint")
+    assert.equal(store.getThread(threadId)?.checkpoint?.type, "final_review_checkpoint")
+    assert.equal(audioPlannerCalls, 0)
     assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "qa_report").length, 2)
     assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "qa_lineage").length, 2)
     assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "direction").length, 3)
     assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "config").length, 2)
-
-    await runtime.resumeCheckpoint(threadId, { approved: true })
-    assert.equal(store.getThread(threadId)?.checkpoint?.type, "final_review_checkpoint")
+    const audioCharts = store.listArtifacts(threadId).filter((artifact) => artifact.kind === "audio_chart")
+    assert.equal(audioCharts.length, 1)
+    assert.equal(audioCharts[0]?.approved, true)
+    assert.equal(store.getPipelinePlan(threadId)?.steps.find((step) => step.id === "audio_plan")?.status, "completed")
+    assert.equal(
+      store.getPipelinePlan(threadId)?.decisions.some((decision) => decision.stepId === "audio_plan"),
+      false,
+    )
 
     await runtime.resumeCheckpoint(threadId, { approved: true })
     assert.equal(store.getThread(threadId)?.checkpoint, null)

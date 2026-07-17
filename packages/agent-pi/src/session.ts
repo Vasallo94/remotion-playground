@@ -1922,12 +1922,28 @@ export class AgentRuntimeManager {
       : soundValues.length > 0 && soundValues.every((value) => value === "none")
         ? ("none" as const)
         : ("optional" as const)
+    const explicitSilence =
+      preferences?.voiceover === "none" && preferences.music === "none" && preferences.soundEffects === "none"
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "run_audio_planner" as const
     const execution = await this.parentActionExecutor().execute({
       snapshot,
       request: { action, idempotencyKey: actionIdempotencyKey(snapshot, action) },
       effect: async () => {
+        if (explicitSilence) {
+          const chart: AudioChart = {
+            voiceover: null,
+            soundDesign: { enabled: false, musicBed: null, sfx: [] },
+            warnings: [],
+          }
+          validateAudioChart(chart, script.data.scenes.length, listAudioLibrary())
+          return {
+            outcome: { mode: "deterministic_silence" },
+            artifacts: [{ id: randomUUID(), threadId, kind: "audio_chart" as const, data: chart, approved: true }],
+            planEffects: [{ type: "complete_step" as const, stepId: "audio_plan" }],
+            effectMetadata: { mode: "deterministic_silence" },
+          }
+        }
         const result = await this.createAudioPlannerSpecialistRunner(threadId).run(
           script.data,
           direction.data,
