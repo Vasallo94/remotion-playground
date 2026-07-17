@@ -40,6 +40,10 @@ packages/agent/.langgraph_api/
 # Claude Code local settings
 .claude/settings.local.json
 
+# Pi package caches; project package declarations live in .pi/settings.json
+.pi/git/
+.pi/npm/
+
 # Generated audio/video assets
 public/audio/*/
 !public/audio/library/
