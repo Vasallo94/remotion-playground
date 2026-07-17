@@ -304,6 +304,11 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     const threadId = await runtime.getOrCreateThread(null, "Pi-only E2E")
     await runtime.sendMessage(threadId, "Create the supplied video", { mode: "new_video" })
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "script_checkpoint")
+    assert.equal(
+      store.listEvents(threadId).filter((event) => event.type === "agent_end").length,
+      0,
+      "checkpoint pauses must not emit terminal completion",
+    )
 
     await runtime.resumeCheckpoint(threadId, { approved: true })
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "direction_checkpoint")
@@ -380,6 +385,11 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     )
     assert.equal(finalPlan.status, "completed")
     assert.equal(finalPlan.progress.completed, finalPlan.progress.total)
+    assert.equal(store.getThread(threadId)?.status, "idle")
+    const terminalEvents = store.listEvents(threadId).filter((event) => event.type === "agent_end")
+    assert.equal(terminalEvents.length, 1)
+    assert.deepEqual(terminalEvents[0]?.payload, { willRetry: false, reason: "canonical_complete" })
+    assert.equal(store.listEvents(threadId).at(-1)?.type, "agent_end")
     assert.equal(publications, 1)
     assert.equal(renders, 1)
     assert.ok(publishedFileNames.includes("visual-recipe-lineage.json"))

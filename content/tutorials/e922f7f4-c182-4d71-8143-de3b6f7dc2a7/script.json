@@ -1,0 +1,86 @@
+{
+  "title": "Cuando ya basta",
+  "objective": "Explicar que el mejor siguiente paso puede ser no añadir nada cuando el resultado ya cumple su propósito.",
+  "audience": "Equipos de producto e ingeniería.",
+  "tone": "Educativo, sobrio, directo, minimalista.",
+  "estimatedDurationSeconds": 9,
+  "notes": "Script ajustado al target exacto target.video.001 y a sus capacidades: video/mp4, 1280x720, 30 fps, horizontal 16:9, tema betelgeuse. Estructura exacta de 3 escenas registradas y simples: intro 3 s, callout 3 s, outro 3 s. Sin voz, música, efectos, assets, investigación externa, marca, logo, firma ni watermark. Todas las decisiones humanas requieren aprobación desde el navegador.",
+  "scenes": [
+    {
+      "id": "scene-01-intro",
+      "type": "intro",
+      "title": "Cuando ya basta",
+      "voiceover": "",
+      "visualNotes": "Tarjeta de apertura simple en 16:9 horizontal con tema betelgeuse, fondo limpio de alto contraste y texto centrado dentro de márgenes seguros. Sin logo, firma, marca ni watermark. Sin elementos decorativos extra.",
+      "narrativeRole": "Abrir el vídeo con el título exacto y orientar al espectador al tema central.",
+      "visualType": "builtin",
+      "visualRole": "Hook de apertura tipográfica mínima.",
+      "propsPlan": {
+        "type": "intro",
+        "title": "Cuando ya basta",
+        "subtitle": null,
+        "pixelLogo": {
+          "enabled": false
+        },
+        "durationInSeconds": 3
+      },
+      "visualRationale": "La escena intro registrada es la opción más simple y correcta para presentar el título exacto sin añadir complejidad visual ni assets.",
+      "requiredAssets": [],
+      "missingCapabilities": [],
+      "riskNotes": [
+        "Verificar que la configuración global desactive watermark y signature fuera de la escena.",
+        "Mantener tamaño de texto legible para LinkedIn/web dentro de safe margins."
+      ],
+      "durationInSeconds": 3
+    },
+    {
+      "id": "scene-02-callout",
+      "type": "callout",
+      "title": "Si ya cumple, detente",
+      "voiceover": "",
+      "visualNotes": "Callout centrado con texto único y breve, alto contraste, fondo sólido o overlay oscuro consistente con betelgeuse. Sin iconos ni apoyo visual externo. Márgenes seguros amplios.",
+      "narrativeRole": "Presentar la idea principal como takeaway claro y memorable.",
+      "visualType": "builtin",
+      "visualRole": "Énfasis conceptual en una sola frase.",
+      "propsPlan": {
+        "type": "callout",
+        "text": "Si ya cumple, detente",
+        "position": "center",
+        "background": "solid",
+        "durationInSeconds": 3
+      },
+      "visualRationale": "La escena callout registrada permite enfatizar una única lección con máxima claridad en muy poco tiempo, adecuada para un vídeo silencioso.",
+      "requiredAssets": [],
+      "missingCapabilities": [],
+      "riskNotes": [
+        "Comprobar contraste suficiente entre fondo y texto.",
+        "No exceder una línea o, si parte en dos, mantener equilibrio visual."
+      ],
+      "durationInSeconds": 3
+    },
+    {
+      "id": "scene-03-outro",
+      "type": "outro",
+      "title": "Menos proceso. Más resultado.",
+      "voiceover": "",
+      "visualNotes": "Cierre tipográfico simple con la frase final exacta como mensaje principal, sin bullets visibles adicionales, centrado y con composición limpia. Tema betelgeuse, alto contraste, safe margins, sin branding.",
+      "narrativeRole": "Cerrar con síntesis memorable y reforzar la filosofía de detenerse cuando ya se cumplió el propósito.",
+      "visualType": "builtin",
+      "visualRole": "Cierre/resumen final minimalista.",
+      "propsPlan": {
+        "type": "outro",
+        "title": "Menos proceso. Más resultado.",
+        "bullets": [],
+        "durationInSeconds": 3
+      },
+      "visualRationale": "La escena outro registrada funciona como cierre natural del mensaje y permite terminar con una frase de resumen sin introducir nuevos elementos.",
+      "requiredAssets": [],
+      "missingCapabilities": [],
+      "riskNotes": [
+        "Si bullets vacíos no son aceptados por el runtime, usar null para mantener solo el título.",
+        "Validar que la frase final quede suficientemente grande y centrada para 3 segundos."
+      ],
+      "durationInSeconds": 3
+    }
+  ]
+}

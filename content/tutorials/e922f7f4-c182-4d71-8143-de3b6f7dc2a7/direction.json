@@ -1,0 +1,92 @@
+{
+  "title": "Cuando ya basta",
+  "scenes": [
+    {
+      "sceneId": "scene-01-intro",
+      "sceneType": "intro",
+      "title": "Cuando ya basta",
+      "technicalIntent": "Abrir con una tarjeta tipográfica mínima usando la escena builtin intro. Debe validar contra el target.video.001 en 1280x720, 30 fps, horizontal 16:9, tema betelgeuse. Sin voz, música, efectos, assets, logo, firma ni watermark.",
+      "visualContract": "Fondo limpio de alto contraste del tema betelgeuse. Texto principal centrado: “Cuando ya basta”. Sin subtítulo. Composición sobria, márgenes seguros amplios, sin elementos decorativos extra.",
+      "timing": {
+        "tailHoldMs": 300,
+        "transitionMs": 150
+      },
+      "beats": [
+        {
+          "id": "scene-01-beat-01",
+          "startMs": 0,
+          "endMs": 3000,
+          "visual": "Título único centrado en pantalla con presencia estable y lectura inmediata.",
+          "animation": "Entrada suave y breve; mantener casi estático el resto del plano.",
+          "emphasis": "medium"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Verificar que la configuración global desactive watermark y signature.",
+        "Mantener tamaño y peso tipográfico legibles dentro de safe margins para web y LinkedIn."
+      ]
+    },
+    {
+      "sceneId": "scene-02-callout",
+      "sceneType": "callout",
+      "title": "Si ya cumple, detente",
+      "technicalIntent": "Presentar la idea principal con la escena builtin callout, priorizando claridad en un vídeo silencioso. Mantener una sola frase, alto contraste y composición mínima, sin iconos ni apoyos externos.",
+      "visualContract": "Texto único centrado: “Si ya cumple, detente”. Fondo sólido u overlay oscuro consistente con betelgeuse. Una sola unidad visual, sin listas ni adornos.",
+      "timing": {
+        "tailHoldMs": 300,
+        "transitionMs": 150
+      },
+      "beats": [
+        {
+          "id": "scene-02-beat-01",
+          "startMs": 0,
+          "endMs": 3000,
+          "visual": "La frase aparece centrada y domina todo el cuadro como takeaway principal.",
+          "animation": "Entrada breve con fijación rápida; sin movimiento posterior relevante.",
+          "emphasis": "high"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Comprobar contraste suficiente entre fondo y texto.",
+        "Evitar que el texto se parta de forma desequilibrada si el render ajusta tipografía."
+      ]
+    },
+    {
+      "sceneId": "scene-03-outro",
+      "sceneType": "outro",
+      "title": "Menos proceso. Más resultado.",
+      "technicalIntent": "Cerrar con una síntesis memorable usando la escena builtin outro, pero sin bullets visibles ni CTA adicional. Mantener el cierre limpio, centrado y consistente con el tono sobrio del vídeo.",
+      "visualContract": "Frase final principal centrada: “Menos proceso. Más resultado.” Sin branding. Sin bullets visibles; si el runtime no acepta array vacío, usar null para bullets y conservar solo el título.",
+      "timing": {
+        "tailHoldMs": 400,
+        "transitionMs": 150
+      },
+      "beats": [
+        {
+          "id": "scene-03-beat-01",
+          "startMs": 0,
+          "endMs": 3000,
+          "visual": "Cierre tipográfico estable con la frase final como resumen único.",
+          "animation": "Entrada suave y cierre sostenido para memorabilidad.",
+          "emphasis": "high"
+        }
+      ],
+      "assets": [],
+      "risks": [
+        "Si bullets vacíos no son aceptados por el runtime, sustituir por null.",
+        "Validar tamaño final de la frase para lectura cómoda durante 3 segundos."
+      ]
+    }
+  ],
+  "warnings": [
+    "Dirección basada estrictamente en las 3 escenas aprobadas y en escenas registradas disponibles: intro, callout y outro.",
+    "No se introducen assets externos, narración, música, efectos, branding ni investigación adicional.",
+    "Cualquier decisión humana de publicación o ajuste final requiere aprobación en navegador."
+  ],
+  "risks": [
+    "El runtime global del target permite watermark por defecto; debe anularse explícitamente para cumplir el script aprobado.",
+    "El cierre outro podría requerir bullets=null en lugar de [] según validación final del runtime."
+  ]
+}

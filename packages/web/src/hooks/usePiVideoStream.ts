@@ -137,6 +137,7 @@ export function shouldApplyPiSnapshot(
 export function checkpointDataWithArtifact(
   checkpoint: {
     id?: string
+    type?: string
     artifactId?: string | null
     payload?: Record<string, unknown>
   },
@@ -153,6 +154,7 @@ export function checkpointDataWithArtifact(
     ...artifactData,
     ...(checkpoint.payload ?? {}),
     ...(checkpoint.id ? { checkpointId: checkpoint.id } : {}),
+    ...(checkpoint.type ? { checkpointType: checkpoint.type } : {}),
     ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
   }
 }
@@ -398,6 +400,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
               ? checkpointDataWithArtifact(
                   {
                     id: checkpoint.id,
+                    type: checkpoint.type,
                     artifactId: checkpoint.artifactId,
                     payload: checkpoint.payload,
                   },

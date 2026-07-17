@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
+import { buildGenericCheckpointPresentation } from "../components/GenericCheckpointCard.js"
 import {
   checkpointDataWithArtifact,
   isCurrentPiRequest,
@@ -24,6 +25,7 @@ describe("Pi thread authority reconciliation", () => {
       checkpointDataWithArtifact(
         {
           id: "cp-script",
+          type: "script_checkpoint",
           artifactId: "script-2",
           payload: { version: 2 },
         },
@@ -34,8 +36,37 @@ describe("Pi thread authority reconciliation", () => {
         scenes: [{ type: "callout" }],
         version: 2,
         checkpointId: "cp-script",
+        checkpointType: "script_checkpoint",
         artifactId: "script-2",
       },
+    )
+  })
+
+  it("projects clarification into human copy without exposing the target registry", () => {
+    const presentation = buildGenericCheckpointPresentation({
+      checkpointType: "target_clarification",
+      questions: [
+        {
+          field: "format",
+          question: "¿Qué formato compatible debemos usar?",
+          requested: "MP4 horizontal",
+          supported: ["video/mp4"],
+        },
+      ],
+      registry: [{ secretImplementationDetail: "DO_NOT_RENDER" }],
+    })
+
+    assert.equal(presentation.isClarification, true)
+    assert.equal(presentation.title, "Necesitamos una aclaración")
+    assert.equal(presentation.questions[0]?.question, "¿Qué formato compatible debemos usar?")
+    assert.equal("registry" in presentation.technicalData, false)
+    assert.equal(
+      buildGenericCheckpointPresentation({ checkpointType: "qa_report_checkpoint" }).title,
+      "Revisión visual",
+    )
+    assert.equal(
+      buildGenericCheckpointPresentation({ checkpointType: "final_review_checkpoint" }).title,
+      "Revisión final del render",
     )
   })
 

@@ -7,6 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Real explicit-silence Ponytail proof** — completes a browser-operated 9-second production with zero Audio Planner model sessions, no CP3, one config/QA lineage, one deterministic approved silent chart, H.264 render review, final human approval, and verified publication.
 - **Ponytail video-production doctrine** — adds a persistent project skill and audited process spec that stop video work at the first approved rung, prefer existing artifacts and deterministic parent rules, invoke specialists only for unresolved judgment, render minimum relevant evidence, and preserve real trust/human/side-effect boundaries.
 - **Real browser-operated silent cascade evidence** — completes CP4, exact Visual Recipe adoption, parent restart, CP1/CP2, ordered multimodal QA with two human rejection cycles, silent audio approval, H.264 render review, and SHA-256-verified publication while preserving one target-scoped active-set digest and creating no candidate promotion or model-authored source.
 - **Published cascade tutorial** — adds the eight verified production artifacts for `content/tutorials/deten-el-efecto-domino/`, including config, script, direction, QA, audio, render review, and exact Visual Recipe lineage.
@@ -153,6 +154,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Live Pi completion convergence** — emits the existing persisted `agent_end` event on canonical `running → idle` completion so SSE clients stop showing `Procesando...`; historical clients continue recovering from snapshots without rerendering or republishing.
+- **Human-friendly generic checkpoints** — clarification cards now show focused questions, requested/supported values, one `Responder` action, and sanitized collapsed details; QA/final-review cards use human titles and final review exposes codec, dimensions, FPS, duration, and warnings without requiring JSON inspection.
 - **Live strict-contract recovery** — Scene Composer now distinguishes exact composed specs from timed capability gaps, Visual Recipe tools expose the duration-bound closed schema instead of a summary, detached checkpoint failures become recoverable thread errors, and Director gets one bounded repair while preserving the approved adapter.
 - **Trusted Visual Program legibility and no-brand rendering** — nearby cards size without overlap, edges terminate at card boundaries with visible arrowheads, labels render only when they fit, isolation boundaries remain behind cards, and root `watermark: false` suppresses theme labels and signature overlays as well as logo watermarks.
 - **Pi checkpoint artifact hydration** — active and replayed checkpoint cards now merge exact artifact data before checkpoint identity metadata, preventing script/direction cards from crashing after SSE transitions, reload, or parent restart when checkpoint payloads contain only artifact references.

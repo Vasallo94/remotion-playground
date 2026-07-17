@@ -629,7 +629,14 @@ export class AgentRuntimeManager {
         throw new Error(`Pipeline mode '${plan.mode}' is not implemented by the parent runtime`)
       await this.advanceCanonicalNewVideo(threadId, message)
       const thread = this.store.getThread(threadId)
-      if (thread?.status === "running") this.store.updateThreadStatus(threadId, "idle")
+      if (thread?.status === "running") {
+        this.store.updateThreadStatus(threadId, "idle")
+        this.eventBus.publish({
+          threadId,
+          type: "agent_end",
+          payload: { willRetry: false, reason: "canonical_complete" },
+        })
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       this.store.updateThreadStatus(threadId, "error")

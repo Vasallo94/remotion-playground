@@ -901,3 +901,66 @@ All other audio combinations keep the existing specialist and CP3 flow.
 - Relaxing recipe, checkpoint, render, review, or publication lineage.
 - Reworking non-silent audio generation or provider receipts.
 - Adding adaptive orchestration infrastructure.
+
+---
+
+# Human-friendly generic checkpoints
+
+## Status
+
+Completed — discovered and verified during the live explicit-silence proof
+
+## Problem
+
+Intake and target clarification checkpoints exposed complete internal artifacts and the target registry as JSON. The user had to inspect implementation data to find one question, while `Aprobar` and `Pedir cambios` did not describe a clarification action. The later final-review checkpoint also appeared as `Revisión pendiente` with decision-relevant media facts hidden in JSON.
+
+## Implemented decision
+
+The existing checkpoint payload and feedback endpoint remain unchanged. Generic checkpoint presentation now:
+
+- renders focused clarification questions prominently;
+- shows requested and supported values;
+- opens one answer field with a single `Responder` action;
+- omits the full registry from sanitized technical details;
+- keeps technical payloads collapsed;
+- gives QA and final-review checkpoints human Spanish titles;
+- shows final render pass state, codec, dimensions, FPS, duration, and warnings before technical details;
+- propagates checkpoint type through active and resolved artifact hydration.
+
+No form framework, checkpoint schema, API, persistence model, or authority path was added.
+
+## Acceptance evidence
+
+- [x] The same paused live thread displayed one focused clarification and continued after its answer.
+- [x] The registry was absent from the default and technical presentation projection.
+- [x] Clarification used `Responder` with no approve/reject actions.
+- [x] Non-clarification checkpoints retained approve/request-changes authority.
+- [x] Final review displayed `Correcto`, H.264, 1280×720, 30 fps, and 9.05/9 s without opening JSON.
+- [x] Web authority tests, TypeScript build, ESLint, and browser verification passed.
+
+---
+
+# Live thread completion convergence
+
+## Status
+
+Completed — root fix and live snapshot recovery verified
+
+## Problem
+
+The real silent production completed render, review, publication, and all 13 plan steps, while the browser continued showing `Procesando...`. The persisted thread was correctly `idle` and the browser DOM already contained the video and download link. Terminal canonical completion changed `running → idle` without publishing an event, so the live frontend could not clear its loading state.
+
+## Implemented decision
+
+`PiAgentRuntime.sendMessage()` now publishes the existing persisted `agent_end` event with `{ willRetry: false, reason: "canonical_complete" }` exactly when canonical work returns with the thread still `running` and the parent transitions it to `idle`.
+
+Checkpoint pauses remain `waiting` and emit no terminal completion. Failures continue using `error`. The solution reuses the event log, transactional outbox, SSE replay, and existing frontend terminal handler; it adds no polling, scheduler, table, lease, or derived frontend authority.
+
+## Acceptance evidence
+
+- [x] Pi-only E2E asserts no terminal event at checkpoint pauses.
+- [x] Final publication leaves the thread `idle` with exactly one final `agent_end`.
+- [x] Existing render/publication idempotency remains unchanged.
+- [x] Historical thread `5065f045-306b-4fbb-a79e-191287fbaeae` recovered from its revision-148/event-80 snapshot without another render or publication.
+- [x] Browser showed `Completado`, ready video/download, and no `Procesando...`.
+- [x] Agent Pi 260/260, scene contracts 28/28, render service 12/12, web authority 4/4, Visual Program renderer 3/3, typechecks, lint, build, and diff checks passed.
