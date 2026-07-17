@@ -161,6 +161,8 @@ The live novel-scene E2E remains blocked until:
 - no source-generation or source-promotion action is reachable from normal production;
 - silent/no-API mode makes no paid provider call.
 
+Gate 3 browser evidence now covers CP4 approval, recipe rejection/reproposal, browser reload, parent restart, recipe adoption, CP1, CP2, Scene QA rejection, direction revision, fresh final-config QA, CP3, final review, and publication. The final plan completed 13/13 steps with one active-set digest preserved through config, QA, validation, render, review, and publication.
+
 ## Non-goals
 
 - Full replacement of `ConfigSpecialistRunner` in this feature.

@@ -134,6 +134,29 @@ export function shouldApplyPiSnapshot(
   )
 }
 
+export function checkpointDataWithArtifact(
+  checkpoint: {
+    id?: string
+    artifactId?: string | null
+    payload?: Record<string, unknown>
+  },
+  artifacts: readonly { id: string; data: unknown }[],
+): Record<string, unknown> {
+  const artifact = checkpoint.artifactId
+    ? artifacts.find((candidate) => candidate.id === checkpoint.artifactId)
+    : undefined
+  const artifactData =
+    typeof artifact?.data === "object" && artifact.data !== null && !Array.isArray(artifact.data)
+      ? (artifact.data as Record<string, unknown>)
+      : {}
+  return {
+    ...artifactData,
+    ...(checkpoint.payload ?? {}),
+    ...(checkpoint.id ? { checkpointId: checkpoint.id } : {}),
+    ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
+  }
+}
+
 export function isPiAuthorityEventCoveredBySnapshot(snapshotRevision: number, event: PiEvent): boolean {
   return (
     AUTHORITY_EVENT_TYPES.has(event.type) && typeof event.revision === "number" && event.revision <= snapshotRevision
@@ -208,6 +231,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const actionGenerationRef = useRef(0)
   const videoResultJobIdsRef = useRef(new Set<string>())
   const activeAssistantIdRef = useRef<string | null>(null)
+  const artifactDataByIdRef = useRef(new Map<string, unknown>())
   const messagesRef = useRef(messages)
   messagesRef.current = messages
 
@@ -223,6 +247,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     snapshotRevisionRef.current = 0
     videoResultJobIdsRef.current.clear()
     activeAssistantIdRef.current = null
+    artifactDataByIdRef.current.clear()
     setMessages([])
     setCheckpointType(null)
     setCheckpointData(null)
@@ -349,24 +374,36 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
             type: "checkpoint",
           })
           setCheckpointType(rawType ? (CHECKPOINT_TYPE_MAP[rawType] ?? "generic") : "generic")
-          setCheckpointData({
-            ...(checkpoint.payload ?? event.payload),
-            ...(checkpoint.id ? { checkpointId: checkpoint.id } : {}),
-            ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
-          })
+          setCheckpointData(
+            checkpointDataWithArtifact(
+              { ...checkpoint, payload: checkpoint.payload ?? event.payload },
+              [...artifactDataByIdRef.current].map(([id, data]) => ({ id, data })),
+            ),
+          )
           setIsLoading(false)
           activeAssistantIdRef.current = null
           return
         }
         case "artifact_updated": {
           const kind = typeof event.payload.kind === "string" ? event.payload.kind : "artifact"
+          const artifact = event.payload.artifact as { id?: unknown; data?: unknown } | undefined
+          if (typeof artifact?.id === "string") artifactDataByIdRef.current.set(artifact.id, artifact.data)
           appendPipelineEvent({ stage: "orchestrator", message: `artifact updated: ${kind}`, type: "info" })
           if (event.payload.kind === "checkpoint_decision") {
             const checkpoint = event.payload.checkpoint as
-              | { type?: string; payload?: Record<string, unknown> }
+              | { id?: string; type?: string; artifactId?: string | null; payload?: Record<string, unknown> }
               | undefined
             const cpType = checkpoint?.type ? (CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic") : checkpointType
-            const cpData = checkpoint?.payload ?? checkpointData
+            const cpData = checkpoint
+              ? checkpointDataWithArtifact(
+                  {
+                    id: checkpoint.id,
+                    artifactId: checkpoint.artifactId,
+                    payload: checkpoint.payload,
+                  },
+                  [...artifactDataByIdRef.current].map(([id, data]) => ({ id, data })),
+                )
+              : checkpointData
             if (cpType && cpData) {
               addEnrichment({
                 id: crypto.randomUUID(),
@@ -572,17 +609,10 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         authorityRevisionRef.current = snapshot.thread.revision
         snapshotRevisionRef.current = snapshot.thread.revision
+        artifactDataByIdRef.current = new Map(snapshot.artifacts.map((artifact) => [artifact.id, artifact.data]))
         const checkpoint = snapshot.thread.checkpoint
         setCheckpointType(checkpoint ? (CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic") : null)
-        setCheckpointData(
-          checkpoint
-            ? {
-                ...checkpoint.payload,
-                checkpointId: checkpoint.id,
-                ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
-              }
-            : null,
-        )
+        setCheckpointData(checkpoint ? checkpointDataWithArtifact(checkpoint, snapshot.artifacts) : null)
         setIsLoading(snapshot.thread.status === "running")
         setError(snapshot.thread.status === "error" ? "Agent Pi failed; retry the current action." : null)
         setPlanState(extractPlanStateFromPipelinePlan(snapshot.plan as PipelinePlan | null))

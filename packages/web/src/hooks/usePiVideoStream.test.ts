@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { isCurrentPiRequest, isPiAuthorityEventCoveredBySnapshot, shouldApplyPiSnapshot } from "./usePiVideoStream.js"
+import {
+  checkpointDataWithArtifact,
+  isCurrentPiRequest,
+  isPiAuthorityEventCoveredBySnapshot,
+  shouldApplyPiSnapshot,
+} from "./usePiVideoStream.js"
 
 describe("Pi thread authority reconciliation", () => {
   it("rejects stale snapshots and callbacks from another thread generation", () => {
@@ -12,6 +17,26 @@ describe("Pi thread authority reconciliation", () => {
     assert.equal(isCurrentPiRequest(4, 4, 2, 2), true)
     assert.equal(isCurrentPiRequest(3, 4, 2, 2), false)
     assert.equal(isCurrentPiRequest(4, 4, 1, 2), false)
+  })
+
+  it("hydrates checkpoint cards from the exact artifact before applying authority metadata", () => {
+    assert.deepEqual(
+      checkpointDataWithArtifact(
+        {
+          id: "cp-script",
+          artifactId: "script-2",
+          payload: { version: 2 },
+        },
+        [{ id: "script-2", data: { title: "Approved script", scenes: [{ type: "callout" }] } }],
+      ),
+      {
+        title: "Approved script",
+        scenes: [{ type: "callout" }],
+        version: 2,
+        checkpointId: "cp-script",
+        artifactId: "script-2",
+      },
+    )
   })
 
   it("does not let replay resurrect authority already covered by a snapshot", () => {

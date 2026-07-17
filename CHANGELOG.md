@@ -149,6 +149,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Pi checkpoint artifact hydration** — active and replayed checkpoint cards now merge exact artifact data before checkpoint identity metadata, preventing script/direction cards from crashing after SSE transitions, reload, or parent restart when checkpoint payloads contain only artifact references.
 - **Pi frontend authority races** — thread snapshots now apply only when their thread, generation, local action generation, and revision are current; authoritative null checkpoints clear stale cards, replay cannot resurrect snapshot-covered authority, delayed submit/resume/retry callbacks are fenced, and checkpoint bindings override component payloads.
 - **Cold Remotion CLI workspace bundling** — `remotion.config.ts` now uses the same NodeNext `.js`→TypeScript extension aliases as the repository-owned bundler and render scripts, so browser bundles resolve workspace contracts consistently.
 - **Pi-only live E2E integration gaps** — continues canonical execution after intake clarification, parent-compiles immutable scene lineage, enforces explicit target theme selection, normalizes silent audio as `null`, gives repeated checkpoint presentations a decision epoch, and resolves NodeNext workspace `.js` imports during cold Remotion bundles.
