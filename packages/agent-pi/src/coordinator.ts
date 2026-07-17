@@ -27,6 +27,7 @@ export type CoordinatorAction =
   | "research_or_skip"
   | "run_copywriter"
   | "run_scene_composer"
+  | "propose_visual_recipe"
   | "generate_scene_candidate"
   | "promote_scene_candidate"
   | "present_script"
@@ -365,6 +366,20 @@ const NEW_VIDEO_TRANSITIONS = [
     stepId: "scene_creation",
     prerequisites: [checkpointClear, artifactPrerequisite("script", false)],
     nextStateEffects: [{ type: "start_step", stepId: "scene_creation" }],
+  },
+  {
+    action: "propose_visual_recipe",
+    stepId: "scene_creation",
+    checkpoint: "visual_recipe_adoption_checkpoint",
+    prerequisites: [
+      checkpointClear,
+      artifactPrerequisite("script", false),
+      artifactPrerequisite("scene_composition", true),
+    ],
+    nextStateEffects: [
+      { type: "set_checkpoint", checkpoint: "visual_recipe_adoption_checkpoint" },
+      { type: "wait_for_human" },
+    ],
   },
   {
     action: "generate_scene_candidate",
@@ -880,16 +895,7 @@ export function deriveCoordinatorDecision(snapshot: CoordinatorSnapshot): Coordi
       else {
         const composition = latest<SceneCompositionResult>(artifacts, "scene_composition")
         if (!composition?.approved) action = "run_scene_composer"
-        else {
-          return {
-            kind: "wait_for_human",
-            mode: plan.mode,
-            action: "wait_for_human",
-            stepId: "scene_creation",
-            reason:
-              "The approved capability gap requires the bounded Visual Program recipe workflow; executable source generation is disabled for normal production.",
-          }
-        }
+        else action = "propose_visual_recipe"
       }
     } else {
       const direction = latest(artifacts, "direction")
@@ -1001,9 +1007,10 @@ export function actionIdempotencyKey(snapshot: CoordinatorSnapshot, action: Coor
         `${prerequisite.artifact.kind}:${latest(snapshot.artifacts, prerequisite.artifact.kind)?.version ?? 0}`,
     )
     .join(",")
-  const checkpointDecisionEpoch = action.startsWith("present_")
-    ? `:decisions:${snapshot.plan?.decisions.length ?? 0}`
-    : ""
+  const checkpointDecisionEpoch =
+    action.startsWith("present_") || action === "propose_visual_recipe"
+      ? `:decisions:${snapshot.plan?.decisions.length ?? 0}`
+      : ""
   return `${snapshot.plan?.id ?? "no-plan"}:${snapshot.plan?.mode ?? "none"}:${action}:${versions}${checkpointDecisionEpoch}`
 }
 
@@ -1178,6 +1185,8 @@ export function coordinatorInstruction(action: CoordinatorAction): string {
       "Run the isolated copywriter with the explicit brief and approved evidence. Do not create a plan or select a transition.",
     run_scene_composer:
       "Run the isolated declarative scene composer for flagged visual needs. Do not generate executable source.",
+    propose_visual_recipe:
+      "Run the same isolated scene composer for one bounded Visual Recipe after exact CP4 approval, then present separate adoption authority.",
     present_script: "Present the latest script artifact at the parent-owned checkpoint and stop.",
     run_intake: "Reserve the parent-owned ProductionBrief intake boundary; do not infer missing inputs.",
     resolve_target: "Reserve the parent-owned TargetContract resolution boundary; do not select an implicit target.",

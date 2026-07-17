@@ -7,7 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **Minimal Visual Recipe artifacts and production lineage** — reuses the existing artifact store for deterministic compiled recipes, event-boundary evidence, target-scoped active sets, tamper verification, immutable config projection, and exact QA/validation/render/review/publication lineage without new tables, source writes, or mutable registries.
+- **Visual Recipe adoption workflow and production lineage** — reuses Scene Composer for one bounded post-CP4 proposal, compiles deterministic recipe/evidence artifacts, requires separate target-scoped human adoption, supports rejection/reproposal, and carries exact active-set lineage through config, QA, validation, render, review, and publication without new tables, source writes, or mutable registries.
 - **Thread revision and transactional event outbox kernel** — adds schema v2 migration/backfill, monotonic per-thread revisions, contiguous local event cursors, atomic outbox persistence, commit-only at-least-once delivery, restart draining, and paginated replay without changing `session.ts`.
 
 - **Visual Program v1 foundation** — adds strict bounded temporal/relational contracts, canonical Node-only compilation and SHA-256 lineage, deterministic timelines/layout/assertions, immutable renderer props, a trusted Remotion renderer, topic-neutral cascade fixtures, and real event-boundary still evidence while reserving the component from model-authored catalog reuse.

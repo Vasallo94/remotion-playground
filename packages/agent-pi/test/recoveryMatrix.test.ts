@@ -107,8 +107,8 @@ describe("checkpoint/restart recovery fixtures", () => {
       assert.equal(approvedState.plan?.decisions[0]?.status, "approved", fixture.name)
       assert.equal(deriveCoordinatorDecision(approvedState).action, fixture.expectedAfterApproval, fixture.name)
       if (fixture.checkpoint.type === "capability_gap_checkpoint") {
-        assert.equal(approvedState.plan?.status, "blocked")
-        assert.equal(approvedState.plan?.currentStepId, "scene_creation")
+        assert.equal(approvedState.plan?.status, "active")
+        assert.equal(approvedState.plan?.steps.find((step) => step.id === "scene_creation")?.status, "in_progress")
       }
 
       const rejectedStore = createStore()

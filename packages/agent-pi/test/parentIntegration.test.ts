@@ -493,6 +493,23 @@ describe("parent-owned new_video intake and target integration", () => {
             },
           }
         },
+        async runVisualRecipe(input) {
+          assert.equal(input.sceneId, "scene-gap")
+          return {
+            runId: "recipe-run",
+            modelRoute: "test/composer",
+            proposal: {
+              summary: "Bounded cascade recipe",
+              sceneId: "scene-gap",
+              template: createVisualRecipeTemplate({
+                version: 1,
+                templateId: "approved-cascade",
+                program: cascadeFixture,
+                bindings: [],
+              }),
+            },
+          }
+        },
       }),
     })
     const threadId = store.createThread().id
@@ -522,7 +539,7 @@ describe("parent-owned new_video intake and target integration", () => {
           {
             id: "scene-gap",
             type: "callout",
-            durationInSeconds: 3,
+            durationInSeconds: 5,
             missingCapabilities: ["Reusable bounded capability"],
           },
         ],
@@ -538,6 +555,45 @@ describe("parent-owned new_video intake and target integration", () => {
     assert.equal(
       store.listActionAttempts(threadId).find((attempt) => attempt.action === "run_scene_composer")?.status,
       "succeeded",
+    )
+
+    await runtime.resumeCheckpoint(threadId, { approved: true })
+    assert.equal(store.getThread(threadId)?.checkpoint?.type, "visual_recipe_adoption_checkpoint")
+    assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "visual_recipe").length, 1)
+    assert.equal(
+      store.listArtifacts(threadId).filter((artifact) => artifact.kind === "visual_recipe_evidence").length,
+      1,
+    )
+
+    await runtime.resumeCheckpoint(threadId, { approved: false, feedback: "Make the evidence clearer." })
+    assert.equal(store.getThread(threadId)?.checkpoint?.type, "visual_recipe_adoption_checkpoint")
+    assert.equal(store.listArtifacts(threadId).filter((artifact) => artifact.kind === "visual_recipe").length, 2)
+
+    const adoptionCheckpoint = store.getThread(threadId)!.checkpoint!
+    const adoptionVersion = (adoptionCheckpoint.payload as { version: number }).version
+    const adoptionDecision = {
+      approved: true,
+      checkpointId: adoptionCheckpoint.id,
+      artifactId: adoptionCheckpoint.artifactId,
+      version: adoptionVersion,
+    }
+    await runtime.resumeCheckpoint(threadId, adoptionDecision)
+    assert.equal(store.getThread(threadId)?.checkpoint?.type, "script_checkpoint")
+    const activeSets = store.listArtifacts(threadId).filter((artifact) => artifact.kind === "active_visual_recipe_set")
+    assert.equal(activeSets.length, 1)
+    assert.equal(activeSets[0]?.approved, true)
+    await assert.rejects(() => runtime!.resumeCheckpoint(threadId, adoptionDecision), /stale checkpoint/)
+    assert.equal(
+      store.listArtifacts(threadId).filter((artifact) => artifact.kind === "active_visual_recipe_set").length,
+      1,
+    )
+    const latestScript = store
+      .listArtifacts(threadId)
+      .filter((artifact) => artifact.kind === "script")
+      .sort((left, right) => right.version - left.version)[0]!
+    assert.deepEqual(
+      (latestScript.data as { scenes: Array<{ missingCapabilities: string[] }> }).scenes[0]!.missingCapabilities,
+      [],
     )
   })
 

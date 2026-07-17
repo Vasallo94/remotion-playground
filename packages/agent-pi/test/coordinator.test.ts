@@ -290,7 +290,7 @@ describe("new_video deterministic transitions", () => {
     )
   })
 
-  it("fails closed after approved capability gaps without deriving executable source actions", () => {
+  it("routes approved capability gaps only to bounded Visual Recipe proposal data", () => {
     const current = plan()
     current.steps[0]!.status = "skipped"
     const unresolvedScript = {
@@ -307,10 +307,11 @@ describe("new_video deterministic transitions", () => {
       ],
     })
 
-    assert.equal(decision.kind, "wait_for_human")
-    assert.equal(decision.action, "wait_for_human")
+    assert.equal(decision.kind, "action")
+    assert.equal(decision.action, "propose_visual_recipe")
     assert.equal(decision.stepId, "scene_creation")
-    assert.match(decision.reason ?? "", /Visual Program/)
+    assert.notEqual(decision.action, "generate_scene_candidate")
+    assert.notEqual(decision.action, "promote_scene_candidate")
   })
 
   it("enforces checkpoint boundaries before any next transition", () => {

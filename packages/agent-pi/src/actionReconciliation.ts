@@ -53,6 +53,10 @@ export const ACTION_RECONCILIATION_CONTRACTS: Readonly<Record<CoordinatorAction,
     research_or_skip: contract("research_or_skip", "atomic_artifact_commit", ["research"]),
     run_copywriter: contract("run_copywriter", "atomic_artifact_commit", ["script", "script_markdown"]),
     run_scene_composer: contract("run_scene_composer", "atomic_artifact_commit", ["scene_composition"]),
+    propose_visual_recipe: contract("propose_visual_recipe", "atomic_checkpoint_commit", [
+      "visual_recipe",
+      "visual_recipe_evidence",
+    ]),
     generate_scene_candidate: contract("generate_scene_candidate", "atomic_checkpoint_commit", [
       "candidate_package",
       "candidate_verification",

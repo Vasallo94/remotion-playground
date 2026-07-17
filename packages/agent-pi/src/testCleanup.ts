@@ -15,6 +15,7 @@ const EXPECTED_TEMP_PREFIXES = [
   "claqueta-agent-pi-",
   "claqueta-audio-production-",
   "claqueta-quarantine-",
+  "claqueta-recipe-composer-",
   "claqueta-scene-composer-",
   "claqueta-scene-qa-",
   "claqueta-scene-qa-repair-",

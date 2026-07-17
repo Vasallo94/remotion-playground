@@ -122,16 +122,16 @@ Minimal race gate implemented before the full ThreadView projection: snapshots c
 
 ### Slice 4 — recipe workflow
 
-The immutable data foundation now reuses existing artifacts for compiled recipes, deterministic boundary evidence, and target-scoped active sets. Specialist proposal and human adoption remain open below.
+The recipe workflow reuses Scene Composer for one bounded post-CP4 proposal, compiles it into immutable artifacts, and requires a separate target-scoped adoption checkpoint. Browser restart/concurrency and ordered multi-frame QA remain open below.
 
-- [ ] The specialist emits exactly one typed recipe proposal, with at most one schema-repair turn.
-- [ ] CP4 and adoption approvals cannot substitute for one another.
-- [ ] Rejection activates nothing and changes no production source.
+- [x] The specialist emits exactly one typed recipe proposal, with at most one schema-repair turn.
+- [x] CP4 and adoption approvals cannot substitute for one another.
+- [x] Rejection activates nothing and changes no production source.
 - [ ] Approval activates exactly once across duplicate requests and restart.
-- [ ] Parent config projection injects exact compiled props that the configurator cannot rewrite.
+- [x] Parent config projection injects exact compiled props that the configurator cannot rewrite.
 - [ ] Fresh QA evaluates ordered multi-frame evidence.
-- [ ] Publication stages and hash-verifies an exact manifest containing visual capability lineage.
-- [ ] Normal production performs no TSX or registry source write.
+- [x] Publication stages and hash-verifies an exact manifest containing visual capability lineage.
+- [x] Normal production performs no TSX or registry source write.
 
 ## Test cases
 

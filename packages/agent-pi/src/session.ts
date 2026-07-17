@@ -52,6 +52,8 @@ import { executableCandidatePolicySummary } from "./candidatePolicy.js"
 import { ParentActionExecutor } from "./parentActionExecutor.js"
 import { failInterruptedAtomicActions } from "./actionReconciliation.js"
 import {
+  buildActiveVisualRecipeSet,
+  buildVisualRecipeArtifacts,
   projectActiveVisualRecipes,
   verifyActiveVisualRecipeSet,
   verifyVisualRecipeArtifacts,
@@ -122,7 +124,9 @@ export interface AgentRuntimeOptions {
   createCopywriterSpecialistRunner?: (threadId: string) => Pick<CopywriterSpecialistRunner, "run">
   createDirectionSpecialistRunner?: (threadId: string) => Pick<DirectionSpecialistRunner, "run">
   createResearchSpecialistRunner?: (threadId: string) => Pick<ResearchSpecialistRunner, "run">
-  createSceneComposerSpecialistRunner?: (threadId: string) => Pick<SceneComposerRunner, "run">
+  createSceneComposerSpecialistRunner?: (
+    threadId: string,
+  ) => Pick<SceneComposerRunner, "run"> & Partial<Pick<SceneComposerRunner, "runVisualRecipe">>
   createExecutableSceneCandidateRunner?: (threadId: string) => Pick<ExecutableSceneCandidateRunner, "run">
   verifyExecutableSceneCandidate?: typeof verifyExecutableSceneCandidate
   createSceneQaSpecialistRunner?: (threadId: string) => Pick<SceneQaRunner, "run">
@@ -198,7 +202,12 @@ function checkpointStepId(type: string): string | undefined {
   if (type === "audio_chart_checkpoint") return "audio_plan"
   if (type === "qa_report_checkpoint") return "scene_qa"
   if (type === "final_review_checkpoint") return "review"
-  if (type === "capability_gap_checkpoint" || type === "candidate_promotion_checkpoint") return "scene_creation"
+  if (
+    type === "capability_gap_checkpoint" ||
+    type === "visual_recipe_adoption_checkpoint" ||
+    type === "candidate_promotion_checkpoint"
+  )
+    return "scene_creation"
   return undefined
 }
 
@@ -209,6 +218,7 @@ function checkpointArtifactKind(type: string): ArtifactKind | undefined {
   if (type === "qa_report_checkpoint") return "qa_report"
   if (type === "final_review_checkpoint") return "render_review"
   if (type === "capability_gap_checkpoint") return "scene_composition"
+  if (type === "visual_recipe_adoption_checkpoint") return "visual_recipe"
   if (type === "candidate_promotion_checkpoint") return "candidate_promotion_plan"
   return undefined
 }
@@ -905,9 +915,13 @@ export class AgentRuntimeManager {
         .sort((left, right) => right.version - left.version)[0]
       if (latest?.id !== artifact.id) throw new Error(`Checkpoint references stale artifact '${artifact.id}'`)
     }
-    if (decision.approved === false && thread.checkpoint.type === "candidate_promotion_checkpoint") {
+    if (
+      decision.approved === false &&
+      (thread.checkpoint.type === "candidate_promotion_checkpoint" ||
+        thread.checkpoint.type === "visual_recipe_adoption_checkpoint")
+    ) {
       const feedback = typeof decision.feedback === "string" ? decision.feedback.trim() : ""
-      if (!feedback) throw new Error("candidate_promotion_checkpoint rejection requires non-empty feedback")
+      if (!feedback) throw new Error(`${thread.checkpoint.type} rejection requires non-empty feedback`)
     }
     if (
       decision.approved === false &&
@@ -926,6 +940,62 @@ export class AgentRuntimeManager {
         },
         feedback,
       )
+    }
+    if (decision.approved === true && thread.checkpoint.type === "visual_recipe_adoption_checkpoint") {
+      const recipeArtifact = this.store.getArtifact<VisualRecipeArtifactData>(thread.checkpoint.artifactId!)
+      const payload = thread.checkpoint.payload as Record<string, unknown>
+      const evidenceArtifact = this.store.getArtifact<VisualRecipeEvidence>(String(payload.evidenceArtifactId))
+      const selectedTarget = this.latestArtifact<SelectedTargetArtifact>(threadId, "selected_target")
+      const script = this.latestArtifact<ScriptDraft>(threadId, "script")
+      if (!recipeArtifact || !evidenceArtifact || !selectedTarget?.approved || !script || script.approved) {
+        throw new Error("Visual Recipe adoption prerequisites are stale")
+      }
+      if (
+        evidenceArtifact.threadId !== threadId ||
+        evidenceArtifact.kind !== "visual_recipe_evidence" ||
+        evidenceArtifact.version !== payload.evidenceArtifactVersion ||
+        recipeArtifact.data.targetId !== selectedTarget.data.target.id ||
+        !verifyVisualRecipeArtifacts(recipeArtifact.data, evidenceArtifact.data)
+      ) {
+        throw new Error("Visual Recipe adoption evidence is invalid or stale")
+      }
+      const previous = this.latestArtifact<ActiveVisualRecipeSet>(threadId, "active_visual_recipe_set")
+      const activeSet = buildActiveVisualRecipeSet(
+        selectedTarget.data.target.id,
+        recipeArtifact.data,
+        previous?.approved ? previous.data : undefined,
+      )
+      this.store.markArtifactApproved(evidenceArtifact.id)
+      const committedArtifacts: ArtifactRecord[] = []
+      if (!previous?.approved || previous.data.digest !== activeSet.digest) {
+        committedArtifacts.push(
+          this.store.saveArtifact({
+            threadId,
+            kind: "active_visual_recipe_set",
+            data: activeSet,
+            approved: true,
+          }),
+        )
+      }
+      const revised = structuredClone(script.data)
+      const scene = revised.scenes[recipeArtifact.data.sceneIndex]
+      if (!scene) throw new Error("Visual Recipe adoption scene index is stale")
+      const rationale = `Adopted Visual Recipe ${recipeArtifact.data.recipeId}`
+      if ((scene.missingCapabilities?.length ?? 0) > 0 || scene.visualRationale !== rationale) {
+        scene.missingCapabilities = []
+        scene.visualRationale = rationale
+        committedArtifacts.push(
+          this.store.saveArtifact({ threadId, kind: "script", data: revised }),
+          this.store.saveArtifact({
+            threadId,
+            kind: "script_markdown",
+            data: scriptToMarkdown(revised),
+          }),
+        )
+      }
+      for (const artifact of committedArtifacts) {
+        this.eventBus.publish({ threadId, type: "artifact_updated", payload: { kind: artifact.kind, artifact } })
+      }
     }
     if (decision.approved === true && thread.checkpoint.artifactId) {
       this.store.markArtifactApproved(thread.checkpoint.artifactId)
@@ -963,27 +1033,34 @@ export class AgentRuntimeManager {
       const step = plan.steps.find((candidate) => candidate.id === stepId)
       if (step) {
         const capabilityProposal = thread.checkpoint.type === "capability_gap_checkpoint"
+        const recipeAdoption = thread.checkpoint.type === "visual_recipe_adoption_checkpoint"
         const promotionDecision = thread.checkpoint.type === "candidate_promotion_checkpoint"
         step.status = capabilityProposal
-          ? approved
-            ? "blocked"
-            : "in_progress"
-          : promotionDecision
-            ? "in_progress"
-            : approved
+          ? "in_progress"
+          : recipeAdoption
+            ? approved
               ? "completed"
               : "in_progress"
+            : promotionDecision
+              ? "in_progress"
+              : approved
+                ? "completed"
+                : "in_progress"
         step.summary = capabilityProposal
           ? approved
-            ? "Capability proposal approved; bounded Visual Program recipe workflow is required and executable source generation is disabled"
+            ? "Capability proposal approved; one bounded Visual Recipe proposal is required next"
             : "Capability proposal changes requested"
-          : promotionDecision
+          : recipeAdoption
             ? approved
-              ? "Candidate promotion approved; parent transaction is required next"
-              : "Candidate promotion rejected; production source remains unchanged"
-            : approved
-              ? `${thread.checkpoint.type} approved`
-              : `${thread.checkpoint.type} changes requested`
+              ? "Visual Recipe adopted for the exact target and scene"
+              : "Visual Recipe adoption rejected; a revised proposal is required"
+            : promotionDecision
+              ? approved
+                ? "Candidate promotion approved; parent transaction is required next"
+                : "Candidate promotion rejected; production source remains unchanged"
+              : approved
+                ? `${thread.checkpoint.type} approved`
+                : `${thread.checkpoint.type} changes requested`
         if (approved && !capabilityProposal) step.completedAt = new Date().toISOString()
       }
       const status: PipelineDecisionStatus = approved ? "approved" : "changes_requested"
@@ -1210,6 +1287,95 @@ export class AgentRuntimeManager {
     if (execution.status === "idempotent") return
     if (execution.status !== "succeeded")
       throw new Error(`Scene composer action requires recovery: ${execution.status}`)
+    for (const artifact of execution.committedArtifacts) {
+      this.eventBus.publish({ threadId, type: "artifact_updated", payload: { kind: artifact.kind, artifact } })
+    }
+    if (execution.committedCheckpoint) {
+      this.eventBus.publish({ threadId, type: "checkpoint", payload: execution.committedCheckpoint })
+    }
+  }
+
+  private async executeVisualRecipeProposalParentAction(threadId: string, signal?: AbortSignal): Promise<void> {
+    const script = this.latestArtifact<ScriptDraft>(threadId, "script")
+    const composition = this.latestArtifact<SceneCompositionResult>(threadId, "scene_composition")
+    const selectedTarget = this.latestArtifact<SelectedTargetArtifact>(threadId, "selected_target")
+    if (!script || script.approved || !composition?.approved || !selectedTarget?.approved) {
+      throw new Error("Visual Recipe proposal requires an unapproved script and exact approved CP4 composition")
+    }
+    const gaps = composition.data.resolutions.filter((resolution) => resolution.outcome === "capability_gap")
+    if (gaps.length !== 1)
+      throw new Error("Visual Recipe proposal currently requires exactly one approved capability gap")
+    const cp4Decision = this.store
+      .getPipelinePlan(threadId)
+      ?.decisions.filter((decision) => decision.stepId === "scene_creation" && decision.status === "approved")
+      .reverse()
+      .find((decision) => {
+        const payload = decision.payload as Record<string, unknown> | undefined
+        return payload?.checkpointType === "capability_gap_checkpoint" && payload.artifactId === composition.id
+      })
+    if (!cp4Decision) throw new Error("Visual Recipe proposal requires exact durable CP4 approval")
+    const target = summarizeSelectedRegisteredTarget({ target: { id: selectedTarget.data.target.id } })
+    if (!target.ok) throw new Error("Visual Recipe proposal target no longer resolves")
+    const sceneIndex = script.data.scenes.findIndex((scene) => scene.id === gaps[0]!.sceneId)
+    if (sceneIndex < 0) throw new Error("Visual Recipe proposal cannot resolve the approved scene")
+    const snapshot = this.coordinatorSnapshot(threadId)
+    const action = "propose_visual_recipe" as const
+    const execution = await this.parentActionExecutor().execute({
+      snapshot,
+      request: { action, idempotencyKey: actionIdempotencyKey(snapshot, action) },
+      effect: async () => {
+        const runner = this.createSceneComposerSpecialistRunner(threadId)
+        if (!runner.runVisualRecipe) throw new Error("Scene Composer does not support Visual Recipe proposals")
+        const result = await runner.runVisualRecipe(
+          {
+            script: script.data,
+            sceneId: gaps[0]!.sceneId,
+            approvedGap: gaps[0]!.gap as unknown as Record<string, unknown>,
+            selectedTarget: target.target,
+          },
+          signal,
+        )
+        const built = buildVisualRecipeArtifacts({
+          targetId: selectedTarget.data.target.id,
+          sceneIndex,
+          template: result.proposal.template,
+        })
+        const recipeId = randomUUID()
+        const evidenceId = randomUUID()
+        const recipeVersion = (this.latestArtifact(threadId, "visual_recipe")?.version ?? 0) + 1
+        const evidenceVersion = (this.latestArtifact(threadId, "visual_recipe_evidence")?.version ?? 0) + 1
+        return {
+          outcome: { runId: result.runId, modelRoute: result.modelRoute, recipeId: built.recipe.recipeId },
+          artifacts: [
+            { id: recipeId, threadId, kind: "visual_recipe" as const, data: built.recipe },
+            { id: evidenceId, threadId, kind: "visual_recipe_evidence" as const, data: built.evidence },
+          ],
+          checkpoint: {
+            id: `recipe-adoption-${randomUUID()}`,
+            type: "visual_recipe_adoption_checkpoint" as const,
+            artifactId: recipeId,
+            payload: {
+              artifactId: recipeId,
+              artifactVersion: recipeVersion,
+              version: recipeVersion,
+              evidenceArtifactId: evidenceId,
+              evidenceArtifactVersion: evidenceVersion,
+              recipeId: built.recipe.recipeId,
+              recipeDigest: built.recipe.digest,
+              evidenceDigest: built.evidence.digest,
+              targetId: built.recipe.targetId,
+              sceneIndex,
+              summary: result.proposal.summary,
+            },
+          },
+          effectMetadata: { runId: result.runId, modelRoute: result.modelRoute },
+        }
+      },
+    })
+    if (execution.status === "failed") throw new Error(execution.error.message)
+    if (execution.status === "idempotent") return
+    if (execution.status !== "succeeded")
+      throw new Error(`Visual Recipe proposal requires recovery: ${execution.status}`)
     for (const artifact of execution.committedArtifacts) {
       this.eventBus.publish({ threadId, type: "artifact_updated", payload: { kind: artifact.kind, artifact } })
     }
@@ -2424,6 +2590,10 @@ export class AgentRuntimeManager {
       }
       if (action === "run_scene_composer") {
         await this.executeSceneComposerParentAction(threadId)
+        return
+      }
+      if (action === "propose_visual_recipe") {
+        await this.executeVisualRecipeProposalParentAction(threadId)
         return
       }
       if (action === "generate_scene_candidate") {

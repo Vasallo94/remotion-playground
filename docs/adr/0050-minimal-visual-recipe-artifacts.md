@@ -37,7 +37,7 @@ Config projection consumes only the latest approved active set plus approved, ve
 
 Parent-owned config lineage pins the active-set artifact ID, version, content hash, target, and digest. The same reference is carried through QA lineage, final validation, render job, render review, and publication. A later active-set version therefore makes older production evidence stale before another side effect can run.
 
-The parent runtime will place activation behind a separate human checkpoint. Specialists may propose bounded templates, but they cannot persist, activate, or project them.
+The parent runtime places activation behind `visual_recipe_adoption_checkpoint`, distinct from CP4. The existing Scene Composer may make exactly one post-CP4 bounded template proposal with one schema-repair turn, but it cannot persist, activate, or project it. The parent compiles and persists recipe/evidence artifacts; approval verifies both, writes a target-scoped active-set artifact, and clears the resolved script capability. Rejection activates nothing and derives a new proposal generation from the persisted decision epoch.
 
 ## Consequences
 
@@ -53,7 +53,7 @@ The parent runtime will place activation behind a separate human checkpoint. Spe
 
 - Active-set lookup is an artifact query rather than a relational join.
 - Deactivation requires writing a new active-set artifact.
-- Human adoption and specialist proposal remain a separate follow-up slice.
+- Concurrent/restart browser evidence for adoption remains a follow-up gate.
 
 ## Validation
 

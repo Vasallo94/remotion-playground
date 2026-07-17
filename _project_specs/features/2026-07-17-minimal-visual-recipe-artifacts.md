@@ -16,7 +16,7 @@ Add pure builders for three immutable data artifacts:
 2. deterministic behavioral evidence at every event boundary;
 3. a target-scoped active recipe set for future config projection.
 
-Activation remains a separate human checkpoint in the parent runtime. This feature does not implement the checkpoint UI or specialist proposal turn.
+Activation is a separate human checkpoint in the parent runtime. The existing Scene Composer makes one post-CP4 bounded proposal; the parent compiles and persists it before presenting exact adoption authority.
 
 The parent config action consumes only the latest approved active set with approved recipe/evidence artifacts. It embeds exact compiled props and the active-set digest, then carries an artifact/version/hash/digest reference through QA, validation, render, review, and publication.
 
@@ -36,6 +36,10 @@ The parent config action consumes only the latest approved active set with appro
 - [x] Config lineage pins the active-set artifact ID, version, content hash, target, and digest.
 - [x] QA, validation, render job, render review, and publication retain the same exact lineage.
 - [x] Changing the approved active set makes older config and downstream evidence stale.
+- [x] CP4 approval derives one inert recipe proposal and cannot activate it.
+- [x] Recipe rejection requires feedback, activates nothing, and derives a new proposal artifact version.
+- [x] Recipe approval verifies exact evidence and target scope before writing the active set.
+- [x] Adoption clears only the resolved script capability and returns to script approval.
 
 ## Tests
 
@@ -46,3 +50,4 @@ The parent config action consumes only the latest approved active set with appro
 5. Persist recipe, evidence, and active set through `AgentPiStore` and reload them unchanged.
 6. Run the Pi-only mocked lifecycle with an approved recipe through projected config, two QA passes, validation, render, review, and publication.
 7. Assert every downstream artifact and the published lineage file retain the exact active-set digest.
+8. Approve CP4, reject the first recipe, approve the reproposal, and verify one active set plus a new unresolved-script version routed to CP1.

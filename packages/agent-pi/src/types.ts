@@ -210,6 +210,7 @@ export type CheckpointKind =
   | "qa_report_checkpoint"
   | "final_review_checkpoint"
   | "capability_gap_checkpoint"
+  | "visual_recipe_adoption_checkpoint"
   | "candidate_promotion_checkpoint"
 
 export type PiSseEventType =

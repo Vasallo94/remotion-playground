@@ -96,6 +96,7 @@ const CHECKPOINT_TYPE_MAP: Record<string, CheckpointType> = {
   qa_report_checkpoint: "generic",
   final_review_checkpoint: "generic",
   capability_gap_checkpoint: "generic",
+  visual_recipe_adoption_checkpoint: "generic",
   candidate_promotion_checkpoint: "candidate_promotion",
 }
 

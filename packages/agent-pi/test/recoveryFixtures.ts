@@ -367,7 +367,7 @@ export function buildCp4Fixture(threadId = "recovery-cp4"): RecoveryCheckpointFi
     plan,
     [draft, composition],
     composition.id,
-    "wait_for_human",
+    "propose_visual_recipe",
     "run_scene_composer",
   )
 }

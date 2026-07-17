@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { COMPOSED_SCENE_CONTRACT_SUMMARY, validateComposedScene } from "@claqueta/scene-contracts"
+import {
+  COMPOSED_SCENE_CONTRACT_SUMMARY,
+  VISUAL_PROGRAM_CONTRACT_SUMMARY,
+  createVisualRecipeTemplate,
+  validateComposedScene,
+  type VisualRecipeTemplate,
+} from "@claqueta/scene-contracts"
 import type { Api, Model } from "@earendil-works/pi-ai/compat"
 import {
   createAgentSession,
@@ -50,6 +56,17 @@ const ResolutionSchema = Type.Union([
   }),
 ])
 const ResultSchema = Type.Object({ summary: Type.String(), resolutions: Type.Array(ResolutionSchema) })
+const RecipeProposalSchema = Type.Object({
+  summary: Type.String(),
+  sceneId: Type.String(),
+  template: Type.Any(),
+})
+
+export interface VisualRecipeProposal {
+  summary: string
+  sceneId: string
+  template: VisualRecipeTemplate
+}
 
 export interface SceneComposerSession {
   subscribe(listener: (event: AgentSessionEvent) => void): () => void
@@ -110,6 +127,7 @@ export class SceneComposerRunner {
       authStorage: AuthStorage
       modelRegistry: ModelRegistry
       createSession?: (capture: (result: SceneCompositionResult) => void) => Promise<SceneComposerSession>
+      createRecipeSession?: (capture: (proposal: VisualRecipeProposal) => void) => Promise<SceneComposerSession>
     },
   ) {}
 
@@ -211,6 +229,111 @@ export class SceneComposerRunner {
     }
   }
 
+  async runVisualRecipe(
+    input: {
+      script: ScriptDraft
+      sceneId: string
+      approvedGap: Record<string, unknown>
+      selectedTarget: Record<string, unknown>
+    },
+    signal?: AbortSignal,
+  ): Promise<{ runId: string; modelRoute: string; proposal: VisualRecipeProposal }> {
+    const scene = input.script.scenes.find((candidate) => candidate.id === input.sceneId)
+    if (!scene) throw new Error(`Visual Recipe proposal cannot find scene '${input.sceneId}'`)
+    const runId = randomUUID()
+    const model = this.options.modelRouter.findModel("scene_creation")
+    const route = this.options.modelRouter.route("scene_creation")
+    const modelRoute = route ? `${route.provider}/${route.model}` : model ? `${model.provider}/${model.id}` : "default"
+    let captured: VisualRecipeProposal | undefined
+    this.options.eventBus.publish({
+      threadId: this.options.threadId,
+      type: "subagent_start",
+      payload: {
+        runId,
+        subagentType: "scene_creator",
+        modelRoute,
+        startedAt: new Date().toISOString(),
+        description: "Propose one bounded Visual Program recipe for an approved capability gap",
+      },
+    })
+    const session = await (this.options.createRecipeSession
+      ? this.options.createRecipeSession((value) => (captured = value))
+      : this.createDefaultRecipeSession(model, (value) => (captured = value)))
+    const unsubscribe = session.subscribe(() => undefined)
+    const abortHandler = () => void session.abort()
+    if (signal?.aborted) abortHandler()
+    else signal?.addEventListener("abort", abortHandler, { once: true })
+    try {
+      await session.prompt(
+        [
+          "Propose exactly one bounded Visual Recipe for the approved capability gap.",
+          "Use inert Visual Program data only. Do not emit code, files, components, styles, or registry changes.",
+          "## Approved scene",
+          JSON.stringify(scene, null, 2),
+          "## Approved generic capability gap",
+          JSON.stringify(input.approvedGap, null, 2),
+          "## Selected target contract",
+          JSON.stringify(input.selectedTarget, null, 2),
+          "## Exact Visual Program contract",
+          JSON.stringify(VISUAL_PROGRAM_CONTRACT_SUMMARY, null, 2),
+        ].join("\n"),
+      )
+      if (!captured)
+        await session.prompt("Call submit_visual_recipe now with one complete proposal; do not answer with prose.")
+      if (!captured) throw new Error("Scene composer finished without a Visual Recipe proposal")
+      if (captured.sceneId !== input.sceneId) throw new Error("Visual Recipe proposal changed the target scene")
+      let accepted = captured
+      let template: VisualRecipeTemplate
+      try {
+        template = createVisualRecipeTemplate(accepted.template)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        captured = undefined
+        await session.prompt(
+          `The parent rejected the Visual Recipe: ${message}. Call submit_visual_recipe exactly once with a corrected proposal; do not answer with prose.`,
+        )
+        const corrected = captured as VisualRecipeProposal | undefined
+        if (!corrected) throw new Error("Scene composer did not submit a corrected Visual Recipe")
+        if (corrected.sceneId !== input.sceneId) throw new Error("Corrected Visual Recipe changed the target scene")
+        accepted = corrected
+        template = createVisualRecipeTemplate(accepted.template)
+      }
+      if (template.program.durationMs !== scene.durationInSeconds * 1000) {
+        throw new Error("Visual Recipe duration must exactly match the approved scene duration")
+      }
+      const proposal = { ...accepted, template }
+      this.options.eventBus.publish({
+        threadId: this.options.threadId,
+        type: "subagent_end",
+        payload: {
+          runId,
+          subagentType: "scene_creator",
+          modelRoute,
+          result: proposal.summary,
+          completedAt: new Date().toISOString(),
+        },
+      })
+      return { runId, modelRoute, proposal }
+    } catch (error) {
+      this.options.eventBus.publish({
+        threadId: this.options.threadId,
+        type: "subagent_error",
+        payload: {
+          runId,
+          subagentType: "scene_creator",
+          modelRoute,
+          message: error instanceof Error ? error.message : String(error),
+          completedAt: new Date().toISOString(),
+        },
+      })
+      throw error
+    } finally {
+      signal?.removeEventListener("abort", abortHandler)
+      unsubscribe()
+      session.dispose()
+    }
+  }
+
   private async createDefaultSession(
     model: Model<Api> | undefined,
     capture: (result: SceneCompositionResult) => void,
@@ -238,6 +361,54 @@ export class SceneComposerRunner {
       noThemes: true,
       noContextFiles: true,
       systemPrompt: readFileSync(join(PROJECT_ROOT, "packages/agent-pi/resources/agents/scene-composer.md"), "utf-8"),
+    })
+    const { session } = await createAgentSession({
+      cwd: PROJECT_ROOT,
+      model,
+      authStorage: this.options.authStorage,
+      modelRegistry: this.options.modelRegistry,
+      resourceLoader: loader,
+      customTools: [submit],
+      tools: [submit.name],
+      sessionManager: SessionManager.inMemory(PROJECT_ROOT),
+      settingsManager: SettingsManager.inMemory({
+        compaction: { enabled: false },
+        retry: { enabled: true, maxRetries: 1 },
+      }),
+    })
+    return session
+  }
+
+  private async createDefaultRecipeSession(
+    model: Model<Api> | undefined,
+    capture: (proposal: VisualRecipeProposal) => void,
+  ): Promise<SceneComposerSession> {
+    const submit = defineTool({
+      name: "submit_visual_recipe",
+      label: "Submit Visual Recipe",
+      description: "Return one bounded inert Visual Program recipe proposal for the approved capability gap.",
+      parameters: Type.Object({ proposal: RecipeProposalSchema }),
+      async execute(_id, params) {
+        capture(params.proposal as VisualRecipeProposal)
+        return {
+          content: [{ type: "text" as const, text: "Visual Recipe proposal accepted for parent validation." }],
+          details: {},
+          terminate: true,
+        }
+      },
+    })
+    const loader = new DefaultResourceLoader({
+      cwd: PROJECT_ROOT,
+      agentDir: PROJECT_ROOT,
+      noExtensions: true,
+      noSkills: true,
+      noPromptTemplates: true,
+      noThemes: true,
+      noContextFiles: true,
+      systemPrompt: readFileSync(
+        join(PROJECT_ROOT, "packages/agent-pi/resources/agents/scene-composer-visual-recipe.md"),
+        "utf-8",
+      ),
     })
     const { session } = await createAgentSession({
       cwd: PROJECT_ROOT,

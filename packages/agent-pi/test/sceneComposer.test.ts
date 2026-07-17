@@ -1,6 +1,8 @@
 import assert from "node:assert/strict"
 import { join } from "node:path"
 import { afterEach, describe, it } from "node:test"
+import { createVisualRecipeTemplate } from "@claqueta/scene-contracts"
+import { cascadeFixture } from "../../scene-contracts/test/fixtures/cascade.js"
 import { ThreadEventBus } from "../src/events.js"
 import { ModelRouter } from "../src/modelRouter.js"
 import { SceneComposerRunner, validateSceneComposition, type SceneComposerSession } from "../src/sceneComposer.js"
@@ -77,6 +79,51 @@ describe("SceneComposerRunner", () => {
       ],
     }
     assert.throws(() => validateSceneComposition(reuse, ["result"], new Set(["visual-program"])), /reserved component/)
+  })
+
+  it("proposes one parent-validated Visual Recipe only for the exact approved scene", async () => {
+    const dir = createTestTemporaryDirectory("claqueta-recipe-composer-")
+    dirs.push(dir)
+    const store = new AgentPiStore(join(dir, "composer.db"))
+    const threadId = store.createThread().id
+    const router = new ModelRouter({ routes: { scene_creation: { provider: "openai-codex", model: "composer-test" } } })
+    let disposed = false
+    const session: SceneComposerSession = {
+      subscribe() {
+        return () => undefined
+      },
+      async prompt() {},
+      async abort() {},
+      dispose() {
+        disposed = true
+      },
+    }
+    const template = createVisualRecipeTemplate({
+      version: 1,
+      templateId: "bounded-cascade",
+      program: cascadeFixture,
+      bindings: [],
+    })
+    const runner = new SceneComposerRunner({
+      threadId,
+      eventBus: new ThreadEventBus(store),
+      modelRouter: router,
+      authStorage: router.authStorage,
+      modelRegistry: router.modelRegistry,
+      createRecipeSession: async (capture) => {
+        capture({ summary: "Bounded propagation", sceneId: "result", template })
+        return session
+      },
+    })
+    const result = await runner.runVisualRecipe({
+      script,
+      sceneId: "result",
+      approvedGap: { capability: "bounded propagation" },
+      selectedTarget: { targetId: "target.video.001" },
+    })
+    assert.equal(result.proposal.template.templateId, "bounded-cascade")
+    assert.equal(disposed, true)
+    store.close()
   })
 
   it("uses a fresh terminating-only session and disposes it", async () => {
