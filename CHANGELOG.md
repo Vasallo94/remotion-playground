@@ -148,6 +148,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Pi frontend authority races** — thread snapshots now apply only when their thread, generation, local action generation, and revision are current; authoritative null checkpoints clear stale cards, replay cannot resurrect snapshot-covered authority, delayed submit/resume/retry callbacks are fenced, and checkpoint bindings override component payloads.
 - **Cold Remotion CLI workspace bundling** — `remotion.config.ts` now uses the same NodeNext `.js`→TypeScript extension aliases as the repository-owned bundler and render scripts, so browser bundles resolve workspace contracts consistently.
 - **Pi-only live E2E integration gaps** — continues canonical execution after intake clarification, parent-compiles immutable scene lineage, enforces explicit target theme selection, normalizes silent audio as `null`, gives repeated checkpoint presentations a decision epoch, and resolves NodeNext workspace `.js` imports during cold Remotion bundles.
 - **Runtime `agent-pi` E2E hardening** — `generate_remotion_config` normaliza props script-like comunes antes de validar (`terminal.command/expectedOutput` → `lines`, `callout.items` → `text`, `outro.summary` → `bullets`, `transition: "cut"` → `none`), `validate_video_config`/`submit_render` pueden caer al último artifact `config` completo cuando el modelo envía inputs parciales, y `submit_render` espera finalización por defecto emitiendo progreso SSE, con skip de audio forzado en V1 salvo `CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true`.

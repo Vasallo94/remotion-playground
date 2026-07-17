@@ -102,6 +102,8 @@ SSE must subscribe and buffer before replay, replay to a captured high-water mar
 
 ### Slice 2 — transport and frontend
 
+Minimal race gate implemented before the full ThreadView projection: snapshots carry the existing thread revision, authoritative `checkpoint: null` clears the card, stale snapshot/SSE authority cannot regress state, thread and local-action generations fence delayed callbacks, and checkpoint identity fields override component payloads. The remaining criteria below stay open until browser lifecycle evidence covers complete projection/reload behavior.
+
 - [ ] Thread snapshots include revision, cursor, durable status, operation identity, and exact checkpoint state.
 - [ ] Replay/live handoff cannot lose events.
 - [ ] Duplicate, stale, and out-of-order events cannot regress browser state.

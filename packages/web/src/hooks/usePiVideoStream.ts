@@ -8,6 +8,7 @@ import { extractPlanStateFromPipelinePlan, type PipelinePlan, type PlanState } f
 
 interface PiEvent {
   seq?: number
+  revision?: number
   threadId: string
   type:
     | "message_delta"
@@ -98,6 +99,46 @@ const CHECKPOINT_TYPE_MAP: Record<string, CheckpointType> = {
   candidate_promotion_checkpoint: "candidate_promotion",
 }
 
+const AUTHORITY_EVENT_TYPES = new Set<PiEvent["type"]>([
+  "checkpoint",
+  "artifact_updated",
+  "plan_updated",
+  "render_status",
+  "error",
+  "agent_end",
+])
+
+export function isCurrentPiRequest(
+  generation: number,
+  currentGeneration: number,
+  actionGeneration: number,
+  currentActionGeneration: number,
+): boolean {
+  return generation === currentGeneration && actionGeneration === currentActionGeneration
+}
+
+export function shouldApplyPiSnapshot(
+  activeThreadId: string | null,
+  generation: number,
+  currentGeneration: number,
+  actionGeneration: number,
+  currentActionGeneration: number,
+  currentRevision: number,
+  snapshotThread: { id: string; revision: number },
+): boolean {
+  return (
+    activeThreadId === snapshotThread.id &&
+    isCurrentPiRequest(generation, currentGeneration, actionGeneration, currentActionGeneration) &&
+    snapshotThread.revision >= currentRevision
+  )
+}
+
+export function isPiAuthorityEventCoveredBySnapshot(snapshotRevision: number, event: PiEvent): boolean {
+  return (
+    AUTHORITY_EVENT_TYPES.has(event.type) && typeof event.revision === "number" && event.revision <= snapshotRevision
+  )
+}
+
 export interface UsePiVideoStreamOptions {
   threadId?: string | null
   onThreadId?: (threadId: string) => void
@@ -160,6 +201,10 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const [planState, setPlanState] = useState<PlanState | null>(null)
   const [subagentRecords, setSubagentRecords] = useState<Map<string, PiSubagentRecord>>(new Map())
   const lastSeqRef = useRef(0)
+  const authorityRevisionRef = useRef(0)
+  const snapshotRevisionRef = useRef(0)
+  const threadGenerationRef = useRef(0)
+  const actionGenerationRef = useRef(0)
   const videoResultJobIdsRef = useRef(new Set<string>())
   const activeAssistantIdRef = useRef<string | null>(null)
   const messagesRef = useRef(messages)
@@ -168,6 +213,25 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   useEffect(() => {
     setActiveThreadId(threadId ?? null)
   }, [threadId])
+
+  useEffect(() => {
+    threadGenerationRef.current += 1
+    actionGenerationRef.current = 0
+    lastSeqRef.current = 0
+    authorityRevisionRef.current = 0
+    snapshotRevisionRef.current = 0
+    videoResultJobIdsRef.current.clear()
+    activeAssistantIdRef.current = null
+    setMessages([])
+    setCheckpointType(null)
+    setCheckpointData(null)
+    setEnrichments([])
+    setPipelineEvents([])
+    setPlanState(null)
+    setSubagentRecords(new Map())
+    setError(null)
+    setIsLoading(false)
+  }, [activeThreadId])
 
   const ensureAssistantMessage = useCallback((): string => {
     if (activeAssistantIdRef.current) return activeAssistantIdRef.current
@@ -225,6 +289,10 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     (event: PiEvent) => {
       if (event.seq && event.seq <= lastSeqRef.current) return
       if (event.seq) lastSeqRef.current = event.seq
+      const coveredBySnapshot = isPiAuthorityEventCoveredBySnapshot(snapshotRevisionRef.current, event)
+      if (!coveredBySnapshot && typeof event.revision === "number") {
+        authorityRevisionRef.current = Math.max(authorityRevisionRef.current, event.revision)
+      }
 
       switch (event.type) {
         case "message_delta": {
@@ -254,6 +322,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "checkpoint": {
+          activeAssistantIdRef.current = null
+          if (coveredBySnapshot) return
           const checkpoint = event.payload as {
             id?: string
             type?: string
@@ -308,14 +378,26 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
                 },
               })
             }
-            setCheckpointType(null)
-            setCheckpointData(null)
+            activeAssistantIdRef.current = null
+            if (!coveredBySnapshot) {
+              setCheckpointType(null)
+              setCheckpointData(null)
+            }
+            const decision = event.payload.decision as { approved?: unknown } | undefined
+            if (
+              decision?.approved === false &&
+              checkpoint?.type === "candidate_promotion_checkpoint" &&
+              (!coveredBySnapshot || event.revision === snapshotRevisionRef.current)
+            )
+              setIsLoading(false)
           }
           return
         }
         case "plan_updated": {
-          const plan = event.payload.plan as PipelinePlan | undefined
-          setPlanState(extractPlanStateFromPipelinePlan(plan))
+          if (!coveredBySnapshot) {
+            const plan = event.payload.plan as PipelinePlan | undefined
+            setPlanState(extractPlanStateFromPipelinePlan(plan))
+          }
           return
         }
         case "subagent_start": {
@@ -407,6 +489,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "render_status": {
+          if (coveredBySnapshot) return
           const jobId =
             typeof event.payload.jobId === "string"
               ? event.payload.jobId
@@ -428,6 +511,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "error": {
+          activeAssistantIdRef.current = null
+          if (coveredBySnapshot) return
           const nextError = event.payload.message ?? "Error en Agent Pi"
           appendPipelineEvent({ stage: "error", message: String(nextError), type: "error" })
           setError(nextError)
@@ -436,6 +521,8 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
           return
         }
         case "agent_end": {
+          activeAssistantIdRef.current = null
+          if (coveredBySnapshot) return
           const willRetry = event.payload.willRetry === true
           appendPipelineEvent({
             stage: willRetry ? "orchestrator" : "done",
@@ -465,18 +552,38 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   useEffect(() => {
     if (!activeThreadId) return
     let cancelled = false
+    const generation = threadGenerationRef.current
+    const actionGeneration = actionGenerationRef.current
     fetchPiThread(activeThreadId)
       .then((snapshot) => {
-        if (cancelled) return
+        if (
+          cancelled ||
+          !shouldApplyPiSnapshot(
+            activeThreadId,
+            generation,
+            threadGenerationRef.current,
+            actionGeneration,
+            actionGenerationRef.current,
+            authorityRevisionRef.current,
+            snapshot.thread,
+          )
+        )
+          return
+        authorityRevisionRef.current = snapshot.thread.revision
+        snapshotRevisionRef.current = snapshot.thread.revision
         const checkpoint = snapshot.thread.checkpoint
-        if (checkpoint) {
-          setCheckpointType(CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic")
-          setCheckpointData({
-            ...checkpoint.payload,
-            checkpointId: checkpoint.id,
-            ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
-          })
-        }
+        setCheckpointType(checkpoint ? (CHECKPOINT_TYPE_MAP[checkpoint.type] ?? "generic") : null)
+        setCheckpointData(
+          checkpoint
+            ? {
+                ...checkpoint.payload,
+                checkpointId: checkpoint.id,
+                ...(checkpoint.artifactId ? { artifactId: checkpoint.artifactId } : {}),
+              }
+            : null,
+        )
+        setIsLoading(snapshot.thread.status === "running")
+        setError(snapshot.thread.status === "error" ? "Agent Pi failed; retry the current action." : null)
         setPlanState(extractPlanStateFromPipelinePlan(snapshot.plan as PipelinePlan | null))
         const latestCompletedRender = [...snapshot.events].reverse().find((event) => {
           const payload = event.payload as Record<string, unknown> | undefined
@@ -496,10 +603,13 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
 
   useEffect(() => {
     if (!activeThreadId) return
+    const generation = threadGenerationRef.current
     const source = new EventSource(getPiEventsUrl(activeThreadId, lastSeqRef.current))
+    const applyEvent = (event: PiEvent | null) => {
+      if (event && generation === threadGenerationRef.current) handleEvent(event)
+    }
     source.onmessage = (message) => {
-      const event = parsePiEvent(message.data)
-      if (event) handleEvent(event)
+      applyEvent(parsePiEvent(message.data))
     }
     const eventTypes: PiEvent["type"][] = [
       "message_delta",
@@ -518,8 +628,7 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
     ]
     for (const type of eventTypes) {
       source.addEventListener(type, (message) => {
-        const event = parsePiEvent((message as MessageEvent).data)
-        if (event) handleEvent(event)
+        applyEvent(parsePiEvent((message as MessageEvent).data))
       })
     }
     source.onerror = () => {
@@ -530,18 +639,26 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
 
   const submit = useCallback(
     (message: string) => {
+      const generation = threadGenerationRef.current
+      const actionGeneration = ++actionGenerationRef.current
       setError(null)
       setIsLoading(true)
-      setCheckpointType(null)
-      setCheckpointData(null)
       sendPiChat(message, activeThreadId)
         .then(({ threadId: nextThreadId }) => {
+          if (
+            !isCurrentPiRequest(generation, threadGenerationRef.current, actionGeneration, actionGenerationRef.current)
+          )
+            return
           if (nextThreadId !== activeThreadId) {
             setActiveThreadId(nextThreadId)
             onThreadId?.(nextThreadId)
           }
         })
         .catch((err) => {
+          if (
+            !isCurrentPiRequest(generation, threadGenerationRef.current, actionGeneration, actionGenerationRef.current)
+          )
+            return
           setError(err)
           setIsLoading(false)
           onError?.(err)
@@ -553,17 +670,19 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
   const resume = useCallback(
     (decision: Record<string, unknown>) => {
       if (!activeThreadId) return
+      const generation = threadGenerationRef.current
+      const actionGeneration = ++actionGenerationRef.current
       const boundDecision = {
+        ...decision,
         ...(typeof checkpointData?.checkpointId === "string" ? { checkpointId: checkpointData.checkpointId } : {}),
         ...(typeof checkpointData?.artifactId === "string" ? { artifactId: checkpointData.artifactId } : {}),
         ...(typeof checkpointData?.version === "number" ? { version: checkpointData.version } : {}),
-        ...decision,
       }
       setError(null)
       setIsLoading(true)
-      setCheckpointType(null)
-      setCheckpointData(null)
       resumePiCheckpoint(activeThreadId, boundDecision).catch((err) => {
+        if (!isCurrentPiRequest(generation, threadGenerationRef.current, actionGeneration, actionGenerationRef.current))
+          return
         setError(err)
         setIsLoading(false)
         onError?.(err)
@@ -574,30 +693,28 @@ export function usePiVideoStream(options: UsePiVideoStreamOptions = {}): PiVideo
 
   const retry = useCallback(() => {
     if (!activeThreadId) return
+    const generation = threadGenerationRef.current
+    const actionGeneration = ++actionGenerationRef.current
     setError(null)
     setIsLoading(true)
     retryPiAction(activeThreadId).catch((err) => {
+      if (!isCurrentPiRequest(generation, threadGenerationRef.current, actionGeneration, actionGenerationRef.current))
+        return
       setError(err)
       setIsLoading(false)
       onError?.(err)
     })
   }, [activeThreadId, onError])
 
-  const switchThread = useCallback((newThreadId: string | null) => {
-    lastSeqRef.current = 0
-    videoResultJobIdsRef.current.clear()
-    activeAssistantIdRef.current = null
-    setActiveThreadId(newThreadId)
-    setMessages([])
-    setCheckpointType(null)
-    setCheckpointData(null)
-    setEnrichments([])
-    setPipelineEvents([])
-    setPlanState(null)
-    setSubagentRecords(new Map())
-    setError(null)
-    setIsLoading(false)
-  }, [])
+  const switchThread = useCallback(
+    (newThreadId: string | null) => {
+      if (newThreadId === activeThreadId) return
+      threadGenerationRef.current += 1
+      actionGenerationRef.current += 1
+      setActiveThreadId(newThreadId)
+    },
+    [activeThreadId],
+  )
 
   const subagents = useMemo(() => {
     const result = new Map<string, SubagentStreamInterface>()

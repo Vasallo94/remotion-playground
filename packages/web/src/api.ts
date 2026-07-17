@@ -2,13 +2,13 @@ import { Client } from "@langchain/langgraph-sdk"
 import type { ConfigListResponse, JobListResponse, RenderJob } from "./types"
 
 export const client = new Client({
-  apiUrl: import.meta.env.VITE_LANGGRAPH_URL ?? "http://127.0.0.1:2024",
+  apiUrl: import.meta.env?.VITE_LANGGRAPH_URL ?? "http://127.0.0.1:2024",
 })
 
 export const ASSISTANT_ID = "claqueta"
 
-const RENDER_URL = import.meta.env.VITE_RENDER_URL ?? "http://127.0.0.1:3100"
-export const AGENT_PI_URL = import.meta.env.VITE_AGENT_PI_URL ?? "http://127.0.0.1:3200"
+const RENDER_URL = import.meta.env?.VITE_RENDER_URL ?? "http://127.0.0.1:3100"
+export const AGENT_PI_URL = import.meta.env?.VITE_AGENT_PI_URL ?? "http://127.0.0.1:3200"
 
 export async function fetchJobStatus(jobId: string): Promise<RenderJob> {
   const res = await fetch(`${RENDER_URL}/api/render/${jobId}/status`)
@@ -82,6 +82,7 @@ export interface PiThreadSnapshot {
     id: string
     title: string | null
     status: string
+    revision: number
     checkpoint: null | {
       id: string
       type: string
