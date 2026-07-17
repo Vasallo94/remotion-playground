@@ -11,6 +11,7 @@ const EXPECTED_TEMP_PREFIXES = [
   "agent-pi-resource-loader-",
   "agent-pi-specialist-",
   "agent-pi-tools-",
+  "agent-pi-visual-recipe-",
   "claqueta-agent-pi-",
   "claqueta-audio-production-",
   "claqueta-quarantine-",

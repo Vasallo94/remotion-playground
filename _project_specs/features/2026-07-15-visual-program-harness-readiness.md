@@ -122,6 +122,8 @@ Minimal race gate implemented before the full ThreadView projection: snapshots c
 
 ### Slice 4 — recipe workflow
 
+The immutable data foundation now reuses existing artifacts for compiled recipes, deterministic boundary evidence, and target-scoped active sets. Specialist proposal and human adoption remain open below.
+
 - [ ] The specialist emits exactly one typed recipe proposal, with at most one schema-repair turn.
 - [ ] CP4 and adoption approvals cannot substitute for one another.
 - [ ] Rejection activates nothing and changes no production source.
