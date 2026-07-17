@@ -61,6 +61,11 @@ export const ProductShortConfigSchema = z.object({
   fps: z.literal(30),
   width: z.literal(1080),
   height: z.literal(1920),
+  activeVisualRecipeSetDigest: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable()
+    .optional(),
   brief: BriefSchema.nullable().optional(),
   scenes: z.array(ProductShortSceneSchema).min(1),
   voiceover: VoiceoverConfigSchema.nullable().optional(),

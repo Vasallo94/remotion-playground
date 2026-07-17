@@ -1,5 +1,7 @@
 import { strict as assert } from "node:assert"
 import { createHash } from "node:crypto"
+import { createVisualRecipeTemplate } from "@claqueta/scene-contracts"
+import { cascadeFixture } from "../../scene-contracts/test/fixtures/cascade.js"
 import { join } from "node:path"
 import { test } from "node:test"
 import { contentHash } from "../src/contentHash.js"
@@ -12,6 +14,7 @@ import {
 } from "../src/productionBrief.js"
 import type { ConfigSpecialistInput } from "../src/configSpecialist.js"
 import { cleanupTestDirectory, createTestTemporaryDirectory } from "../src/testCleanup.js"
+import { buildActiveVisualRecipeSet, buildVisualRecipeArtifacts } from "../src/visualRecipes.js"
 
 const provided = <T>(value: T) => ({ status: "provided" as const, value, source: "user" as const })
 const absent = (rationale: string) => ({ status: "explicitly_absent" as const, rationale })
@@ -111,6 +114,7 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
   let renders = 0
   let qaRuns = 0
   let directionRevisionFeedback: string | undefined
+  let publishedFileNames: string[] = []
   const runtime = new AgentRuntimeManager({
     store,
     createProductionBriefIntakeRunner: () => ({
@@ -289,6 +293,7 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     }),
     publishFiles: async (_slug, files) => {
       publications += 1
+      publishedFileNames = [...files.keys()]
       return Object.fromEntries(
         [...files].map(([name, content]) => [
           name,
@@ -305,6 +310,31 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
 
     await runtime.resumeCheckpoint(threadId, { approved: true })
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "direction_checkpoint")
+
+    const visualArtifacts = buildVisualRecipeArtifacts({
+      targetId: "target.video.001",
+      sceneIndex: 0,
+      template: createVisualRecipeTemplate({
+        version: 1,
+        templateId: "e2e-cascade",
+        program: cascadeFixture,
+        bindings: [],
+      }),
+    })
+    store.saveArtifact({ threadId, kind: "visual_recipe", data: visualArtifacts.recipe, approved: true })
+    store.saveArtifact({
+      threadId,
+      kind: "visual_recipe_evidence",
+      data: visualArtifacts.evidence,
+      approved: true,
+    })
+    const activeVisualRecipeSet = buildActiveVisualRecipeSet("target.video.001", visualArtifacts.recipe)
+    store.saveArtifact({
+      threadId,
+      kind: "active_visual_recipe_set",
+      data: activeVisualRecipeSet,
+      approved: true,
+    })
 
     await runtime.resumeCheckpoint(threadId, { approved: true })
     assert.equal(store.getThread(threadId)?.checkpoint?.type, "qa_report_checkpoint")
@@ -349,6 +379,26 @@ test("Pi-only new_video reaches publication through every human checkpoint witho
     assert.equal(finalPlan.progress.completed, finalPlan.progress.total)
     assert.equal(publications, 1)
     assert.equal(renders, 1)
+    assert.ok(publishedFileNames.includes("visual-recipe-lineage.json"))
+    const finalConfig = store
+      .listArtifacts(threadId)
+      .filter((artifact) => artifact.kind === "config")
+      .sort((left, right) => right.version - left.version)[0]!
+    assert.equal(
+      (finalConfig.data as { activeVisualRecipeSetDigest: string }).activeVisualRecipeSetDigest,
+      activeVisualRecipeSet.digest,
+    )
+    for (const kind of ["config_lineage", "qa_lineage", "validation_report", "render_job", "render_review"] as const) {
+      const artifact = store
+        .listArtifacts(threadId)
+        .filter((candidate) => candidate.kind === kind)
+        .sort((left, right) => right.version - left.version)[0]!
+      assert.equal(
+        (artifact.data as { activeVisualRecipeSet: { digest: string } }).activeVisualRecipeSet.digest,
+        activeVisualRecipeSet.digest,
+        `${kind} must retain exact active recipe lineage`,
+      )
+    }
     assert.equal(store.getThread(threadId)?.piSessionId, null)
     assert.equal(
       store.listActionAttempts(threadId).every((attempt) => attempt.status === "succeeded"),

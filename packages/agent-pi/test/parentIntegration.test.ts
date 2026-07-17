@@ -1,6 +1,8 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { afterEach, describe, it } from "node:test"
+import { createVisualRecipeTemplate } from "@claqueta/scene-contracts"
+import { cascadeFixture } from "../../scene-contracts/test/fixtures/cascade.js"
 import { contentHash } from "../src/contentHash.js"
 import { CANONICAL_MODE_STEPS, deriveCoordinatorAction } from "../src/coordinator.js"
 import type { ProductionBriefIntakeResult } from "../src/intake.js"
@@ -14,6 +16,7 @@ import { AgentPiStore } from "../src/store.js"
 import { buildSelectedTargetArtifact, REGISTERED_TARGETS } from "../src/targetContracts.js"
 import type { ConfigSpecialistInput } from "../src/configSpecialist.js"
 import type { PipelinePlan } from "../src/types.js"
+import { buildActiveVisualRecipeSet, buildVisualRecipeArtifacts } from "../src/visualRecipes.js"
 
 const provided = <T>(value: T) => ({ status: "provided" as const, value, source: "user" as const })
 const absent = (rationale: string) => ({ status: "explicitly_absent" as const, rationale })
@@ -122,6 +125,10 @@ function saveQaWithLineage(
   config: { id: string; version: number; data: unknown },
 ) {
   const qa = targetStore.saveArtifact({ threadId, kind: "qa_report", data })
+  const configLineage = targetStore
+    .listArtifacts(threadId)
+    .filter((artifact) => artifact.kind === "config_lineage")
+    .sort((left, right) => right.version - left.version)[0]?.data as { activeVisualRecipeSet?: unknown } | undefined
   targetStore.saveArtifact({
     threadId,
     kind: "qa_lineage",
@@ -130,6 +137,7 @@ function saveQaWithLineage(
       schemaVersion: 1,
       qaReport: { artifactId: qa.id, version: qa.version, contentHash: contentHash(qa.data) },
       config: { artifactId: config.id, version: config.version, contentHash: contentHash(config.data) },
+      activeVisualRecipeSet: configLineage?.activeVisualRecipeSet ?? null,
     },
   })
   return qa
@@ -935,7 +943,7 @@ describe("parent-owned new_video intake and target integration", () => {
       createConfigSpecialistRunner: () => ({
         async run(input) {
           received = input
-          const config = { id: "atomic-config", compositionId: "ClaudeCodeTutorial", scenes: [] }
+          const config = { id: "atomic-config", compositionId: "ClaudeCodeTutorial", scenes: [{}] }
           return {
             runId: "config-run",
             modelRoute: "test/config",
@@ -1018,6 +1026,35 @@ describe("parent-owned new_video intake and target integration", () => {
       data: { title: "Atomic direction", scenes: [], warnings: [] },
       approved: true,
     })
+    const visualArtifacts = buildVisualRecipeArtifacts({
+      targetId: "target.video.001",
+      sceneIndex: 0,
+      template: createVisualRecipeTemplate({
+        version: 1,
+        templateId: "atomic-cascade",
+        program: cascadeFixture,
+        bindings: [],
+      }),
+    })
+    store.saveArtifact({
+      threadId,
+      kind: "visual_recipe",
+      data: visualArtifacts.recipe,
+      approved: true,
+    })
+    store.saveArtifact({
+      threadId,
+      kind: "visual_recipe_evidence",
+      data: visualArtifacts.evidence,
+      approved: true,
+    })
+    const activeVisualRecipeSet = buildActiveVisualRecipeSet("target.video.001", visualArtifacts.recipe)
+    const activeSetArtifact = store.saveArtifact({
+      threadId,
+      kind: "active_visual_recipe_set",
+      data: activeVisualRecipeSet,
+      approved: true,
+    })
 
     await (runtime as unknown as ParentActionRuntime).executeConfigParentAction(threadId, "generate_draft_config")
 
@@ -1028,6 +1065,22 @@ describe("parent-owned new_video intake and target integration", () => {
     const lineage = store.listArtifacts(threadId).find((artifact) => artifact.kind === "config_lineage")
     assert.equal((lineage?.data as { configArtifactId: string }).configArtifactId, config?.id)
     assert.equal((lineage?.data as { configVersion: number }).configVersion, config?.version)
+    assert.equal(
+      (config?.data as { activeVisualRecipeSetDigest: string }).activeVisualRecipeSetDigest,
+      activeVisualRecipeSet.digest,
+    )
+    assert.equal(
+      ((config?.data as { scenes: Array<{ componentId?: string }> }).scenes[0] as { componentId?: string }).componentId,
+      "visual-program",
+    )
+    assert.equal(
+      (
+        lineage?.data as {
+          activeVisualRecipeSet: { artifactId: string; digest: string }
+        }
+      ).activeVisualRecipeSet.artifactId,
+      activeSetArtifact.id,
+    )
     assert.equal(
       store.listActionAttempts(threadId).find((attempt) => attempt.action === "generate_draft_config")?.status,
       "succeeded",
@@ -1279,7 +1332,13 @@ describe("parent-owned new_video intake and target integration", () => {
     store.saveArtifact({
       threadId,
       kind: "validation_report",
-      data: { valid: true, configArtifactId: config.id, configVersion: config.version },
+      data: {
+        valid: true,
+        configArtifactId: config.id,
+        configVersion: config.version,
+        configHash: contentHash(config.data),
+        activeVisualRecipeSet: null,
+      },
       approved: true,
     })
     const parent = runtime as unknown as ParentActionRuntime

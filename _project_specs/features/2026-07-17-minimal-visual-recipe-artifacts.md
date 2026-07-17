@@ -16,7 +16,9 @@ Add pure builders for three immutable data artifacts:
 2. deterministic behavioral evidence at every event boundary;
 3. a target-scoped active recipe set for future config projection.
 
-Activation remains a separate human checkpoint in the parent runtime. This slice does not implement the checkpoint UI or specialist proposal turn.
+Activation remains a separate human checkpoint in the parent runtime. This feature does not implement the checkpoint UI or specialist proposal turn.
+
+The parent config action consumes only the latest approved active set with approved recipe/evidence artifacts. It embeds exact compiled props and the active-set digest, then carries an artifact/version/hash/digest reference through QA, validation, render, review, and publication.
 
 ## Acceptance criteria
 
@@ -29,6 +31,11 @@ Activation remains a separate human checkpoint in the parent runtime. This slice
 - [x] Config projection replaces only the activated scene indexes with `visual-program` custom scenes and exact compiled props.
 - [x] Later activation cannot mutate a previously projected config.
 - [x] No source, registry, catalog, or TSX write occurs.
+- [x] Parent config generation rejects invalid, unapproved, stale, or cross-target active recipe data.
+- [x] Config embeds the active-set digest and exact compiled props after specialist validation.
+- [x] Config lineage pins the active-set artifact ID, version, content hash, target, and digest.
+- [x] QA, validation, render job, render review, and publication retain the same exact lineage.
+- [x] Changing the approved active set makes older config and downstream evidence stale.
 
 ## Tests
 
@@ -37,3 +44,5 @@ Activation remains a separate human checkpoint in the parent runtime. This slice
 3. Activate, duplicate-activate, replace, and cross-target reject.
 4. Project into a multi-scene config and prove untouched scenes remain byte-equivalent.
 5. Persist recipe, evidence, and active set through `AgentPiStore` and reload them unchanged.
+6. Run the Pi-only mocked lifecycle with an approved recipe through projected config, two QA passes, validation, render, review, and publication.
+7. Assert every downstream artifact and the published lineage file retain the exact active-set digest.

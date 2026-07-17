@@ -18,6 +18,7 @@ import type {
 import { contentHash } from "./contentHash.js"
 import { validateProductionBriefArtifact, type ProductionBriefArtifact } from "./productionBrief.js"
 import { isSelectedTargetArtifactForBrief, type SelectedTargetArtifact } from "./targetContracts.js"
+import type { ActiveVisualRecipeSet } from "./visualRecipes.js"
 
 export type CoordinatorAction =
   | "create_plan"
@@ -689,6 +690,13 @@ interface ConfigLineageArtifactData {
     script: { artifactId: string; version: number; contentHash: string }
     direction: { artifactId: string; version: number; contentHash: string }
   }
+  activeVisualRecipeSet?: {
+    artifactId: string
+    version: number
+    contentHash: string
+    targetId: string
+    digest: string
+  } | null
 }
 
 function currentConfig(artifacts: readonly ArtifactRecord[]): ArtifactRecord<Record<string, unknown>> | undefined {
@@ -696,6 +704,8 @@ function currentConfig(artifacts: readonly ArtifactRecord[]): ArtifactRecord<Rec
   const lineage = latest<ConfigLineageArtifactData>(artifacts, "config_lineage")
   const script = latest<ScriptDraft>(artifacts, "script")
   const direction = latest<DirectionDraft>(artifacts, "direction")
+  const activeSet = latest<ActiveVisualRecipeSet>(artifacts, "active_visual_recipe_set")
+  const activeLineage = lineage?.data.activeVisualRecipeSet ?? null
   if (
     !config ||
     !lineage ||
@@ -709,7 +719,16 @@ function currentConfig(artifacts: readonly ArtifactRecord[]): ArtifactRecord<Rec
     lineage.data.lineage.script.contentHash !== contentHash(script.data) ||
     lineage.data.lineage.direction.artifactId !== direction.id ||
     lineage.data.lineage.direction.version !== direction.version ||
-    lineage.data.lineage.direction.contentHash !== contentHash(direction.data)
+    lineage.data.lineage.direction.contentHash !== contentHash(direction.data) ||
+    (activeSet
+      ? !activeSet.approved ||
+        activeLineage?.artifactId !== activeSet.id ||
+        activeLineage.version !== activeSet.version ||
+        activeLineage.contentHash !== contentHash(activeSet.data) ||
+        activeLineage.targetId !== activeSet.data.targetId ||
+        activeLineage.digest !== activeSet.data.digest ||
+        config.data.activeVisualRecipeSetDigest !== activeSet.data.digest
+      : activeLineage !== null || config.data.activeVisualRecipeSetDigest != null)
   ) {
     return undefined
   }
@@ -729,7 +748,9 @@ function currentQaReport(artifacts: readonly ArtifactRecord[]): ArtifactRecord<S
     lineage.data.qaReport.contentHash !== contentHash(qa.data) ||
     lineage.data.config.artifactId !== config.id ||
     lineage.data.config.version !== config.version ||
-    lineage.data.config.contentHash !== contentHash(config.data)
+    lineage.data.config.contentHash !== contentHash(config.data) ||
+    contentHash(lineage.data.activeVisualRecipeSet ?? null) !==
+      contentHash(latest<ConfigLineageArtifactData>(artifacts, "config_lineage")?.data.activeVisualRecipeSet ?? null)
   ) {
     return undefined
   }

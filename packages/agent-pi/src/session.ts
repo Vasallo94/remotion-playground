@@ -52,6 +52,14 @@ import { executableCandidatePolicySummary } from "./candidatePolicy.js"
 import { ParentActionExecutor } from "./parentActionExecutor.js"
 import { failInterruptedAtomicActions } from "./actionReconciliation.js"
 import {
+  projectActiveVisualRecipes,
+  verifyActiveVisualRecipeSet,
+  verifyVisualRecipeArtifacts,
+  type ActiveVisualRecipeSet,
+  type VisualRecipeArtifactData,
+  type VisualRecipeEvidence,
+} from "./visualRecipes.js"
+import {
   ConfigSpecialistRunner,
   configContentHash,
   type ConfigLineageMetadata,
@@ -81,6 +89,7 @@ import {
   type SelectedTargetArtifact,
 } from "./targetContracts.js"
 import type {
+  ActiveVisualRecipeSetLineageReference,
   ArtifactKind,
   ArtifactRecord,
   AudioChart,
@@ -1776,9 +1785,16 @@ export class AgentRuntimeManager {
   }
 
   private async executeRenderReviewParentAction(threadId: string, signal?: AbortSignal): Promise<void> {
-    const render = this.latestArtifact<RenderJobStatus>(threadId, "render_job")
-    if (!render?.approved || render.data.status !== "done")
+    const render = this.latestArtifact<
+      RenderJobStatus & { activeVisualRecipeSet?: ActiveVisualRecipeSetLineageReference | null }
+    >(threadId, "render_job")
+    const config = this.latestArtifact<Record<string, unknown>>(threadId, "config")
+    if (!render?.approved || render.data.status !== "done" || !config)
       throw new Error("Render review requires a completed render job")
+    const activeVisualRecipeSet = this.activeVisualRecipeLineageForConfig(threadId, config.data)
+    if (configContentHash(render.data.activeVisualRecipeSet ?? null) !== configContentHash(activeVisualRecipeSet)) {
+      throw new Error("Render job Visual Recipe lineage is stale")
+    }
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "review_render" as const
     const execution = await this.parentActionExecutor().execute({
@@ -1788,8 +1804,18 @@ export class AgentRuntimeManager {
         const report = await this.reviewRender(render.data.id, signal)
         return {
           outcome: { passed: report.passed, failures: report.failures },
-          artifacts: [{ id: randomUUID(), threadId, kind: "render_review" as const, data: report }],
-          effectMetadata: { renderJobId: render.data.id },
+          artifacts: [
+            {
+              id: randomUUID(),
+              threadId,
+              kind: "render_review" as const,
+              data: { ...report, activeVisualRecipeSet },
+            },
+          ],
+          effectMetadata: {
+            renderJobId: render.data.id,
+            activeVisualRecipeSetDigest: activeVisualRecipeSet?.digest ?? null,
+          },
         }
       },
     })
@@ -1803,9 +1829,15 @@ export class AgentRuntimeManager {
 
   private async executePublicationParentAction(threadId: string): Promise<void> {
     const config = this.latestArtifact<Record<string, unknown>>(threadId, "config")
-    const review = this.latestArtifact<RenderReviewReport>(threadId, "render_review")
+    const review = this.latestArtifact<
+      RenderReviewReport & { activeVisualRecipeSet?: ActiveVisualRecipeSetLineageReference | null }
+    >(threadId, "render_review")
     if (!config || !review?.approved || !review.data.passed) {
       throw new Error("Publication requires final human-approved passing render review")
+    }
+    const activeVisualRecipeSet = this.activeVisualRecipeLineageForConfig(threadId, config.data)
+    if (configContentHash(review.data.activeVisualRecipeSet ?? null) !== configContentHash(activeVisualRecipeSet)) {
+      throw new Error("Publication review Visual Recipe lineage is stale")
     }
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "publish" as const
@@ -1831,8 +1863,14 @@ export class AgentRuntimeManager {
         const audio = this.latestArtifact<AudioChart>(threadId, "audio_chart")
         if (audio?.approved) files.set("audio-chart.json", JSON.stringify(audio.data, null, 2) + "\n")
         files.set("render-review.json", JSON.stringify(review.data, null, 2) + "\n")
+        if (activeVisualRecipeSet) {
+          files.set("visual-recipe-lineage.json", JSON.stringify(activeVisualRecipeSet, null, 2) + "\n")
+        }
         const written = await this.publishFiles(slug, files)
-        return { outcome: { slug, written }, effectMetadata: { slug, written } }
+        return {
+          outcome: { slug, written },
+          effectMetadata: { slug, written, activeVisualRecipeSetDigest: activeVisualRecipeSet?.digest ?? null },
+        }
       },
     })
     if (execution.status === "failed") throw new Error(execution.error.message)
@@ -1847,8 +1885,17 @@ export class AgentRuntimeManager {
 
   private async executeRenderParentAction(threadId: string, signal?: AbortSignal): Promise<void> {
     const config = this.latestArtifact<Record<string, unknown>>(threadId, "config")
-    const validation = this.latestArtifact(threadId, "validation_report")
+    const validation = this.latestArtifact<Record<string, unknown>>(threadId, "validation_report")
     if (!config || !validation?.approved) throw new Error("Render requires exact approved validation evidence")
+    const activeVisualRecipeSet = this.activeVisualRecipeLineageForConfig(threadId, config.data)
+    if (
+      validation.data.configArtifactId !== config.id ||
+      validation.data.configVersion !== config.version ||
+      validation.data.configHash !== configContentHash(config.data) ||
+      configContentHash(validation.data.activeVisualRecipeSet ?? null) !== configContentHash(activeVisualRecipeSet)
+    ) {
+      throw new Error("Render validation lineage is stale")
+    }
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "render" as const
     const key = actionIdempotencyKey(snapshot, action)
@@ -1871,9 +1918,22 @@ export class AgentRuntimeManager {
         if (!job || job.status !== "done") throw new Error(`Render timed out: ${submission.jobId}`)
         return {
           outcome: { jobId: job.id, reused: submission.reused, outputPath: job.output_path },
-          artifacts: [{ id: randomUUID(), threadId, kind: "render_job" as const, data: job, approved: true }],
+          artifacts: [
+            {
+              id: randomUUID(),
+              threadId,
+              kind: "render_job" as const,
+              data: { ...job, activeVisualRecipeSet },
+              approved: true,
+            },
+          ],
           planEffects: [{ type: "complete_step" as const, stepId: "render" }],
-          effectMetadata: { jobId: job.id, requestHash, providerIdempotencyKey: key },
+          effectMetadata: {
+            jobId: job.id,
+            requestHash,
+            providerIdempotencyKey: key,
+            activeVisualRecipeSetDigest: activeVisualRecipeSet?.digest ?? null,
+          },
         }
       },
     })
@@ -1889,6 +1949,7 @@ export class AgentRuntimeManager {
     const config = this.latestArtifact<Record<string, unknown>>(threadId, "config")
     const audioAssets = this.latestArtifact(threadId, "audio_assets")
     if (!config || !audioAssets) throw new Error("Final validation requires config and produced audio assets")
+    const activeVisualRecipeSet = this.activeVisualRecipeLineageForConfig(threadId, config.data)
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "validate_final" as const
     const execution = await this.parentActionExecutor().execute({
@@ -1911,12 +1972,17 @@ export class AgentRuntimeManager {
                 configArtifactId: config.id,
                 configVersion: config.version,
                 configHash: configContentHash(config.data),
+                activeVisualRecipeSet,
                 errors: [],
               },
             },
           ],
           planEffects: [{ type: "complete_step" as const, stepId: "final_validation" }],
-          effectMetadata: { configArtifactId: config.id, audioAssetsArtifactId: audioAssets.id },
+          effectMetadata: {
+            configArtifactId: config.id,
+            audioAssetsArtifactId: audioAssets.id,
+            activeVisualRecipeSetDigest: activeVisualRecipeSet?.digest ?? null,
+          },
         }
       },
     })
@@ -1990,6 +2056,7 @@ export class AgentRuntimeManager {
     }
     const target = summarizeSelectedRegisteredTarget({ target: { id: selectedTarget.data.target.id } })
     if (!target.ok) throw new Error("Scene QA selected target no longer resolves")
+    const activeVisualRecipeSet = this.activeVisualRecipeLineageForConfig(threadId, config.data)
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "run_scene_qa" as const
     const execution = await this.parentActionExecutor().execute({
@@ -2019,6 +2086,7 @@ export class AgentRuntimeManager {
             version: config.version,
             contentHash: configContentHash(config.data),
           },
+          activeVisualRecipeSet,
         }
         return {
           outcome: { runId: result.runId, modelRoute: result.modelRoute },
@@ -2064,12 +2132,14 @@ export class AgentRuntimeManager {
     }
     const target = summarizeSelectedRegisteredTarget({ target: { id: selectedTarget.data.target.id } })
     if (!target.ok) throw new Error("Selected target no longer resolves in the parent registry")
+    const activeRecipes = this.activeVisualRecipeContext(threadId, selectedTarget.data.target.id)
     const previousConfig = this.latestArtifact<Record<string, unknown>>(threadId, "config")
     const previousLineage = this.latestArtifact<{
       configArtifactId: string
       configVersion: number
       configHash: string
       lineage: ConfigLineageMetadata
+      activeVisualRecipeSet?: ActiveVisualRecipeSetLineageReference | null
     }>(threadId, "config_lineage")
     if (
       previousConfig &&
@@ -2085,7 +2155,9 @@ export class AgentRuntimeManager {
       previousLineage.data.lineage.script.artifactId === script.id &&
       previousLineage.data.lineage.script.version === script.version &&
       previousLineage.data.lineage.direction.artifactId === direction.id &&
-      previousLineage.data.lineage.direction.version === direction.version,
+      previousLineage.data.lineage.direction.version === direction.version &&
+      configContentHash(previousLineage.data.activeVisualRecipeSet ?? null) ===
+        configContentHash(activeRecipes?.lineage ?? null),
     )
     const input: ConfigSpecialistInput = {
       productionBrief: { artifactId: brief.id, version: brief.version, approved: true, data: brief.data },
@@ -2113,12 +2185,16 @@ export class AgentRuntimeManager {
       effect: async () => {
         const result = await this.createConfigSpecialistRunner(threadId).run(input, signal)
         assertConfigResultBoundToInput(input, result)
+        const config = activeRecipes
+          ? projectActiveVisualRecipes(result.config, activeRecipes.activeSet.data, activeRecipes.recipes)
+          : result.config
+        const configHash = configContentHash(config)
         const configId = randomUUID()
         const configVersion = (previousConfig?.version ?? 0) + 1
         return {
-          outcome: { runId: result.runId, modelRoute: result.modelRoute, configHash: result.configHash },
+          outcome: { runId: result.runId, modelRoute: result.modelRoute, configHash },
           artifacts: [
-            { id: configId, threadId, kind: "config" as const, data: result.config },
+            { id: configId, threadId, kind: "config" as const, data: config },
             {
               id: randomUUID(),
               threadId,
@@ -2126,8 +2202,9 @@ export class AgentRuntimeManager {
               data: {
                 configArtifactId: configId,
                 configVersion,
-                configHash: result.configHash,
+                configHash,
                 lineage: result.lineage,
+                activeVisualRecipeSet: activeRecipes?.lineage ?? null,
               },
             },
           ],
@@ -2419,6 +2496,71 @@ export class AgentRuntimeManager {
       throw new Error(`Canonical coordinator action '${action}' has no parent-owned adapter`)
     }
     throw new Error("Canonical coordinator exceeded its transition budget before reaching a checkpoint")
+  }
+
+  private activeVisualRecipeLineageForConfig(
+    threadId: string,
+    config: Record<string, unknown>,
+  ): ActiveVisualRecipeSetLineageReference | null {
+    const selectedTarget = this.latestArtifact<SelectedTargetArtifact>(threadId, "selected_target")
+    const context = selectedTarget?.approved
+      ? this.activeVisualRecipeContext(threadId, selectedTarget.data.target.id)
+      : null
+    const observedDigest = config.activeVisualRecipeSetDigest ?? null
+    const expectedDigest = context?.lineage.digest ?? null
+    if (observedDigest !== expectedDigest) {
+      throw new Error("Config is stale for the current active Visual Recipe set")
+    }
+    return context?.lineage ?? null
+  }
+
+  private activeVisualRecipeContext(
+    threadId: string,
+    targetId: string,
+  ): {
+    activeSet: ArtifactRecord<ActiveVisualRecipeSet>
+    lineage: ActiveVisualRecipeSetLineageReference
+    recipes: VisualRecipeArtifactData[]
+  } | null {
+    const artifacts = this.store.listArtifacts(threadId)
+    const activeSet = artifacts
+      .filter((artifact) => artifact.kind === "active_visual_recipe_set" && artifact.approved)
+      .sort((left, right) => right.version - left.version)[0] as ArtifactRecord<ActiveVisualRecipeSet> | undefined
+    if (!activeSet) return null
+    if (activeSet.data.targetId !== targetId || !verifyActiveVisualRecipeSet(activeSet.data)) {
+      throw new Error("Active Visual Recipe set is invalid or belongs to another target")
+    }
+    const recipes = activeSet.data.entries.map((entry) => {
+      const recipe = artifacts.find(
+        (artifact) =>
+          artifact.kind === "visual_recipe" &&
+          artifact.approved &&
+          (artifact.data as VisualRecipeArtifactData).recipeId === entry.recipeId &&
+          (artifact.data as VisualRecipeArtifactData).digest === entry.recipeDigest,
+      ) as ArtifactRecord<VisualRecipeArtifactData> | undefined
+      const evidence = artifacts.find(
+        (artifact) =>
+          artifact.kind === "visual_recipe_evidence" &&
+          artifact.approved &&
+          (artifact.data as VisualRecipeEvidence).recipeId === entry.recipeId &&
+          (artifact.data as VisualRecipeEvidence).digest === entry.evidenceDigest,
+      ) as ArtifactRecord<VisualRecipeEvidence> | undefined
+      if (!recipe || !evidence || !verifyVisualRecipeArtifacts(recipe.data, evidence.data)) {
+        throw new Error(`Active Visual Recipe '${entry.recipeId}' lacks valid approved evidence`)
+      }
+      return recipe.data
+    })
+    return {
+      activeSet,
+      lineage: {
+        artifactId: activeSet.id,
+        version: activeSet.version,
+        contentHash: configContentHash(activeSet.data),
+        targetId,
+        digest: activeSet.data.digest,
+      },
+      recipes,
+    }
   }
 
   private latestArtifact<TData>(threadId: string, kind: ArtifactRecord["kind"]): ArtifactRecord<TData> | undefined {

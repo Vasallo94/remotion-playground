@@ -136,6 +136,11 @@ export const TutorialConfigSchema = z.object({
   composition: z.string().nullable().optional(),
   signature: z.string().nullable().optional(),
   watermark: z.boolean().default(true),
+  activeVisualRecipeSetDigest: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable()
+    .optional(),
   theme: z.enum(["default", "linea-directa", "atom-dark", "h-alpha", "claqueta", "betelgeuse"]).default("betelgeuse"),
   brief: BriefSchema.nullable().optional(),
   scenes: z.array(SceneSchema).min(1),

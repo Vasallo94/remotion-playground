@@ -141,10 +141,16 @@ export interface ArtifactLineageReference {
   contentHash: string
 }
 
+export interface ActiveVisualRecipeSetLineageReference extends ArtifactLineageReference {
+  targetId: string
+  digest: string
+}
+
 export interface QaReportLineage {
   schemaVersion: 1
   qaReport: ArtifactLineageReference
   config: ArtifactLineageReference
+  activeVisualRecipeSet?: ActiveVisualRecipeSetLineageReference | null
 }
 
 export interface DirectionRevisionRequest {
