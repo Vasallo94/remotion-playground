@@ -7,6 +7,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **LangGraph/DeepAgents retirement ADR (0054)** — records the Pi-native parity evidence (260 green agent-pi tests, deterministic pi-only E2E to SHA-256 publication, real multi-subject productions), the exact removal scope for Phase 9 (web `@langchain/langgraph-sdk`, `VITE_AGENT_RUNTIME` flag, Python `packages/agent/src`), and the four open gates blocking `Accepted`; `skills/`/`prompts/` are explicitly retained.
+
+### Changed
+
+- **Pi-DeepAgents parity spec reconciled** — marks the acceptance criteria already evidenced by the passing agent-pi suite (131 done), leaving only four genuinely open gates: automated ≥3-subject E2E, all-mode transition tables, the LangGraph removal gate, and the Codex-quota-blocked researcher live smoke.
+
 - **Real explicit-silence Ponytail proof** — completes a browser-operated 9-second production with zero Audio Planner model sessions, no CP3, one config/QA lineage, one deterministic approved silent chart, H.264 render review, final human approval, and verified publication.
 - **Ponytail video-production doctrine** — adds a persistent project skill and audited process spec that stop video work at the first approved rung, prefer existing artifacts and deterministic parent rules, invoke specialists only for unresolved judgment, render minimum relevant evidence, and preserve real trust/human/side-effect boundaries.
 - **Real browser-operated silent cascade evidence** — completes CP4, exact Visual Recipe adoption, parent restart, CP1/CP2, ordered multimodal QA with two human rejection cycles, silent audio approval, H.264 render review, and SHA-256-verified publication while preserving one target-scoped active-set digest and creating no candidate promotion or model-authored source.

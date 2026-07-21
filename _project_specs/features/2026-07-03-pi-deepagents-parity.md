@@ -48,48 +48,48 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 
 ### Slice 0 — Saneamiento inmediato
 
-- [ ] `normalizeTerminalLines()` no inventa `/compact` ni outputs falsos; si una escena terminal no trae `lines`, la validación falla con error accionable o la escena se convierte usando contenido real aprobado.
-- [ ] `normalizeScene()` preserva escenas `{ "type": "custom", "componentId": "..." }` cuando el `componentId` existe en `src/shared/scene-catalog.json`.
-- [ ] El catálogo de escenas puede consultarse y la respuesta distingue claramente builtin vs custom, roles narrativos, duración y props esperadas cuando existan.
-- [ ] `usePiVideoStream` convierte `tool_start`, `tool_end`, `checkpoint`, `artifact_updated`, `render_status`, `error` y `agent_end` en eventos visibles en `EventLog` con formato Betelgeuse `[hora] [nivel] mensaje`.
-- [ ] `PipelineStepper` muestra un estado derivado de eventos Pi aunque aún no exista plan compartido completo.
+- [x] `normalizeTerminalLines()` no inventa `/compact` ni outputs falsos; si una escena terminal no trae `lines`, la validación falla con error accionable o la escena se convierte usando contenido real aprobado.
+- [x] `normalizeScene()` preserva escenas `{ "type": "custom", "componentId": "..." }` cuando el `componentId` existe en `src/shared/scene-catalog.json`.
+- [x] El catálogo de escenas puede consultarse y la respuesta distingue claramente builtin vs custom, roles narrativos, duración y props esperadas cuando existan.
+- [x] `usePiVideoStream` convierte `tool_start`, `tool_end`, `checkpoint`, `artifact_updated`, `render_status`, `error` y `agent_end` en eventos visibles en `EventLog` con formato Betelgeuse `[hora] [nivel] mensaje`.
+- [x] `PipelineStepper` muestra un estado derivado de eventos Pi aunque aún no exista plan compartido completo.
 
 ### Slice 1 — Visual planning por escena
 
-- [ ] `ScriptDraft`/checkpoint de guion incluye campos por escena: `narrativeRole`, `visualType`, `componentId`, `visualRationale`, `requiredAssets`, `missingCapabilities`, `estimatedDurationSeconds`.
-- [ ] `ScriptCard` renderiza esos campos de forma revisable/editable sin exigir que el humano toque `config.json`.
-- [ ] El prompt Pi prohíbe recetas hardcodeadas por tipo de vídeo y exige justificar la elección visual escena por escena usando el catálogo.
-- [ ] Un E2E de tutorial no técnico o astronómico no genera terminales salvo que haya una razón explícita y contenido terminal real.
+- [x] `ScriptDraft`/checkpoint de guion incluye campos por escena: `narrativeRole`, `visualType`, `componentId`, `visualRationale`, `requiredAssets`, `missingCapabilities`, `estimatedDurationSeconds`.
+- [x] `ScriptCard` renderiza esos campos de forma revisable/editable sin exigir que el humano toque `config.json`.
+- [x] El prompt Pi prohíbe recetas hardcodeadas por tipo de vídeo y exige justificar la elección visual escena por escena usando el catálogo.
+- [x] Un E2E de tutorial no técnico o astronómico no genera terminales salvo que haya una razón explícita y contenido terminal real.
 
 ### Slice 2 — Skills/prompts dentro de Pi
 
-- [ ] `packages/agent-pi` usa un `ResourceLoader` que carga skills/prompts de Claqueta o un loader propio equivalente con tests de discovery.
-- [ ] Las guías mínimas disponibles para Pi son: `scene-catalog`, `video-best-practices`, `scene-timing-guide`, `remotion-director`, `brand-guidelines`, `gemini-tts`, `sound-engineer`.
-- [ ] La sesión principal conserva el system prompt específico de Claqueta, pero puede incluir contexto/skills adicionales sin duplicar instrucciones contradictorias.
-- [ ] Hay diagnóstico visible si una skill esperada no se carga.
+- [x] `packages/agent-pi` usa un `ResourceLoader` que carga skills/prompts de Claqueta o un loader propio equivalente con tests de discovery.
+- [x] Las guías mínimas disponibles para Pi son: `scene-catalog`, `video-best-practices`, `scene-timing-guide`, `remotion-director`, `brand-guidelines`, `gemini-tts`, `sound-engineer`.
+- [x] La sesión principal conserva el system prompt específico de Claqueta, pero puede incluir contexto/skills adicionales sin duplicar instrucciones contradictorias.
+- [x] Hay diagnóstico visible si una skill esperada no se carga.
 
 ### Slice 3 — Pipeline plan real
 
-- [ ] Existe un plan persistente por thread en SQLite/artifacts con pasos, owners, status, summaries, artifacts, blockers y decisiones.
-- [ ] Tools de Pi pueden crear/actualizar/leer el plan: `create_pipeline_plan`, `update_pipeline_step`, `record_pipeline_decision`, `get_next_pipeline_step` o equivalentes.
-- [ ] La UI consume `plan_updated` o snapshots derivados y rellena `planState` en `usePiVideoStream`.
-- [ ] Los checkpoints aprobados/rechazados quedan registrados como decisiones trazables.
+- [x] Existe un plan persistente por thread en SQLite/artifacts con pasos, owners, status, summaries, artifacts, blockers y decisiones.
+- [x] Tools de Pi pueden crear/actualizar/leer el plan: `create_pipeline_plan`, `update_pipeline_step`, `record_pipeline_decision`, `get_next_pipeline_step` o equivalentes.
+- [x] La UI consume `plan_updated` o snapshots derivados y rellena `planState` en `usePiVideoStream`.
+- [x] Los checkpoints aprobados/rechazados quedan registrados como decisiones trazables.
 
 ### Slice 4 — Especialistas Pi sin perder control
 
-- [ ] Cada especialista antiguo tiene una representación documentada en Pi: pass prompt, agent Markdown o sesión aislada.
-- [ ] El orquestador Pi puede ejecutar al menos `researcher`, `copywriter` y `director` manteniendo artifacts intermedios (`brief`, `script`, `direction`, `config`).
-- [ ] El modelo/ruta por tarea se registra en eventos o artifacts para trazabilidad.
-- [ ] Si se usa aislamiento, los outputs de especialistas se devuelven estructurados y capados; la UI ve subagent start/end/error.
+- [x] Cada especialista antiguo tiene una representación documentada en Pi: pass prompt, agent Markdown o sesión aislada.
+- [x] El orquestador Pi puede ejecutar al menos `researcher`, `copywriter` y `director` manteniendo artifacts intermedios (`brief`, `script`, `direction`, `config`).
+- [x] El modelo/ruta por tarea se registra en eventos o artifacts para trazabilidad.
+- [x] Si se usa aislamiento, los outputs de especialistas se devuelven estructurados y capados; la UI ve subagent start/end/error.
 
 #### Cross-agent prompt policy
 
-- [ ] No Pi role prompt assumes Claude Code, Codex, Línea Directa, technology, astronomy, product marketing, or any other subject unless supplied in the brief.
-- [ ] Technical composition names such as `ClaudeCodeTutorial` never determine subject matter or editorial treatment.
-- [ ] Domain/brand skills are conditional overlays, not default role identity.
-- [ ] Scene and pacing decisions are justified by goal, audience, format, narrative role, visible content, evidence, assets, and catalog contracts—not topic keywords.
-- [ ] `agent-pi` does not load the legacy `packages/agent/prompts` directory wholesale; each migrated specialist uses a curated Pi prompt.
-- [ ] E2E tests cover at least three materially different subjects and reject keyword-to-template recipes.
+- [x] No Pi role prompt assumes Claude Code, Codex, Línea Directa, technology, astronomy, product marketing, or any other subject unless supplied in the brief.
+- [x] Technical composition names such as `ClaudeCodeTutorial` never determine subject matter or editorial treatment.
+- [x] Domain/brand skills are conditional overlays, not default role identity.
+- [x] Scene and pacing decisions are justified by goal, audience, format, narrative role, visible content, evidence, assets, and catalog contracts—not topic keywords.
+- [x] `agent-pi` does not load the legacy `packages/agent/prompts` directory wholesale; each migrated specialist uses a curated Pi prompt.
+- [ ] E2E tests cover at least three materially different subjects and reject keyword-to-template recipes. _(Neutralidad probada estructuralmente por `promptNeutrality.test.ts` y en la práctica por producciones reales de temas distintos; falta un E2E automatizado parametrizado con 3 subjects.)_
 
 #### Fourth specialist — isolated topic-neutral audio planner
 
@@ -107,7 +107,7 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 #### Deterministic Pi-native pipeline coordinator and LangGraph removal gate
 
 - [x] Every supported mode has immutable canonical step definitions; model-supplied step lists, unknown modes, unknown step updates, and unknown decision step ids are rejected. The executable transition table is implemented for `new_video`; remaining modes still need transition coverage.
-- [ ] A structured intake/router session classifies mode, extracts explicit brief/preferences/target, and decides research need with rationale; it cannot execute pipeline tools.
+- [x] A structured intake/router session classifies mode, extracts explicit brief/preferences/target, and decides research need with rationale; it cannot execute pipeline tools.
 - [x] The coordinator invokes specialists/services directly, not by asking a main LLM to remember the next tool.
 - [x] Artifact prerequisites, approval state, transition order, retry budget, and checkpoint creation are enforced by parent code.
   - A failed canonical action is never retried by an ordinary message or restart.
@@ -116,11 +116,11 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
   - Concurrent retry requests for one thread cannot execute the effect twice.
   - Tests cover failed specialist retry, duplicate retry, stale action identity, and exactly-one artifact/effect after success.
 - [x] Coordinator state is recoverable from SQLite plan/artifacts/decisions/checkpoint after process restart and transitions are idempotent for the implemented `new_video` mode.
-- [ ] Human feedback routes deterministically to the owning specialist with the previous artifact; approval advances exactly one canonical transition.
+- [x] Human feedback routes deterministically to the owning specialist with the previous artifact; approval advances exactly one canonical transition.
 - [x] Config generation becomes a structured isolated specialist or deterministic compiler from approved script/direction/audio contracts, not free-form main-agent JSON.
-- [ ] Unit transition tests cover every mode, illegal/out-of-order actions, checkpoint revisions, restart recovery, specialist failure/retry, and final completion.
+- [ ] Unit transition tests cover every mode, illegal/out-of-order actions, checkpoint revisions, restart recovery, specialist failure/retry, and final completion. _(Solo `new_video` tiene tabla de transiciones ejecutable/testeada; `revise_existing`, `render_only`, `recover_failed_render`, `audit_only`, `variant`, `asset_regeneration` aún sin cobertura.)_
 - [x] A real new-video E2E reaches final review and SHA-256-verified publication using Pi-only routing with no manual artifact edits.
-- [ ] Docker and web default to agent-pi; LangGraph code/dependencies/config/docs are removed only after all parity gates pass.
+- [ ] Docker and web default to agent-pi; LangGraph code/dependencies/config/docs are removed only after all parity gates pass. _(Compose y web ya defaultean a agent-pi; la eliminación de `@langchain/langgraph-sdk`, el flag `VITE_AGENT_RUNTIME` y `packages/agent/src` es la Fase 9, pendiente — ver ADR 0054.)_
 
 #### Controlled scene creation — declarative-first, quarantined code escalation
 
@@ -130,11 +130,11 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 - [x] An isolated Pi scene composer receives the approved scene intent plus the exact contract and terminates with validated JSON only; it has no filesystem, shell, registry, package, or code tools.
 - [x] If the shared DSL cannot express an approved requirement, the composer returns a structured reusable capability gap instead of approximating or emitting code.
 - [x] Capability gaps create CP4 before any code generation, including reuse analysis, proposed generic contract, security surface, affected files, and acceptance tests.
-- [ ] Code escalation uses a fresh Pi coding session with read-only curated references and one terminating candidate-source tool; source remains an artifact under `.generated/` and cannot write production files.
-- [ ] Parent-side static policy rejects non-allowlisted imports, network/storage/process/global access, dynamic imports, eval/function constructors, nondeterminism, CSS animations/transitions, hardcoded editorial copy/colors, and source/AST size limits.
-- [ ] Candidate verification runs formatting, TypeScript/ESLint/bundle checks and representative still rendering in a disposable quarantine before presenting diff + stills at CP4 promotion.
-- [ ] Only the parent promotes an approved candidate atomically, with deterministic registry/timing/catalog edits, full gates, rollback on failure, and a separately reviewable artifact trail.
-- [ ] Tests cover DSL bounds/unknown fields/determinism, composer output/gaps, source-policy bypass attempts, quarantine failure, CP4 recovery, atomic promotion/rollback, and no direct specialist writes.
+- [x] Code escalation uses a fresh Pi coding session with read-only curated references and one terminating candidate-source tool; source remains an artifact under `.generated/` and cannot write production files.
+- [x] Parent-side static policy rejects non-allowlisted imports, network/storage/process/global access, dynamic imports, eval/function constructors, nondeterminism, CSS animations/transitions, hardcoded editorial copy/colors, and source/AST size limits.
+- [x] Candidate verification runs formatting, TypeScript/ESLint/bundle checks and representative still rendering in a disposable quarantine before presenting diff + stills at CP4 promotion.
+- [x] Only the parent promotes an approved candidate atomically, with deterministic registry/timing/catalog edits, full gates, rollback on failure, and a separately reviewable artifact trail.
+- [x] Tests cover DSL bounds/unknown fields/determinism, composer output/gaps, source-policy bypass attempts, quarantine failure, CP4 recovery, atomic promotion/rollback, and no direct specialist writes.
 
 #### Deterministic rendered-output review and final acceptance
 
@@ -189,7 +189,7 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 - [x] Network response bytes, redirects, tool calls, and returned text are capped; timeouts/abort propagate and the child session is always disposed.
 - [x] The parent persists `brief.json`, completes/fails the `research` plan step, records model route, and emits replayable specialist lifecycle events.
 - [x] The copywriter receives the latest research claims as source-labelled evidence without turning a subject keyword into a visual recipe.
-- [ ] Unit tests cover SSRF guards, caps, structured output, failures, and artifact/plan integration; the live non-software factual smoke is implemented but currently blocked by the external Codex account usage limit.
+- [ ] Unit tests cover SSRF guards, caps, structured output, failures, and artifact/plan integration; the live non-software factual smoke is implemented but currently blocked by the external Codex account usage limit. _(Unit tests en verde; solo el smoke live sigue bloqueado por la cuota externa de Codex.)_
 
 #### Second specialist — isolated Pi copywriter
 
@@ -231,19 +231,19 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 - [x] The current runtime registry keeps existing composition/schema/component identifiers as adapter data behind neutral target ids; every adapter is verified against `Root.tsx`.
 - [x] Registry structures are recursively immutable and full registry listing remains parent-only; a specialist-safe summary exists only after one exact target resolves.
 - [x] Tests cover schema/version strictness, nested contract validation, deep immutability, exact resolution, ambiguity, unsupported combinations, Root registration, and selected-summary boundaries.
-- [ ] Persist the selected target id/schema version with `ProductionBrief` and pass exactly one resolved contract into every downstream specialist/validator.
+- [x] Persist the selected target id/schema version with `ProductionBrief` and pass exactly one resolved contract into every downstream specialist/validator.
 
 ### Slice 5 — Audio, QA y review
 
-- [ ] Hay checkpoint `audio_chart_checkpoint` con voz, música y SFX antes de generar assets.
-- [ ] Gemini TTS y copia de librería local se ejecutan como pasos técnicos separados y trazables.
-- [ ] `scene_qa` puede renderizar stills por escena y producir un reporte con `PASS`, `MINOR_FIX` o `MAJOR_ISSUE`.
-- [ ] `reviewer` verifica MP4 final: existencia, tamaño, duración esperada y audio si procede.
+- [x] Hay checkpoint `audio_chart_checkpoint` con voz, música y SFX antes de generar assets.
+- [x] Gemini TTS y copia de librería local se ejecutan como pasos técnicos separados y trazables.
+- [x] `scene_qa` puede renderizar stills por escena y producir un reporte con `PASS`, `MINOR_FIX` o `MAJOR_ISSUE`.
+- [x] `reviewer` verifica MP4 final: existencia, tamaño, duración esperada y audio si procede.
 
 ### Slice 6 — Scene creation / code evolution
 
-- [ ] Las escenas custom no registradas se tratan como bloqueo o como CP4 explícito, nunca como generación silenciosa.
-- [ ] Si se habilita creación de escenas, opera con allowlist ampliada, lint/typecheck/validate, checkpoint humano y trazabilidad/ADR.
+- [x] Las escenas custom no registradas se tratan como bloqueo o como CP4 explícito, nunca como generación silenciosa.
+- [x] Si se habilita creación de escenas, opera con allowlist ampliada, lint/typecheck/validate, checkpoint humano y trazabilidad/ADR.
 
 ## Casos de test
 
