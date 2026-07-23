@@ -298,22 +298,24 @@ describe("ConfigSpecialistRunner", () => {
     await assert.rejects(() => modified.runner.run(modifiedInput), /content hash does not match/)
   })
 
-  it("preserves approved audio exactly", async () => {
+  it("projects approved audio exactly", async () => {
     const divergent = validConfig()
     divergent.voiceover = { enabled: true, provider: "gemini", language: "x", voiceId: "Orus", scenes: {} }
-    divergent.soundDesign = silentAudio.soundDesign
-    const { runner } = runnerWithResponses([divergent, divergent])
-    await assert.rejects(
-      () => runner.run(input({ audio: approved("audio-1", silentAudio) })),
-      /voiceover diverges from approved audio/,
-    )
+    divergent.soundDesign = { enabled: true, musicBed: { libraryId: "invented" }, sfx: [] }
+    const { runner } = runnerWithResponses([divergent])
+    const result = await runner.run(input({ audio: approved("audio-1", silentAudio) }))
+    assert.deepEqual(result.config.voiceover, silentAudio.voiceover)
+    assert.deepEqual(result.config.soundDesign, silentAudio.soundDesign)
   })
 
-  it("does not allow unapproved audio to enter a config before the audio checkpoint", async () => {
+  it("removes model-authored audio before the audio checkpoint", async () => {
     const unapproved = validConfig()
     unapproved.voiceover = { enabled: true, provider: "gemini", scenes: {} }
-    const { runner } = runnerWithResponses([unapproved, unapproved])
-    await assert.rejects(() => runner.run(input()), /voiceover requires an approved audio artifact/)
+    unapproved.soundDesign = { enabled: true, musicBed: null, sfx: [] }
+    const { runner } = runnerWithResponses([unapproved])
+    const result = await runner.run(input())
+    assert.equal("voiceover" in result.config, false)
+    assert.equal("soundDesign" in result.config, false)
   })
 
   it("maps approved custom props through the real scene adapter without requiring editorial fields", async () => {
@@ -365,6 +367,39 @@ describe("ConfigSpecialistRunner", () => {
       (result.config.scenes as Array<Record<string, unknown>>)[0]?.props,
       customScript.scenes[0]?.propsPlan,
     )
+  })
+
+  it("unwraps an approved full-scene wrapper into direct custom component props", async () => {
+    const wrapped = structuredClone(script)
+    wrapped.scenes = [
+      {
+        id: "scene-custom",
+        type: "custom",
+        componentId: "block-diagram",
+        durationInSeconds: 4,
+        propsPlan: {
+          componentId: "block-diagram",
+          durationInSeconds: 4,
+          props: { title: "Direct props", blocks: [{ label: "A" }] },
+        },
+      },
+    ]
+    const customDirection: DirectionDraft = {
+      scenes: [{ sceneId: "scene-custom", sceneType: "custom", componentId: "block-diagram", beats: [] }],
+      warnings: [],
+    }
+    const candidate = { ...validConfig(), scenes: [{ type: "custom", componentId: "block-diagram", props: {} }] }
+    const { runner } = runnerWithResponses([candidate])
+    const result = await runner.run(
+      input({
+        script: approved("script-wrapped", wrapped),
+        direction: approved("direction-wrapped", customDirection),
+      }),
+    )
+    assert.deepEqual((result.config.scenes as Array<Record<string, unknown>>)[0]?.props, {
+      title: "Direct props",
+      blocks: [{ label: "A" }],
+    })
   })
 
   it("rejects invalid previous config versions before specialist execution", async () => {

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import { validateComposedScene } from "@claqueta/scene-contracts"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { StringEnum, type Api, type Model } from "@earendil-works/pi-ai/compat"
@@ -262,13 +263,13 @@ export class CopywriterSpecialistRunner {
         JSON.stringify(loadAvailableSceneCatalog(), null, 2),
       ].join("\n")
       await session.prompt(prompt)
-      if (childError) throw new Error(childError)
+      if (childError && !capturedScript) throw new Error(childError)
 
       if (!capturedScript) {
         await session.prompt(
           "Your previous turn did not satisfy the output contract. Call submit_script exactly once now with the complete structured draft; do not answer with prose.",
         )
-        if (childError) throw new Error(childError)
+        if (childError && !capturedScript) throw new Error(childError)
       }
       if (!capturedScript) {
         throw new Error("Copywriter specialist finished without calling submit_script after one repair attempt")
@@ -327,7 +328,24 @@ export class CopywriterSpecialistRunner {
       description: "Return the complete structured visual script to the parent Claqueta runtime.",
       parameters: Type.Object({ script: SpecialistScriptDraftSchema }),
       async execute(_toolCallId, params) {
-        captureScript(params.script as ScriptDraft)
+        const script = params.script as ScriptDraft
+        for (const scene of script.scenes) {
+          if (scene.componentId !== "composed-scene") continue
+          const validation = validateComposedScene(scene.propsPlan)
+          if (!validation.valid) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Scene '${scene.id}' has invalid composed-scene props: ${validation.errors.join("; ")}`,
+                },
+              ],
+              details: { sceneCount: params.script.scenes.length },
+              isError: true,
+            }
+          }
+        }
+        captureScript(script)
         return {
           content: [{ type: "text" as const, text: "Script draft accepted." }],
           details: { sceneCount: params.script.scenes.length },

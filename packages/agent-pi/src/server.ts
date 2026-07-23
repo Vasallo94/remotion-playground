@@ -14,11 +14,15 @@ export function createApp(runtime = createDefaultRuntime()) {
   app.use(express.json({ limit: "10mb" }))
 
   app.get("/api/pi/health", (_req, res) => {
-    res.json({ ok: true })
+    const models = runtime.modelRouter.diagnostics()
+    const invalid = models.filter(
+      (model) => !model.resolved || !model.authenticated || (model.task === "scene_qa" && !model.supportsImages),
+    )
+    res.status(invalid.length === 0 ? 200 : 503).json({ ok: invalid.length === 0, models, invalid })
   })
 
   app.get("/api/pi/model-routes", (_req, res) => {
-    res.json(runtime.modelRouter.config)
+    res.json({ config: runtime.modelRouter.config, diagnostics: runtime.modelRouter.diagnostics() })
   })
 
   app.get("/api/pi/threads", (_req, res) => {

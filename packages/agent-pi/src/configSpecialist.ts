@@ -315,6 +315,12 @@ function validateExplicitTargetSelection(config: Record<string, unknown>, input:
   }
 }
 
+function approvedCustomProps(scene: ScriptDraft["scenes"][number]): Record<string, unknown> | undefined {
+  if (!scene.propsPlan) return undefined
+  const wrappedProps = scene.propsPlan.props
+  return scene.propsPlan.componentId === scene.componentId && isRecord(wrappedProps) ? wrappedProps : scene.propsPlan
+}
+
 function validateSceneLineage(
   config: Record<string, unknown>,
   input: ConfigSpecialistInput,
@@ -371,7 +377,7 @@ function validateSceneLineage(
 
     if (scriptScene.propsPlan) {
       if (scriptScene.type === "custom") {
-        if (!sameValue(rawScene.props, scriptScene.propsPlan)) {
+        if (!sameValue(rawScene.props, approvedCustomProps(scriptScene))) {
           throw new Error(`Config scene '${scriptScene.id}' changed approved custom props/copy`)
         }
       } else {
@@ -403,13 +409,28 @@ function applyApprovedSceneLineage(
     if (!scriptScene || !directionScene) return
     scene.durationInSeconds = scriptScene.durationInSeconds
     if (scriptScene.propsPlan) {
-      if (scriptScene.type === "custom") scene.props = clone(scriptScene.propsPlan)
+      if (scriptScene.type === "custom") scene.props = clone(approvedCustomProps(scriptScene)!)
       else Object.assign(scene, clone(scriptScene.propsPlan))
     }
     for (const field of ["timing", "beats"] as const) {
       if (directionScene[field] !== undefined) scene[field] = clone(directionScene[field])
     }
   })
+  return compiled
+}
+
+function applyApprovedAudioLineage(
+  config: Record<string, unknown>,
+  audio: ApprovedConfigInputArtifact<AudioChart> | undefined,
+): Record<string, unknown> {
+  const compiled = clone(config)
+  if (audio) {
+    compiled.voiceover = clone(audio.data.voiceover)
+    compiled.soundDesign = clone(audio.data.soundDesign)
+  } else {
+    delete compiled.voiceover
+    delete compiled.soundDesign
+  }
   return compiled
 }
 
@@ -563,7 +584,10 @@ export class ConfigSpecialistRunner {
     if (!value || submissions === 0) throw new Error("Configurator finished without structured output")
     if (submissions !== 1)
       throw new Error(`Configurator must submit exactly once per turn; received ${submissions} submissions`)
-    const config = applyApprovedSceneLineage(validateGeneratedConfig(value), input)
+    const config = applyApprovedAudioLineage(
+      applyApprovedSceneLineage(validateGeneratedConfig(value), input),
+      input.audio,
+    )
     validateRenderSchema(config, target)
     validateCapabilities(config, target)
     validateExplicitTargetSelection(config, input)

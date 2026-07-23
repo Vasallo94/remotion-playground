@@ -196,6 +196,20 @@ function isScriptDraft(value: unknown): value is ScriptDraft {
   return typeof draft.title === "string" && typeof draft.objective === "string" && Array.isArray(draft.scenes)
 }
 
+export function sceneQaVisualProjection(config: Record<string, unknown>): Record<string, unknown> {
+  const projected = structuredClone(config)
+  delete projected.voiceover
+  delete projected.soundDesign
+  if (Array.isArray(projected.scenes)) {
+    for (const scene of projected.scenes) {
+      if (typeof scene === "object" && scene !== null && !Array.isArray(scene)) {
+        delete (scene as Record<string, unknown>).voiceover
+      }
+    }
+  }
+  return projected
+}
+
 function checkpointStepId(type: string): string | undefined {
   if (type === "script_checkpoint") return "copywriting"
   if (type === "direction_checkpoint") return "direction"
@@ -663,14 +677,19 @@ export class AgentRuntimeManager {
     const action = deriveCoordinatorAction(snapshot)
     const idempotencyKey = actionIdempotencyKey(snapshot, action)
     const attempt = this.store.readActionAttempt(threadId, createActionKey(idempotencyKey))
-    if (!attempt || attempt.status !== "failed") {
+    const recoverCompletedResearch =
+      action === "research_or_skip" &&
+      attempt?.status === "succeeded" &&
+      plan.steps.find((step) => step.id === "research")?.status === "in_progress" &&
+      Boolean(this.latestArtifact<Record<string, unknown>>(threadId, "research")?.approved)
+    if ((!attempt || attempt.status !== "failed") && !recoverCompletedResearch) {
       throw new Error(`Current action '${action}' has no exact failed attempt eligible for retry`)
     }
-    if (String(attempt.action) !== action || String(attempt.actionKey) !== idempotencyKey) {
+    if (String(attempt?.action) !== action || String(attempt?.actionKey) !== idempotencyKey) {
       throw new Error("Failed attempt identity does not match the current canonical action")
     }
 
-    this.retryActionKeys.add(idempotencyKey)
+    if (!recoverCompletedResearch) this.retryActionKeys.add(idempotencyKey)
     this.retryingThreads.add(threadId)
     return this.sendMessage(threadId, plan.goal, { displayUserMessage: false }).finally(() => {
       this.retryActionKeys.delete(idempotencyKey)
@@ -1194,12 +1213,28 @@ export class AgentRuntimeManager {
         return {
           outcome: { runId: result.runId, modelRoute: result.modelRoute },
           artifacts: [{ id: randomUUID(), threadId, kind: "research" as const, data: result.research, approved: true }],
+          planEffects: [{ type: "complete_step" as const, stepId: "research" }],
           effectMetadata: { runId: result.runId, modelRoute: result.modelRoute },
         }
       },
     })
     if (execution.status === "failed") throw new Error(execution.error.message)
-    if (execution.status === "idempotent") return
+    if (execution.status === "idempotent") {
+      const research = this.latestArtifact<Record<string, unknown>>(threadId, "research")
+      const plan = this.store.getPipelinePlan(threadId)
+      const step = plan?.steps.find((candidate) => candidate.id === "research")
+      if (research?.approved && plan && step?.status === "in_progress") {
+        step.status = "completed"
+        step.completedAt = new Date().toISOString()
+        const savedPlan = this.store.savePipelinePlan(refreshPlanState(plan))
+        this.eventBus.publish({
+          threadId,
+          type: "plan_updated",
+          payload: { plan: savedPlan, action: "research_recovery", stepId: "research", status: "completed" },
+        })
+      }
+      return
+    }
     if (execution.status !== "succeeded")
       throw new Error(`Research parent action requires recovery: ${execution.status}`)
     for (const artifact of execution.committedArtifacts) {
@@ -2198,12 +2233,6 @@ export class AgentRuntimeManager {
     if (!config || !chart?.approved || !script?.approved) {
       throw new Error("Audio production requires config plus approved chart and script")
     }
-    const hasApiVoice = Object.values(chart.data.voiceover?.scenes ?? {}).some((text) => text.trim().length > 0)
-    if (hasApiVoice) {
-      throw new Error(
-        "API voice production remains disabled until durable provider-receipt reconciliation is configured",
-      )
-    }
     const snapshot = this.coordinatorSnapshot(threadId)
     const action = "produce_audio_assets" as const
     const execution = await this.parentActionExecutor().execute({
@@ -2260,15 +2289,47 @@ export class AgentRuntimeManager {
       snapshot,
       request: { action, idempotencyKey: actionIdempotencyKey(snapshot, action) },
       effect: async () => {
-        const stills = await this.createSceneStillClient().render(config.data, script.data.scenes.length, signal)
-        const result = await this.createSceneQaSpecialistRunner(threadId).run({
-          config: config.data,
-          script: script.data,
-          direction: direction.data,
-          audioChart: audio?.approved ? audio.data : undefined,
-          stills,
-          selectedTarget: target.target,
-        })
+        const approvedQa = this.store
+          .listArtifacts(threadId)
+          .filter((artifact) => artifact.kind === "qa_report" && artifact.approved)
+          .sort((left, right) => right.version - left.version)[0] as ArtifactRecord<SceneQaReport> | undefined
+        const approvedQaLineage = approvedQa
+          ? (
+              this.store
+                .listArtifacts(threadId)
+                .filter((artifact) => artifact.kind === "qa_lineage")
+                .sort((left, right) => right.version - left.version) as ArtifactRecord<QaReportLineage>[]
+            ).find((artifact) => artifact.data.qaReport.artifactId === approvedQa.id)
+          : undefined
+        const previousConfig = approvedQaLineage
+          ? this.store.getArtifact<Record<string, unknown>>(approvedQaLineage.data.config.artifactId)
+          : undefined
+        const canReuse =
+          Boolean(approvedQa) &&
+          previousConfig?.kind === "config" &&
+          configContentHash(sceneQaVisualProjection(previousConfig.data)) ===
+            configContentHash(sceneQaVisualProjection(config.data))
+        let report: SceneQaReport
+        let runId: string
+        let modelRoute: string
+        if (canReuse) {
+          report = structuredClone(approvedQa!.data)
+          runId = `reused-${approvedQa!.id}`
+          modelRoute = "deterministic/visual-projection"
+        } else {
+          const stills = await this.createSceneStillClient().render(config.data, script.data.scenes.length, signal)
+          const result = await this.createSceneQaSpecialistRunner(threadId).run({
+            config: config.data,
+            script: script.data,
+            direction: direction.data,
+            audioChart: audio?.approved ? audio.data : undefined,
+            stills,
+            selectedTarget: target.target,
+          })
+          report = result.report
+          runId = result.runId
+          modelRoute = result.modelRoute
+        }
         const qaArtifactId = randomUUID()
         const qaArtifactVersion = (this.latestArtifact<SceneQaReport>(threadId, "qa_report")?.version ?? 0) + 1
         const qaLineage: QaReportLineage = {
@@ -2276,7 +2337,7 @@ export class AgentRuntimeManager {
           qaReport: {
             artifactId: qaArtifactId,
             version: qaArtifactVersion,
-            contentHash: configContentHash(result.report),
+            contentHash: configContentHash(report),
           },
           config: {
             artifactId: config.id,
@@ -2286,15 +2347,15 @@ export class AgentRuntimeManager {
           activeVisualRecipeSet,
         }
         return {
-          outcome: { runId: result.runId, modelRoute: result.modelRoute },
+          outcome: { runId, modelRoute, reused: canReuse },
           artifacts: [
-            { id: qaArtifactId, threadId, kind: "qa_report" as const, data: result.report },
+            { id: qaArtifactId, threadId, kind: "qa_report" as const, data: report },
             { id: randomUUID(), threadId, kind: "qa_lineage" as const, data: qaLineage, approved: true },
           ],
-          ...(result.report.scenes.every((scene) => scene.verdict === "PASS")
+          ...(report.scenes.every((scene) => scene.verdict === "PASS")
             ? { planEffects: [{ type: "complete_step" as const, stepId: "scene_qa" }] }
             : {}),
-          effectMetadata: { runId: result.runId, modelRoute: result.modelRoute },
+          effectMetadata: { runId, modelRoute, reused: canReuse },
         }
       },
     })

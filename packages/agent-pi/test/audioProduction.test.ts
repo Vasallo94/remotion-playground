@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterEach, describe, it } from "node:test"
 import { AudioAssetProducer } from "../src/audioProduction.js"
@@ -68,7 +68,7 @@ describe("AudioAssetProducer", () => {
     assert.equal(result.assets[0]?.sizeBytes, 5)
   })
 
-  it("gates API voice generation and verifies expected scene files", async () => {
+  it("generates CP3-approved Gemini voiceover by default and verifies expected scene files", async () => {
     const project = root()
     const chart: AudioChart = {
       voiceover: {
@@ -81,13 +81,18 @@ describe("AudioAssetProducer", () => {
       soundDesign: { enabled: false, musicBed: null, sfx: [] },
       warnings: [],
     }
-    const input = { config: { id: "spoken-story" }, configPath: "config.json", chart, sceneCount: 1 }
-    await assert.rejects(new AudioAssetProducer({ root: project }).produce(input), /generation is disabled/)
-
+    const input = {
+      config: { id: "spoken-story", voiceover: chart.voiceover },
+      configPath: "",
+      chart,
+      sceneCount: 1,
+    }
+    let temporaryConfigPath = ""
     const producer = new AudioAssetProducer({
       root: project,
-      allowApiGeneration: true,
-      runVoiceGenerator: async () => {
+      runVoiceGenerator: async (configPath) => {
+        temporaryConfigPath = configPath
+        assert.equal(existsSync(configPath), true)
         mkdirSync(join(project, "public/voiceover/spoken-story"), { recursive: true })
         writeFileSync(join(project, "public/voiceover/spoken-story/0.mp3"), "voice")
       },
@@ -95,5 +100,11 @@ describe("AudioAssetProducer", () => {
     const result = await producer.produce(input)
     assert.equal(result.voiceStatus, "completed")
     assert.equal(result.assets[0]?.sceneIndex, "0")
+    assert.equal(existsSync(temporaryConfigPath), false)
+
+    await assert.rejects(
+      new AudioAssetProducer({ root: project, allowApiGeneration: false }).produce(input),
+      /explicitly disabled/,
+    )
   })
 })

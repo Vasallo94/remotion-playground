@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted — cost-gate clause amended by ADR 0055
 
 ## Context
 
@@ -47,7 +47,7 @@ The parent runtime exposes a narrow audio-production tool that accepts approved 
 2. marks `voice_generation` and `sound_assets` independently;
 3. treats disabled layers as successful skips;
 4. copies approved local music directly;
-5. invokes the fixed TypeScript voice generator through `execFile` without a shell only when `CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true`;
+5. invokes the fixed TypeScript voice generator through `execFile` without a shell after explicit CP3 approval;
 6. applies a timeout and bounded output;
 7. verifies expected MP3 files and persists an `audio_assets` manifest.
 
@@ -57,6 +57,6 @@ Generated music and SFX remain unsupported in this slice and fail explicitly if 
 
 - No additional LLM session is needed after CP3 for audio execution.
 - Silent videos and local-music-only videos work without credentials.
-- Voice API spending requires an explicit runtime opt-in.
+- Voice API spending requires explicit human approval at CP3; ADR 0055 removed the redundant environment opt-in to restore DeepAgent behavior.
 - Existing voice fingerprints remain reusable.
 - Provider credential loading remains in the legacy TypeScript generator for now; a later security hardening slice may move local credentials from `.env` to macOS Keychain without changing this orchestration contract.

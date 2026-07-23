@@ -19,12 +19,14 @@ import { PROJECT_ROOT } from "./paths.js"
 import type { AudioChart, DirectionDraft, SceneQaReport, ScriptDraft } from "./types.js"
 
 const IssueSchema = Type.Object({
-  category: Type.Union(
-    ["legibility", "clipping", "hierarchy", "coherence", "continuity", "accessibility", "accuracy", "other"].map(
-      (value) => Type.Literal(value),
-    ),
-  ),
-  severity: Type.Union([Type.Literal("minor"), Type.Literal("major")]),
+  category: Type.Unsafe<SceneQaReport["scenes"][number]["issues"][number]["category"]>({
+    type: "string",
+    enum: ["legibility", "clipping", "hierarchy", "coherence", "continuity", "accessibility", "accuracy", "other"],
+  }),
+  severity: Type.Unsafe<SceneQaReport["scenes"][number]["issues"][number]["severity"]>({
+    type: "string",
+    enum: ["minor", "major"],
+  }),
   observation: Type.String(),
   evidence: Type.String(),
   suggestedChange: Type.Optional(Type.String()),
@@ -33,9 +35,12 @@ const ReportSchema = Type.Object({
   summary: Type.String(),
   scenes: Type.Array(
     Type.Object({
-      index: Type.Integer({ minimum: 0 }),
-      verdict: Type.Union([Type.Literal("PASS"), Type.Literal("MINOR_FIX"), Type.Literal("MAJOR_ISSUE")]),
-      score: Type.Number({ minimum: 1, maximum: 10 }),
+      index: Type.Integer(),
+      verdict: Type.Unsafe<SceneQaReport["scenes"][number]["verdict"]>({
+        type: "string",
+        enum: ["PASS", "MINOR_FIX", "MAJOR_ISSUE"],
+      }),
+      score: Type.Number(),
       observations: Type.Array(Type.String()),
       issues: Type.Array(IssueSchema),
     }),
@@ -188,10 +193,11 @@ export class SceneQaRunner {
     const model = this.options.modelRouter.findModel("scene_qa")
     const route = this.options.modelRouter.route("scene_qa")
     const modelRoute = route ? `${route.provider}/${route.model}` : model ? `${model.provider}/${model.id}` : "default"
+    const thinkingLevel = this.options.modelRouter.thinkingLevel("scene_qa")
     let captured: SceneQaReport | undefined
     const session = await (this.options.createSession
       ? this.options.createSession((report) => (captured = report))
-      : this.createDefaultSession(model, (report) => (captured = report)))
+      : this.createDefaultSession(model, (report) => (captured = report), thinkingLevel, input.script.scenes.length))
     this.options.eventBus.publish({
       threadId: this.options.threadId,
       type: "subagent_start",
@@ -226,12 +232,19 @@ export class SceneQaRunner {
           .join("\n"),
       ].join("\n")
       await session.prompt(prompt, { images: input.stills.map((still) => still.image) })
-      if (!captured)
+      let report: SceneQaReport
+      try {
+        if (!captured) throw new Error("Scene QA specialist finished without structured output")
+        report = validateSceneQaReport(captured, input.script.scenes.length)
+      } catch (firstError) {
+        const exactError = firstError instanceof Error ? firstError.message : String(firstError)
+        captured = undefined
         await session.prompt(
-          "Call submit_scene_qa_report now with complete ordered coverage; do not answer with prose.",
+          `Parent validation rejected the report: ${exactError}. Call submit_scene_qa_report exactly once with corrected complete ordered coverage; do not answer with prose.`,
         )
-      if (!captured) throw new Error("Scene QA specialist finished without structured output")
-      const report = validateSceneQaReport(captured, input.script.scenes.length)
+        if (!captured) throw new Error("Scene QA specialist finished without structured output")
+        report = validateSceneQaReport(captured, input.script.scenes.length)
+      }
       this.options.eventBus.publish({
         threadId: this.options.threadId,
         type: "subagent_end",
@@ -266,6 +279,8 @@ export class SceneQaRunner {
   private async createDefaultSession(
     model: Model<Api> | undefined,
     capture: (report: SceneQaReport) => void,
+    thinkingLevel: ReturnType<ModelRouter["thinkingLevel"]>,
+    sceneCount: number,
   ): Promise<SceneQaSession> {
     const submit = defineTool({
       name: "submit_scene_qa_report",
@@ -273,8 +288,20 @@ export class SceneQaRunner {
       description: "Return the complete image-grounded scene QA report.",
       parameters: Type.Object({ report: ReportSchema }),
       async execute(_id, params) {
-        capture(params.report as SceneQaReport)
-        return { content: [{ type: "text" as const, text: "Scene QA report accepted." }], details: {}, terminate: true }
+        try {
+          capture(validateSceneQaReport(params.report as SceneQaReport, sceneCount))
+          return {
+            content: [{ type: "text" as const, text: "Scene QA report accepted." }],
+            details: {},
+            terminate: true,
+          }
+        } catch (error) {
+          return {
+            content: [{ type: "text" as const, text: error instanceof Error ? error.message : String(error) }],
+            details: {},
+            isError: true,
+          }
+        }
       },
     })
     const loader = new DefaultResourceLoader({
@@ -300,6 +327,7 @@ export class SceneQaRunner {
         compaction: { enabled: false },
         retry: { enabled: true, maxRetries: 1 },
       }),
+      ...(thinkingLevel ? { thinkingLevel } : {}),
     })
     return session
   }

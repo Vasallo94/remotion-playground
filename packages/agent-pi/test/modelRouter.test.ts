@@ -1,8 +1,76 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
-import { isSafeDefaultModel, loadModelRoutingConfigFromEnv, parseModelRoute } from "../src/modelRouter.js"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import {
+  createRuntimeAuthStorage,
+  ModelRouter,
+  isSafeDefaultModel,
+  loadModelRoutingConfigFromEnv,
+  parseModelRoute,
+} from "../src/modelRouter.js"
 
 describe("model routing", () => {
+  it("defaults text tasks to Azure Luna/Sol and visual QA to Google Vertex", () => {
+    const routes = loadModelRoutingConfigFromEnv({}).routes
+    const textTasks = [
+      "main",
+      "intake",
+      "research",
+      "narrative",
+      "direction",
+      "audio_plan",
+      "scene_creation",
+      "config",
+      "validation",
+    ] as const
+
+    for (const task of textTasks) {
+      assert.equal(routes[task]?.provider, "azure-openai")
+      assert.match(routes[task]?.model ?? "", /^gpt-5\.6-(luna|sol)$/)
+    }
+    assert.equal(routes.scene_qa?.provider, "google-vertex")
+    assert.equal(routes.scene_qa?.model, "gemini-2.5-flash")
+    assert.equal(routes.scene_qa?.thinkingLevel, "off")
+  })
+
+  it("adapts a Vertex service account for Pi without copying its secret", () => {
+    const directory = mkdtempSync(join(tmpdir(), "claqueta-vertex-auth-"))
+    const credentialsPath = join(directory, "service-account.json")
+    writeFileSync(credentialsPath, JSON.stringify({ project_id: "vertex-project", private_key: "not-copied" }))
+
+    try {
+      assert.deepEqual(
+        createRuntimeAuthStorage({ GOOGLE_APPLICATION_CREDENTIALS: credentialsPath }).get("google-vertex"),
+        {
+          type: "api_key",
+          key: "gcp-vertex-credentials",
+          env: {
+            GOOGLE_APPLICATION_CREDENTIALS: credentialsPath,
+            GOOGLE_CLOUD_PROJECT: "vertex-project",
+            GOOGLE_CLOUD_LOCATION: "global",
+          },
+        },
+      )
+    } finally {
+      rmSync(directory, { recursive: true })
+    }
+  })
+
+  it("reports configured routes that cannot be resolved", () => {
+    const router = new ModelRouter({ routes: { main: { provider: "missing", model: "missing" } } })
+    assert.deepEqual(router.diagnostics(), [
+      {
+        task: "main",
+        route: "missing/missing",
+        resolved: false,
+        authenticated: false,
+        supportsImages: false,
+      },
+    ])
+  })
+
   it("parses provider/model with thinking suffix", () => {
     assert.deepEqual(parseModelRoute("anthropic/claude-sonnet-4-5:high"), {
       provider: "anthropic",

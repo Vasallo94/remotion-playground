@@ -367,6 +367,18 @@ describe("parent-owned new_video intake and target integration", () => {
     assert.equal(researchInput?.subject, "Explicit subject")
     assert.deepEqual(researchInput?.sourceUrls, ["https://example.com/source"])
     assert.equal(store.listArtifacts(requiredThread).find((artifact) => artifact.kind === "research")?.approved, true)
+    assert.equal(
+      store.getPipelinePlan(requiredThread)?.steps.find((step) => step.id === "research")?.status,
+      "completed",
+    )
+    assert.equal(
+      deriveCoordinatorAction({
+        plan: store.getPipelinePlan(requiredThread),
+        checkpoint: store.getThread(requiredThread)!.checkpoint,
+        artifacts: store.listArtifacts(requiredThread),
+      }),
+      "run_copywriter",
+    )
   })
 
   it("runs copywriter and direction as proposal-only actions with atomic checkpoints", async () => {
@@ -796,7 +808,7 @@ describe("parent-owned new_video intake and target integration", () => {
     )
   })
 
-  it("produces silent/local audio exactly once and blocks unreconciled API voice", async () => {
+  it("produces CP3-approved Gemini voice exactly once", async () => {
     store = new AgentPiStore(":memory:")
     let productions = 0
     let validations = 0
@@ -864,9 +876,9 @@ describe("parent-owned new_video intake and target integration", () => {
           productions += 1
           return {
             configId: input.config.id as string,
-            voiceStatus: "skipped" as const,
+            voiceStatus: "completed" as const,
             soundStatus: "skipped" as const,
-            assets: [],
+            assets: [{ kind: "voiceover" as const, sceneIndex: "0", path: "/safe/0.mp3", sizeBytes: 5 }],
             generatedAt: "2026-07-12T00:00:00Z",
           }
         },
@@ -894,7 +906,13 @@ describe("parent-owned new_video intake and target integration", () => {
       approved: true,
     })
     const chart = {
-      voiceover: null,
+      voiceover: {
+        enabled: true as const,
+        provider: "gemini" as const,
+        language: "es-ES",
+        voiceId: "Kore",
+        scenes: { "0": "Narración aprobada." },
+      },
       soundDesign: { enabled: false, musicBed: null, sfx: [] },
       warnings: [],
     }
@@ -917,7 +935,7 @@ describe("parent-owned new_video intake and target integration", () => {
     const config = saveConfigWithLineage(
       store,
       threadId,
-      { id: "silent-config", scenes: [{}], soundDesign: chart.soundDesign },
+      { id: "silent-config", scenes: [{}], voiceover: chart.voiceover, soundDesign: chart.soundDesign },
       script,
       direction,
     )
@@ -987,29 +1005,6 @@ describe("parent-owned new_video intake and target integration", () => {
     ])
     assert.equal(store.getPipelinePlan(threadId)?.steps.find((step) => step.id === "publication")?.status, "completed")
 
-    const apiThread = store.createThread().id
-    store.saveArtifact({
-      threadId: apiThread,
-      kind: "script",
-      data: {
-        title: "Voice",
-        objective: "API",
-        scenes: [{ id: "scene-1", type: "callout", durationInSeconds: 3, missingCapabilities: [] }],
-      },
-      approved: true,
-    })
-    store.saveArtifact({
-      threadId: apiThread,
-      kind: "audio_chart",
-      data: {
-        voiceover: { enabled: true, provider: "gemini", language: "en", voiceId: "Kore", scenes: { "0": "Narration" } },
-        soundDesign: { enabled: false, musicBed: null, sfx: [] },
-        warnings: [],
-      },
-      approved: true,
-    })
-    store.saveArtifact({ threadId: apiThread, kind: "config", data: { id: "voice-config", scenes: [{}] } })
-    await assert.rejects(() => parent.executeAudioProductionParentAction(apiThread), /provider-receipt reconciliation/)
     assert.equal(productions, 1)
   })
 

@@ -170,7 +170,7 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 #### Approved audio asset production
 
 - [x] Audio production is deterministic orchestration, not another creative LLM specialist: it consumes only an approved CP3 chart and generated config.
-- [x] Voice generation is disabled unless `CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true`; local library copies do not require credentials or API access.
+- [x] Voice generation runs automatically only after CP3 approval, matching DeepAgent; local library copies do not require credentials or API access.
 - [x] The runtime invokes the existing TypeScript voice generator without a shell, with a fixed executable/script, project cwd, timeout, and bounded output.
 - [x] Silent charts skip voice generation successfully; charts without sound design skip sound assets successfully.
 - [x] Local music references are revalidated and copied to `public/audio/<config-id>/music-bed.mp3`; unsupported generated music/SFX fail explicitly rather than silently invoking APIs.
@@ -307,5 +307,5 @@ El primer objetivo práctico es arreglar el gap observado en el vídeo del eclip
 
 - `ResourceLoader`: `DefaultResourceLoader` con `additionalSkillPaths` vs loader determinista propio.
 - Especialistas: passes del mismo agente vs `.pi/agents/*.md` + tool `claqueta_subagent` vs SDK sessions internas.
-- Audio: activar Gemini TTS en Pi cuando `CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true` o moverlo a un servicio separado.
+- Audio: Gemini TTS activado en Pi tras CP3 mediante el generador y service-account ADC heredados de DeepAgent (ADR 0055).
 - Scene creation: CP4 dentro de `video_generation` o modo `code_evolution` obligatorio.

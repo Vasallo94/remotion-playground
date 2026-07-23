@@ -11,6 +11,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Pi model routing split by modality** — routes all text-only Pi work to Azure OpenAI Luna/Sol, keeps image-grounded Scene QA and Gemini TTS on Google Vertex, mounts Pi/Google credentials read-only, adapts service-account ADC to Pi's in-memory Vertex credential contract, exposes startup route/auth/image diagnostics, and restores DeepAgent parity by generating CP3-approved Gemini voiceover automatically before render.
 - **Pi-DeepAgents parity spec reconciled** — marks the acceptance criteria already evidenced by the passing agent-pi suite (131 done), leaving only four genuinely open gates: automated ≥3-subject E2E, all-mode transition tables, the LangGraph removal gate, and the Codex-quota-blocked researcher live smoke.
 
 - **Real explicit-silence Ponytail proof** — completes a browser-operated 9-second production with zero Audio Planner model sessions, no CP3, one config/QA lineage, one deterministic approved silent chart, H.264 render review, final human approval, and verified publication.
@@ -160,6 +161,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Live Pi multimodal/audio E2E hardening** — preserves CP3-approved audio lineage, unwraps custom component props at the config boundary, packages scene contracts in render Docker, completes required-research transitions, repairs invalid composed-scene tool calls, materializes pathless SQLite configs for Gemini TTS, reuses approved Scene QA for audio-only final configs through ADR 0056, and accepts valid structured copywriter output even when the provider reports terminal completion.
 - **Live Pi completion convergence** — emits the existing persisted `agent_end` event on canonical `running → idle` completion so SSE clients stop showing `Procesando...`; historical clients continue recovering from snapshots without rerendering or republishing.
 - **Human-friendly generic checkpoints** — clarification cards now show focused questions, requested/supported values, one `Responder` action, and sanitized collapsed details; QA/final-review cards use human titles and final review exposes codec, dimensions, FPS, duration, and warnings without requiring JSON inspection.
 - **Live strict-contract recovery** — Scene Composer now distinguishes exact composed specs from timed capability gaps, Visual Recipe tools expose the duration-bound closed schema instead of a summary, detached checkpoint failures become recoverable thread errors, and Director gets one bounded repair while preserving the approved adapter.

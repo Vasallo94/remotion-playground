@@ -23,6 +23,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source after install to leverage Docker layer cache for dependencies
 COPY packages/render-service/src packages/render-service/src
+COPY packages/scene-contracts packages/scene-contracts
 # Remotion compositions + shared render scripts
 COPY src src
 COPY scripts scripts

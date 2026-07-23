@@ -11,10 +11,7 @@ services:
       - ./public/audio:/app/public/audio
       - ./public/voiceover:/app/public/voiceover
       - ./.generated:/app/.generated
-      - ./gemini_flash_tts_testing_sa.json:/app/gemini_flash_tts_testing_sa.json:ro
     env_file: .env
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gemini_flash_tts_testing_sa.json
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3100/api/render/jobs"]
       interval: 10s
@@ -35,19 +32,30 @@ services:
       - ./public/voiceover:/app/public/voiceover
       - ./.generated:/app/.generated
       - ${HOME}/.pi/agent/auth.json:/root/.pi/agent/auth.json:ro
+      - ${HOME}/.pi/agent/models.json:/root/.pi/agent/models.json:ro
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-./gemini_flash_tts_testing_sa.json}:/run/secrets/google-service-account.json:ro
     env_file: .env
     environment:
       - PROJECT_ROOT=/app
       - RENDER_URL=http://render-service:3100
       - AGENT_PI_DB=/app/.generated/claqueta-pi/agent-pi.db
-      - CLAQUETA_PI_MODEL=${CLAQUETA_PI_MODEL:-openai-codex/gpt-5.6-sol:low}
-      - CLAQUETA_PI_MODEL_RESEARCH=${CLAQUETA_PI_MODEL_RESEARCH:-openai-codex/gpt-5.6-luna:low}
-      - CLAQUETA_PI_MODEL_NARRATIVE=${CLAQUETA_PI_MODEL_NARRATIVE:-openai-codex/gpt-5.6-sol:low}
-      - CLAQUETA_PI_MODEL_DIRECTION=${CLAQUETA_PI_MODEL_DIRECTION:-openai-codex/gpt-5.6-sol:low}
-      - CLAQUETA_PI_MODEL_AUDIO_PLAN=${CLAQUETA_PI_MODEL_AUDIO_PLAN:-openai-codex/gpt-5.6-luna:low}
-      - CLAQUETA_PI_MODEL_SCENE_QA=${CLAQUETA_PI_MODEL_SCENE_QA:-openai-codex/gpt-5.6-sol:low}
-      - CLAQUETA_PI_MODEL_SCENE_CREATION=${CLAQUETA_PI_MODEL_SCENE_CREATION:-openai-codex/gpt-5.6-luna:low}
-      - CLAQUETA_PI_MODEL_VALIDATION=${CLAQUETA_PI_MODEL_VALIDATION:-openai-codex/gpt-5.6-luna:low}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_BASE_URL=${AZURE_OPENAI_BASE_URL:-}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-}
+      - AZURE_OPENAI_DEPLOYMENT_NAME_MAP=${AZURE_OPENAI_DEPLOYMENT_NAME_MAP:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-service-account.json
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-vertexlda}
+      - GOOGLE_CLOUD_LOCATION=${GOOGLE_CLOUD_LOCATION:-global}
+      - CLAQUETA_PI_MODEL=${CLAQUETA_PI_MODEL:-azure-openai/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_INTAKE=${CLAQUETA_PI_MODEL_INTAKE:-azure-openai/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_RESEARCH=${CLAQUETA_PI_MODEL_RESEARCH:-azure-openai/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_NARRATIVE=${CLAQUETA_PI_MODEL_NARRATIVE:-azure-openai/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_DIRECTION=${CLAQUETA_PI_MODEL_DIRECTION:-azure-openai/gpt-5.6-sol:low}
+      - CLAQUETA_PI_MODEL_AUDIO_PLAN=${CLAQUETA_PI_MODEL_AUDIO_PLAN:-azure-openai/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_SCENE_QA=${CLAQUETA_PI_MODEL_SCENE_QA:-google-vertex/gemini-2.5-flash:low}
+      - CLAQUETA_PI_MODEL_SCENE_CREATION=${CLAQUETA_PI_MODEL_SCENE_CREATION:-azure-openai/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_CONFIG=${CLAQUETA_PI_MODEL_CONFIG:-azure-openai/gpt-5.6-luna:low}
+      - CLAQUETA_PI_MODEL_VALIDATION=${CLAQUETA_PI_MODEL_VALIDATION:-azure-openai/gpt-5.6-luna:low}
     depends_on:
       render-service:
         condition: service_healthy

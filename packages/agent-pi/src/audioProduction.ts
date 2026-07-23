@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, statSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { promisify } from "node:util"
 import type { AudioAssetsManifest, AudioChart, ProducedAudioAsset } from "./types.js"
@@ -42,7 +43,7 @@ export class AudioAssetProducer {
 
   constructor(options: AudioProductionOptions = {}) {
     this.root = options.root ?? PROJECT_ROOT
-    this.allowApiGeneration = options.allowApiGeneration ?? process.env.CLAQUETA_PI_ALLOW_AUDIO_GENERATION === "true"
+    this.allowApiGeneration = options.allowApiGeneration ?? true
     this.runVoiceGenerator =
       options.runVoiceGenerator ??
       (async (configPath) => {
@@ -70,11 +71,20 @@ export class AudioAssetProducer {
     const expectedScenes = Object.entries(narration?.scenes ?? {}).filter(([, text]) => text.trim().length > 0)
     if (expectedScenes.length > 0) {
       if (!this.allowApiGeneration) {
-        throw new Error(
-          "Voice generation is disabled; set CLAQUETA_PI_ALLOW_AUDIO_GENERATION=true to approve API usage",
-        )
+        throw new Error("Voice generation was explicitly disabled after CP3 approval")
       }
-      await this.runVoiceGenerator(input.configPath)
+      let configPath = input.configPath
+      let temporaryDirectory: string | undefined
+      if (!configPath) {
+        temporaryDirectory = mkdtempSync(join(tmpdir(), "claqueta-voice-"))
+        configPath = join(temporaryDirectory, "config.json")
+        writeFileSync(configPath, JSON.stringify(input.config))
+      }
+      try {
+        await this.runVoiceGenerator(configPath)
+      } finally {
+        if (temporaryDirectory) rmSync(temporaryDirectory, { recursive: true, force: true })
+      }
       for (const [sceneIndex] of expectedScenes) {
         const absolutePath = join(this.root, "public/voiceover", id, `${sceneIndex}.mp3`)
         if (!existsSync(absolutePath)) throw new Error(`Voice generator did not create scene ${sceneIndex} MP3`)

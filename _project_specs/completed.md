@@ -964,3 +964,265 @@ Checkpoint pauses remain `waiting` and emit no terminal completion. Failures con
 - [x] Historical thread `5065f045-306b-4fbb-a79e-191287fbaeae` recovered from its revision-148/event-80 snapshot without another render or publication.
 - [x] Browser showed `Completado`, ready video/download, and no `Procesando...`.
 - [x] Agent Pi 260/260, scene contracts 28/28, render service 12/12, web authority 4/4, Visual Program renderer 3/3, typechecks, lint, build, and diff checks passed.
+
+---
+
+# Feature: Pi model routing and Google media authentication
+
+## Status
+
+Completed.
+
+## Problem
+
+The Pi runtime must not use Gemini for text-only orchestration, research, writing, direction, planning, configuration, or validation. Those tasks should use the existing Azure OpenAI Luna/Sol deployments. Gemini remains necessary for Google media capabilities, currently image-grounded Scene QA and Gemini voice generation, and must authenticate in Docker with a Google service-account file rather than a Gemini API key.
+
+The current Compose defaults name `openai-codex` routes that do not load the repository user's Azure deployment catalog, route Scene QA to Sol, do not mount Pi's `models.json`, and do not mount the Google service account into `agent-pi`.
+
+## Scope
+
+- Give every text-only Pi task an explicit Azure OpenAI Luna or Sol default.
+- Route image-grounded Scene QA to a supported Google Vertex multimodal model.
+- Mount Pi's model catalog and the configured Google service-account file read-only in `agent-pi`.
+- Pass the Azure and Google environment required by their providers.
+- Keep Gemini voice generation using the same service-account credential.
+- Fail startup diagnostics when a configured route cannot be resolved.
+
+Voice generation preserves the former DeepAgent path: Gemini TTS `gemini-3.1-flash-tts-preview` through Vertex service-account ADC. This is text-to-speech, not a generic transcription/Whisper stage.
+
+## Acceptance criteria
+
+- [x] Main, intake, research, narrative, direction, audio planning, scene creation, configuration, and validation default only to `azure-openai/gpt-5.6-luna` or `azure-openai/gpt-5.6-sol`.
+- [x] Scene QA defaults to `google-vertex/gemini-2.5-flash` and accepts image inputs.
+- [x] No text-only default route uses `google` or `google-vertex`.
+- [x] `agent-pi` receives the Azure OpenAI key/settings, Pi model catalog, Google project/location, and a read-only service-account path.
+- [x] The service-account JSON is never copied into an image or committed.
+- [x] Model route validation reports unresolved configured routes clearly.
+- [x] Existing explicit `CLAQUETA_PI_MODEL_*` overrides remain supported.
+- [x] Gemini TTS still receives `GOOGLE_APPLICATION_CREDENTIALS` inside `agent-pi`.
+
+## Tests
+
+1. Assert default routes select Azure Luna/Sol for every text-only task and Google Vertex only for Scene QA.
+2. Assert explicit environment overrides still win.
+3. Assert a missing configured model produces a useful route error.
+4. Typecheck and run the full `agent-pi` test suite.
+5. Build/start Compose and verify `agent-pi` resolves an Azure text model and Google Vertex Scene QA model without exposing credential contents.
+
+## Result
+
+Completed on 2026-07-23. The full 263-test suite and typecheck pass; Compose is healthy; Azure Luna completed a real Researcher smoke; Vertex Gemini inspected a real PNG and emitted a structured tool call through service-account ADC; Gemini TTS generated a real MP3 with the same mounted credential. Native-video analysis remains out of scope because that pipeline stage does not exist yet.
+
+---
+
+# Feature: Pi Gemini TTS parity with DeepAgent
+
+## Status
+
+Completed.
+
+## Problem
+
+DeepAgent generated the CP3-approved voiceover automatically with `gemini-3.1-flash-tts-preview` through Vertex service-account ADC. Pi already invokes the same generator, but an additional runtime guard rejects every non-empty voiceover before the generator can run.
+
+## Scope
+
+- Preserve CP3 as the human approval boundary.
+- After approval, run the existing `scripts/generate-voiceover.ts` path automatically from Pi.
+- Keep the same Gemini TTS model, voices, multi-speaker behavior, fingerprint cache, MP3 verification, and service-account authentication used by DeepAgent.
+- Keep render audio generation disabled because Pi materializes and verifies audio before render.
+
+## Acceptance criteria
+
+- [x] An approved non-empty voiceover reaches `AudioAssetProducer` instead of failing on the former provider-receipt guard.
+- [x] API generation defaults on after CP3 approval, while an explicit test/operator disable remains available.
+- [x] Silent and local-music flows remain unchanged.
+- [x] The generated MP3 paths are verified before the `audio_assets` artifact is committed.
+- [x] Tests, typecheck, and a real Vertex TTS smoke pass.
+
+## Result
+
+Pi now follows the former DeepAgent path after CP3: it invokes the existing Gemini TTS generator automatically, preserves `gemini-3.1-flash-tts-preview`, Vertex ADC, voice/multi-speaker settings and fingerprint caching, verifies every expected MP3, and renders with audio regeneration disabled. The full 263-test suite and typecheck pass; a real Pi `AudioAssetProducer` smoke generated and verified a 9,453-byte MP3.
+
+---
+
+# Fix: Parent-owned audio lineage in draft configuration
+
+## Status
+
+Completed.
+
+## Problem
+
+The live Pi E2E failed immediately after CP2 because the draft configurator copied Gemini narration mentioned in direction before CP3 existed. Parent validation rejected it twice with `Config voiceover requires an approved audio artifact`, so the pipeline never reached Scene QA or audio planning.
+
+## Decision
+
+Project audio fields deterministically from parent-approved artifacts, exactly like approved scene props:
+
+- before CP3, remove model-authored `voiceover` and `soundDesign` from the draft config;
+- after CP3, overwrite both fields with the exact approved audio chart;
+- keep validation as a final invariant check.
+
+## Acceptance criteria
+
+- [x] Draft config generation cannot introduce audio before CP3 and does not waste a repair turn for it.
+- [x] Final config contains the exact CP3-approved voiceover and sound design even if the model proposes divergent values.
+- [x] Existing config lineage, render-schema, and target validation remain unchanged.
+- [x] Config tests and the live browser E2E proceed beyond the former failure.
+
+---
+
+# Fix: Repair invalid composed-scene props inside the copywriter session
+
+## Status
+
+Completed.
+
+## Problem
+
+The live Claqueta copywriter submitted a `composed-scene` with an unsupported `gap` value. The terminating tool accepted it, the child session ended, and only the parent later rejected the script, forcing a failed pipeline action instead of an in-session correction.
+
+## Decision
+
+Validate every submitted `composed-scene` props plan inside `submit_script`. Return the exact contract error as a non-terminating tool error so the same isolated copywriter can correct its structured output. Parent validation remains the final boundary.
+
+## Acceptance criteria
+
+- [x] Valid composed scenes terminate normally.
+- [x] Invalid composed props do not get captured or terminate the session.
+- [x] The tool returns the exact contract validation error.
+- [x] Explicit retry resumes the failed copywriting action and reaches CP1.
+
+---
+
+# Fix: Unwrap approved custom component props at config boundary
+
+## Status
+
+Completed.
+
+## Problem
+
+Live Scene QA proved that an approved `code-block` plan shaped like a full scene wrapper (`{componentId, durationInSeconds, props:{...}}`) was copied wholesale into `scene.props`. Remotion therefore received nested props and rendered only line number `1` with YAML defaults instead of `edad = 25`.
+
+## Decision
+
+At the shared config adapter, when a custom scene's approved `propsPlan` is an exact wrapper for the same component and contains an object `props`, project only that inner `props` object. Preserve already-flat plans unchanged.
+
+## Acceptance criteria
+
+- [x] Wrapped custom plans become direct component props.
+- [x] Flat custom plans remain byte-equivalent.
+- [x] The regenerated E2E still shows `edad = 25`, title `nombre → valor`, and Python.
+
+---
+
+# Fix: Materialize persisted Pi config for Gemini TTS
+
+## Status
+
+Completed.
+
+## Problem
+
+The live E2E reached CP3 and final config, then Gemini TTS failed because Pi config artifacts are stored in SQLite with `path: null`, while the reused DeepAgent TypeScript generator accepts a config file path.
+
+## Decision
+
+When no artifact path exists, `AudioAssetProducer` writes the exact approved config to a private OS temporary directory, invokes the existing generator, and removes the temporary directory in `finally`. Existing path-backed calls remain unchanged.
+
+## Acceptance criteria
+
+- [x] Pathless approved configs reach Gemini TTS through an exact temporary JSON file.
+- [x] Temporary files are removed on success and failure.
+- [x] Existing path-backed generation remains unchanged.
+- [x] The browser E2E generates and verifies all three MP3 files.
+
+---
+
+# Fix: Include scene-contracts workspace in render Docker image
+
+## Status
+
+Completed.
+
+## Problem
+
+The live Pi E2E reached Scene QA still rendering, but Remotion bundling failed because `@claqueta/scene-contracts` was installed as a workspace package while its exported source files were absent from the render-service image.
+
+## Acceptance criteria
+
+- [x] The render-service Docker image copies `packages/scene-contracts` after dependency installation.
+- [x] Remotion can resolve the package export during still rendering.
+- [x] The live E2E proceeds beyond Scene QA still generation.
+
+---
+
+# Fix: Complete the canonical research transition
+
+## Status
+
+Completed.
+
+## Problem
+
+A live Claqueta run completed and persisted required research, but left the canonical `research` step `in_progress`. The coordinator repeatedly derived `research_or_skip` until exhausting its transition budget instead of advancing to copywriting.
+
+## Decision
+
+A successful required-research parent action must atomically complete the `research` plan step, just as the no-research branch atomically skips it.
+
+## Acceptance criteria
+
+- [x] Required research persists one approved research artifact.
+- [x] The same successful action marks `research` completed.
+- [x] The next derived action is `run_copywriter`.
+- [x] The failed browser flow recovers through the explicit retry endpoint.
+
+---
+
+# Fix: Vertex Scene QA structured tool completion
+
+## Status
+
+Completed.
+
+## Problem
+
+The live E2E delivered three real stills to Vertex Gemini, but Scene QA spent its response on extended internal reasoning and ended with a provider error before calling `submit_scene_qa_report`. The runner also ignored the configured task thinking level.
+
+## Decision
+
+Pass the Scene QA route's thinking level into `createAgentSession` and default this image-classification/reporting task to thinking `off`, preserving the strict structured tool and parent validation.
+
+## Acceptance criteria
+
+- [x] Scene QA applies its configured thinking level.
+- [x] Default Scene QA route remains Vertex Gemini but uses `off` reasoning.
+- [x] Unit tests verify propagation.
+- [x] A real three-image schema smoke completes the tool call.
+- [x] The browser E2E proceeds beyond Scene QA.
+
+---
+
+# Reuse approved Scene QA across audio-only config finalization
+
+## Status
+
+Completed.
+
+## Problem
+
+After CP3, Claqueta recompiles the final config with approved audio. A 22-scene production then reran the identical visual QA twice and Vertex could not return a complete structured report. The previously human-approved QA was tied to draft config v2, while final config v3 differed only in audio fields.
+
+## Decision
+
+Define a deterministic visual projection of config that excludes top-level `voiceover`/`soundDesign` and per-scene `voiceover`. If the latest approved QA lineage points to a config with the same visual projection, reuse that report and write fresh lineage to the final config instead of rerendering/reviewing unchanged visuals.
+
+## Acceptance criteria
+
+- [x] Audio-only config changes reuse the latest approved QA report.
+- [x] Fresh QA lineage points to the exact final config/version/hash.
+- [x] Any visual field change forces new still rendering and multimodal QA.
+- [x] Reuse is recorded in action metadata/events and advances to audio production.

@@ -140,7 +140,7 @@ export function validateParentEffectOverride(
   const allowed =
     (action === "research_or_skip" &&
       effects.length === 1 &&
-      effects[0]?.type === "skip_step" &&
+      (effects[0]?.type === "skip_step" || effects[0]?.type === "complete_step") &&
       effects[0].stepId === "research") ||
     (action === "run_scene_composer" &&
       effects.length === 1 &&
